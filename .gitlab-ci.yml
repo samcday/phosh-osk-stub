@@ -29,8 +29,8 @@ variables:
   XVFB_RUN: xvfb-run -a -s -noreset
   COMMON_BUILD_OPTS: --werror
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
-                    gtk+3.0-dev libhandy1-dev meson musl-dev ninja 
-                    wayland-dev wayland-protocols ttf-dejavu
+                    gtk+3.0-dev libhandy1-dev meson musl-dev ninja json-glib-dev
+                    elogind-dev wayland-dev wayland-protocols ttf-dejavu
 
 .bookworm_vars: &bookworm_vars
   variables:
