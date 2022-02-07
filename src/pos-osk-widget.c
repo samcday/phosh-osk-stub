@@ -326,7 +326,7 @@ get_common_key_pre (PosOskWidgetLayer layer, gint row)
 
 
 static PosOskKey *
-get_key (PosOskWidget *self, const char *symbol, GStrv symbols, guint num_keys)
+get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *label, guint num_keys)
 {
   if (g_strcmp0 (symbol, " ") == 0) {
     double width;
@@ -342,6 +342,7 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, guint num_keys)
   return g_object_new (POS_TYPE_OSK_KEY,
                        "symbol", symbol,
                        "symbols", symbols,
+                       "label", label,
                        NULL);
 }
 
@@ -377,13 +378,23 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
   g_ptr_array_set_free_func (row->keys, g_object_unref);
 
   for (int i = 0; i < num_keys; i++) {
-    JsonArray *all_symbols = json_array_get_array_element (arow, i);
-    const gchar *symbol = json_array_get_string_element (all_symbols, 0);
+    JsonNode *key_node;
     g_autoptr (PosOskKey) key = NULL;
     g_auto (GStrv) symbols = NULL;
 
-    symbols = parse_symbols (all_symbols);
-    key = get_key (self, symbol, symbols, num_keys);
+    key_node = json_array_get_element (arow, i);
+    if (JSON_NODE_HOLDS (key_node, JSON_NODE_ARRAY)) {
+      JsonArray *all_symbols = json_array_get_array_element (arow, i);
+      const gchar *symbol = json_array_get_string_element (all_symbols, 0);
+
+      symbols = parse_symbols (all_symbols);
+      key = get_key (self, symbol, symbols, NULL, num_keys);
+    } else if (JSON_NODE_HOLDS (key_node, JSON_NODE_OBJECT)) {
+      key = POS_OSK_KEY (json_gobject_deserialize (POS_TYPE_OSK_KEY, key_node));
+    } else {
+      g_warning ("Unparseable key in row %d pos %d", r, i);
+      continue;
+    }
 
     width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, -1, g_steal_pointer (&key));
