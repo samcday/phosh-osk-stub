@@ -1,4 +1,4 @@
-project('phosh-osk-stup', 'c',
+project('phosh-osk-stub', 'c',
           version: '0.0.1',
           license: 'GPLv3+',
     meson_version: '>= 0.52.0',
