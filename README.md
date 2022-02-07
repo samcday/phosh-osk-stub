@@ -1,7 +1,7 @@
 # Phosh OSK Stub
 
-A tool to debug input related issues in phosh. For real on screen keyboard
-see [squeekboard]()
+A tool to debug input related issues in phosh. For a real on screen keyboard
+see [squeekboard][].
 
 ## License
 
@@ -10,8 +10,8 @@ phosh-osk-stub is licensed under the GPLv3+.
 ## Getting the source
 
 ```sh
-git clone https://gitlab.gnome.org/World/Phosh/phosh
-cd phosh
+git clone https://gitlab.gnome.org/guidog/phosh-osk-stub
+cd phosh-osk-stub
 ```
 
 The [main][] branch has the current development version.
@@ -39,8 +39,8 @@ ninja -C _build
 
 ## Running
 ### Running from the source tree
-When running from the source tree start the compositor *[phoc][]*.
-Then start *phosh* using:
+When running from the source tree first start *[phosh][]*.
+Then start *phosh-osk-stub* using:
 
 ```sh
 _build/src/phosh-osk-stub
@@ -57,5 +57,5 @@ The result should look something like this:
 [main]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/tree/main
 [.gitlab-ci.yml]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/.gitlab-ci.yml
 [debian/control]:https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/debian/control
-[phoc]: https://gitlab.gnome.org/World/Phosh/phoc
+[phosh]: https://gitlab.gnome.org/World/Phosh/phosh
 [squeekboard]: https://gitlab.gnome.org/World/Phosh/squeekboard
