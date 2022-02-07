@@ -1,0 +1,12 @@
+#! /bin/sh
+
+set -e
+
+case "$1" in install|upgrade)
+    dpkg-divert --package phosh-osk-stub \
+      --divert /usr/share/applications/sm.puri.OSK0.desktop.phosh-osk-stub \
+      --rename /usr/share/applications/sm.puri.OSK0.desktop
+    ;;
+esac
+
+#DEBHELPER#

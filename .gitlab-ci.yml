@@ -1,0 +1,102 @@
+include:
+ - remote: 'https://source.puri.sm/Librem5/librem5-ci/raw/master/librem5-pipeline-definitions.yml'
+ - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/34039cd573a2df832d465bc9e4c5f543571f5241/templates/ci-fairy.yml'
+
+stages:
+ - build
+ - test+docs
+ - package
+ - deploy
+
+default:
+  # Protect CI infra from rogue jobs
+  timeout: 15 minutes
+  # Allow jobs to be caneled on new commits
+  interruptible: true
+  # Retry on infra hickups automatically
+  retry:
+    max: 1
+    when:
+      - 'api_failure'
+      - 'runner_system_failure'
+      - 'scheduler_failure'
+      - 'stuck_or_timeout_failure'
+
+variables:
+  # For ci-fairy
+  FDO_UPSTREAM_REPO: guidog/phosh-osk-stub
+  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20220207
+  XVFB_RUN: xvfb-run -a -s -noreset
+  COMMON_BUILD_OPTS: --werror
+  ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
+                    gtk+3.0-dev libhandy1-dev meson musl-dev ninja 
+                    wayland-dev wayland-protocols ttf-dejavu
+
+.bookworm_vars: &bookworm_vars
+  variables:
+    DIST: bookworm
+    BUILD_OPTS:  ${COMMON_BUILD_OPTS}
+
+.build_step: &build_step
+  script:
+    - git submodule update --recursive
+    - 'echo "Build opts: ${BUILD_OPTS}"'
+    - meson ${BUILD_OPTS} . _build
+    - ninja -C _build
+
+# Sanity checks of MR settings and commit logs
+sanity:
+  extends:
+    - .fdo.ci-fairy
+  stage: build
+  script: |
+    if [ -n "$CI_OPEN_MERGE_REQUESTS" ]; then
+      ci-fairy check-commits --junit-xml=commit-message-junit-report.xml cifairy/main..HEAD ;
+    else
+      echo "Not a merge request" ;
+    fi
+  artifacts:
+    reports:
+      junit: commit-message-junit-report.xml
+  only:
+    variables:
+      - $CI_OPEN_MERGE_REQUESTS && $PKG_ONLY != "1"
+
+build:native-debian-bookworm:
+  stage: build
+  image: ${DEBIAN_IMAGE}
+  <<: *bookworm_vars
+  <<: *build_step
+  artifacts:
+    paths:
+      - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
+build:native-alpinelinux-edge:
+  stage: build
+  image: alpine:edge
+  allow_failure: true
+  before_script:
+    - echo "https://alpine.global.ssl.fastly.net/alpine/edge/testing" >> /etc/apk/repositories
+    - apk add $ALPINE_EDGE_DEPS
+  artifacts:
+    paths:
+      - _build
+  script:
+    - git submodule update --recursive
+    - meson --werror . _build
+    - ninja -C _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
+package:deb-pureos-byzantium:arm64:
+  variables:
+    L5_DOCKER_IMAGE: pureos/byzantium
+    DEB_BUILD_PROFILES: nodoc
+  extends: .l5-build-debian-package
+  tags:
+    - aarch64
+

@@ -1,0 +1,4 @@
+Test-Command: /usr/bin/phosh-osk-stub --help
+Restrictions: superficial
+Depends: @
+

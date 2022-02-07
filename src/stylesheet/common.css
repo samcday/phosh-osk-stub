@@ -1,0 +1,61 @@
+pos-osk-widget {
+  font-family: cantarell, sans-serif;
+
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+}
+
+pos-key {
+  color: @pos_key_fg_color;
+  background: @pos_key_bg_color;
+  border-radius: 6px;
+  margin: 2px;
+}
+
+pos-key.pressed {
+  background: shade(@pos_key_bg_color, 0.8);
+}
+
+pos-key.toggle {
+  background: shade(@pos_key_bg_color, 0.75);
+}
+
+pos-key.toggle.pressed {
+  background: shade(@pos_key_bg_color, 0.6);
+  color: @pos_key_fg_color;
+}
+
+pos-key.return {
+  background: @theme_selected_bg_color;
+  color: @theme_selected_fg_color;
+}
+
+pos-key.return.pressed {
+  background: shade(@theme_selected_bg_color, 0.8);
+  color: alpha(@theme_selected_fg_color, 0.8);
+}
+
+pos-char-popup {
+  font-family: cantarell, sans-serif;
+  
+  color: @theme_fg_color;
+  background-color: @theme_bg_color;
+}
+
+pos-char-popup box {
+  padding: 2px;
+  border-radius: 8px;
+}
+
+pos-char-popup button {
+  color: @pos_key_fg_color;
+  background: @pos_key_bg_color;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 0px;
+  border: none;
+}
+
+pos-char-popup button:active {
+  background: shade(@pos_key_bg_color, 0.8);
+}
