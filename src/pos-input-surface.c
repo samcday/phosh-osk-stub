@@ -596,7 +596,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 {
   g_autoptr (GVariant) sources = NULL;
   g_autoptr (GHashTable) new = NULL;
-  g_auto (GStrv) old = NULL;
+  g_autofree GStrv old = NULL;
   GStrv old_keys;
   GVariantIter iter;
   const char *id = NULL;
@@ -611,7 +611,6 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   /* Get us a copy of the keys since we remove elements while iterating */
   old_keys = (GStrv)g_hash_table_get_keys_as_array (self->osks, NULL);
   old = g_strdupv (old_keys);
-  g_free (old_keys);
   new = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
   while (g_variant_iter_next (&iter, "(&s&s)", &type, &id)) {
