@@ -109,7 +109,7 @@ set_xkb_keymap (PosVirtualKeyboard *self,
 
   keymap = xkb_map_new_from_names (context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
   if (keymap == NULL) {
-    g_warning ("Cannot create XKB keymap");
+    g_warning ("Cannot create XKB keymap for %s %s %s", layout, variant, options);
   }
 
 out:
@@ -122,10 +122,13 @@ out:
   }
 
   keymap_str = xkb_keymap_get_as_string (keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
-  if (keymap_str)
+  if (keymap_str) {
+    g_debug ("Loading keymap %s %s %s", layout, variant, variant);
     install_keymap (self, keymap_str, strlen (keymap_str));
-  else
+  } else {
+
     install_default_keymap (self);
+  }
 
   xkb_keymap_unref (keymap);
 }
