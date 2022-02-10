@@ -25,7 +25,7 @@ default:
 variables:
   # For ci-fairy
   FDO_UPSTREAM_REPO: guidog/phosh-osk-stub
-  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20220207
+  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20220210
   XVFB_RUN: xvfb-run -a -s -noreset
   COMMON_BUILD_OPTS: --werror
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
@@ -39,10 +39,13 @@ variables:
 
 .build_step: &build_step
   script:
-    - git submodule update --recursive
     - 'echo "Build opts: ${BUILD_OPTS}"'
     - meson ${BUILD_OPTS} . _build
-    - ninja -C _build
+    - meson compile -C _build
+
+.test_step: &test_step
+  script:
+    - meson test --print-errorlogs -C _build
 
 # Sanity checks of MR settings and commit logs
 sanity:
@@ -70,6 +73,17 @@ build:native-debian-bookworm:
   artifacts:
     paths:
       - _build
+  except:
+    variables:
+      - $PKG_ONLY == "1"
+
+test:native-debian-bookworm:
+  stage: test+docs
+  image: ${DEBIAN_IMAGE}
+  needs:
+    - build:native-debian-bookworm
+  <<: *bookworm_vars
+  <<: *test_step
   except:
     variables:
       - $PKG_ONLY == "1"

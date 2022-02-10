@@ -1,4 +1,5 @@
 subdir('dbus')
+subdir('layouts')
 
 phosh_osk_stub_enum_headers = files(['pos-enums.h'])
 phosh_osk_stub_enum_sources = gnome.mkenums_simple(
