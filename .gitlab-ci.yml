@@ -39,10 +39,9 @@ variables:
 
 .build_step: &build_step
   script:
-    - git submodule update --recursive
     - 'echo "Build opts: ${BUILD_OPTS}"'
     - meson ${BUILD_OPTS} . _build
-    - ninja -C _build
+    - meson compile -C _build
 
 # Sanity checks of MR settings and commit logs
 sanity:
