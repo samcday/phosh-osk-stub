@@ -25,6 +25,8 @@ Rules-Requires-Root: no
 
 Package: phosh-osk-stub
 Architecture: any
+Recommends: fzf,
+ wamerican | wordlist,
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},

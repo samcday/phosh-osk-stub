@@ -91,7 +91,10 @@ libpos_dep = declare_dependency(
   sources: libpos_generated_sources,
   include_directories: pos_includes,
   link_with: pos_lib,
-  dependencies: [libpos_deps, libpos_completer_presage_dep])
+  dependencies: [libpos_deps,
+		 libpos_completer_fzf_dep,
+		 libpos_completer_presage_dep,
+		])
 
 executable('phosh-osk-stub',
 	   'phosh-osk-stub.c',
