@@ -125,5 +125,6 @@ subdir('data')
 subdir('po')
 subdir('protocol')
 subdir('src')
+subdir('tests')
 subdir('doc')
 
