@@ -56,6 +56,7 @@ struct _PosInputSurface {
 
   gboolean                 surface_visible;
   PosInputSurfaceAnimation animation;
+  int                      height;
 
   /* GNOME settings */
   gboolean                 screen_keyboard_enabled;
@@ -622,16 +623,45 @@ static void pos_input_surface_action_map_iface_init (GActionMapInterface *iface)
 
 
 static void
+pos_input_surface_check_resize (GtkContainer *container)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (container);
+  GtkRequisition min, nat;
+  int height;
+
+  g_return_if_fail (GTK_IS_CONTAINER (container));
+
+  gtk_widget_get_preferred_size (GTK_WIDGET (self), &min, &nat);
+  g_object_get (self, "height", &height, NULL);
+
+  if (gtk_widget_get_mapped (GTK_WIDGET (self)) && min.height != self->height) {
+    g_debug ("Setting height to %d", min.height);
+    phosh_layer_surface_set_size (PHOSH_LAYER_SURFACE (self), -1, min.height);
+    /* Don't interfere with animation */
+    if (self->animation.progress >= 1.0) {
+      phosh_layer_surface_set_exclusive_zone (PHOSH_LAYER_SURFACE (self), min.height);
+    }
+  }
+
+  GTK_CONTAINER_CLASS (pos_input_surface_parent_class)->check_resize (container);
+}
+
+
+
+static void
 pos_input_surface_class_init (PosInputSurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+  GtkContainerClass *container_class = GTK_CONTAINER_CLASS (klass);
 
   object_class->get_property = pos_input_surface_get_property;
   object_class->set_property = pos_input_surface_set_property;
   object_class->constructed = pos_input_surface_constructed;
   object_class->dispose = pos_input_surface_dispose;
   object_class->finalize = pos_input_surface_finalize;
+
+  container_class->check_resize = pos_input_surface_check_resize;
 
   g_type_ensure (POS_TYPE_OSK_WIDGET);
   g_type_ensure (POS_TYPE_DEBUG_WIDGET);
