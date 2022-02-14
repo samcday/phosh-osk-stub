@@ -7,9 +7,24 @@
       <object class="HdyClamp">
         <property name="visible">True</property>
         <property name="maximum_size">720</property>
+
+        <!-- TODO: reindent once working -->
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="PosCompletionBar" id="completion_bar">
+                <property name="visible" bind-source="PosInputSurface" bind-property="completer-active" bind-flags="sync-create"/>
+                <signal name="selected" handler="on_completion_selected" object="PosInputSurface" swapped="yes"/>
+              </object>
+            </child>
+
         <child>
           <object class="HdyDeck" id="deck">
             <property name="visible">True</property>
+            <property name="vexpand">True</property>
+            <property name="valign">end</property>
             <property name="can-swipe-back">True</property>
             <property name="can-swipe-forward">True</property>
             <signal name="notify::visible-child" handler="on_visible_child_changed" object="PosInputSurface" swapped="yes"/>
@@ -28,6 +43,9 @@
                 <property name="visible">True</property>
               </object>
             </child>
+
+          </object>
+        </child>
 
           </object>
         </child>
