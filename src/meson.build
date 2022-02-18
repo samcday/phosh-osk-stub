@@ -22,15 +22,17 @@ libpos_deps = [
 ]
 
 pos_resources = gnome.compile_resources(
-  'phosh-osk-stub-resources',
+  'pos-resources',
   'phosh-osk-stub.gresources.xml',
-
+  extra_args: '--manual-register',
   c_name: 'pos',
 )
 
 libpos_sources = files(
   'pos-char-popup.h',
   'pos-char-popup.c',
+  'pos-main.c',
+  'pos-main.h',
   'pos-osk-dbus.h',
   'pos-osk-dbus.c',
   'pos-osk-key.h',
@@ -46,6 +48,7 @@ libpos_sources = files(
 libpos_generated_sources = [
   generated_dbus_sources,
   libpos_enum_sources,
+  pos_resources,
   wl_proto_headers,
   wl_proto_sources,
 ]
@@ -76,9 +79,9 @@ libpos_dep = declare_dependency(
   dependencies: libpos_deps)
 
 executable('phosh-osk-stub',
-	   ['phosh-osk-stub.c',
-	    'pos-input-surface.h',
-	    'pos-input-surface.c'],
+	   'phosh-osk-stub.c',
+	   'pos-input-surface.h',
+	   'pos-input-surface.c',
            include_directories: pos_includes,
            install: true,
            dependencies: libpos_dep)

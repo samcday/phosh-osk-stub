@@ -9,6 +9,7 @@
 #define G_LOG_DOMAIN "phosh-osk-stub"
 
 #include "config.h"
+#include "pos-main.h"
 #include "pos-osk-dbus.h"
 #include "pos-input-surface.h"
 #include "pos-vk-driver.h"
@@ -442,6 +443,7 @@ main (int argc, char *argv[])
     print_version ();
   }
 
+  pos_init ();
   lfb_init (APP_ID, NULL);
   _debug_flags = parse_debug_env ();
   gtk_init (&argc, &argv);
@@ -462,6 +464,8 @@ main (int argc, char *argv[])
   g_object_unref (_proxy);
   gtk_widget_destroy (GTK_WIDGET (_input_surface));
   g_clear_object (&_osk_dbus);
+
+  pos_uninit ();
 
   return EXIT_SUCCESS;
 }
