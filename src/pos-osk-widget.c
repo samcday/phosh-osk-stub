@@ -1082,6 +1082,8 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
 
   /**
    * PosOskWidget::key-down
+   * @self: The osk emitting the symbol
+   * @symbol: The key pressed
    *
    * A key was pressed. This is mostly useful for haptic feedback
    * since it's not clear yet where the user will lift the finger.
@@ -1112,6 +1114,8 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
                                              G_TYPE_STRING);
   /**
    * PosOskWidget::key-symbol
+   * @self: The osk emitting the symbol
+   * @symbol: The selected symbol
    *
    * A symbol was selected on the keyboard.
    */
