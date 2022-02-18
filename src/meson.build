@@ -58,6 +58,7 @@ executable('phosh-osk-stub', ['phosh-osk-stub.c',
 			     phosh_osk_stub_enum_sources +
 			     phosh_osk_stub_resources +
 			     phosh_contrib_sources +
+			     wl_proto_headers,
 			     wl_proto_sources,
            include_directories: [root_inc, pos_inc],
            install: true,
