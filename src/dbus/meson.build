@@ -1,3 +1,5 @@
+dbus_inc = include_directories('.')
+
 # DBus client interfaces
 generated_dbus_sources = []
 
