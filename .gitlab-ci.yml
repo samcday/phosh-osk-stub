@@ -25,7 +25,7 @@ default:
 variables:
   # For ci-fairy
   FDO_UPSTREAM_REPO: guidog/phosh-osk-stub
-  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20220210
+  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20220218
   XVFB_RUN: xvfb-run -a -s -noreset
   COMMON_BUILD_OPTS: --werror
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
@@ -88,6 +88,21 @@ test:native-debian-bookworm:
     variables:
       - $PKG_ONLY == "1"
 
+doc:
+  stage: test+docs
+  image: ${DEBIAN_IMAGE}
+  needs: []
+  variables:
+    BUILD_OPTS: >-
+      -Dgtk_doc=true
+  script:
+    - meson ${BUILD_OPTS} _build
+    - ninja -C _build
+    - mv _build/doc/pos-0 _doc/
+  artifacts:
+    paths:
+      - _doc/
+
 build:native-alpinelinux-edge:
   stage: build
   image: alpine:edge
@@ -114,3 +129,14 @@ package:deb-pureos-byzantium:arm64:
   tags:
     - aarch64
 
+pages:
+  stage: deploy
+  before_script: []
+  needs: ['doc']
+  script:
+    - mv _doc/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

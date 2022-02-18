@@ -10,14 +10,6 @@
 
 #include "pos-osk-key.h"
 
-/**
- * SECTION:osk-key
- * @short_description: A key on osk widget
- * @Title: PosOskKey
- *
- * A key on the osk widget
- */
-
 enum {
   PROP_0,
   PROP_USE,
@@ -33,6 +25,11 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PosOskKey:
+ *
+ * A key on the osk widget
+ */
 struct _PosOskKey {
   GObject           parent;
 
@@ -348,6 +345,15 @@ pos_osk_key_get_layer (PosOskKey *self)
 }
 
 
+/**
+ * pos_osk_key_get_symbols:
+ * @self: The key
+ *
+ * Get the additional symbols. For the primary symbol see
+ * [method@Pos.OskKey.get_symbol].
+ *
+ * Returns: (transfer none): The key's additional symbols
+ */
 GStrv
 pos_osk_key_get_symbols (PosOskKey *self)
 {

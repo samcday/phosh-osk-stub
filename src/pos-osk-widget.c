@@ -25,13 +25,6 @@
 #define LAYOUT_COLS 10
 #define LAYOUT_ROWS 4
 
-/**
- * SECTION:osk-widget
- * @short_description: An osk widget
- * @Title: PosOskWidget
- *
- * Renders the keyboard and reacts to keypresses by signal emissions.
- */
 enum {
   OSK_KEY_DOWN,
   OSK_KEY_UP,
@@ -98,7 +91,11 @@ typedef struct {
   double                    width;
 } PosOskWidgetLayout;
 
-
+/**
+ * PosOskWidget:
+ *
+ * Renders the keyboard and reacts to keypresses by signal emissions.
+ */
 struct _PosOskWidget {
   GtkDrawingArea       parent;
 
@@ -150,10 +147,10 @@ on_drag_update (PosOskWidget *self,
   delta_y = self->last_y - off_y;
 
   if (ABS (delta_x) > KEY_DIST_X) {
-    symbol =  delta_x > 0 ? OSK_SYMBOL_LEFT : OSK_SYMBOL_RIGHT;
+    symbol =  delta_x > 0 ? POS_OSK_SYMBOL_LEFT : POS_OSK_SYMBOL_RIGHT;
     self->last_x = off_x;
   } else if (ABS (delta_y) > KEY_DIST_Y) {
-    symbol =  delta_y > 0 ? OSK_SYMBOL_UP : OSK_SYMBOL_DOWN;
+    symbol =  delta_y > 0 ? POS_OSK_SYMBOL_UP : POS_OSK_SYMBOL_DOWN;
     self->last_y = off_y;
   }
 
@@ -798,7 +795,7 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
 
   g_debug ("Long press '%s'", pos_osk_key_get_label (key) ?: pos_osk_key_get_symbol (key));
 
-  if (g_strcmp0 (pos_osk_key_get_symbol (key), OSK_SYMBOL_SPACE) == 0) {
+  if (g_strcmp0 (pos_osk_key_get_symbol (key), POS_OSK_SYMBOL_SPACE) == 0) {
     pos_osk_widget_set_mode (self, POS_OSK_WIDGET_MODE_CURSOR);
     return;
   }
@@ -1082,6 +1079,8 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
 
   /**
    * PosOskWidget::key-down
+   * @self: The osk emitting the symbol
+   * @symbol: The key pressed
    *
    * A key was pressed. This is mostly useful for haptic feedback
    * since it's not clear yet where the user will lift the finger.
@@ -1112,6 +1111,8 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
                                              G_TYPE_STRING);
   /**
    * PosOskWidget::key-symbol
+   * @self: The osk emitting the symbol
+   * @symbol: The selected symbol
    *
    * A symbol was selected on the keyboard.
    */

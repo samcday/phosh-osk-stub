@@ -14,15 +14,6 @@
 
 #include <linux/input-event-codes.h>
 
-/**
- * SECTION:vk-driver
- * @short_description: Virtual keyboad driver
- * @Title: PosVkDriver
- *
- * Processes input events and drives a virtual keyboard
- * using the wayland virtual keyboard protocol with them.
- */
-
 enum {
   PROP_0,
   PROP_VIRTUAL_KEYBOARD,
@@ -30,6 +21,12 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PosVkDriver:
+ *
+ * Processes input events and drives a virtual keyboard
+ * using the wayland virtual keyboard protocol with them.
+ */
 struct _PosVkDriver {
   GObject             parent;
 

@@ -1,12 +1,12 @@
 subdir('dbus')
 subdir('layouts')
 
-phosh_osk_stub_enum_headers = files(['pos-enums.h'])
-phosh_osk_stub_enum_sources = gnome.mkenums_simple(
+libpos_enum_headers = files(['pos-enums.h'])
+libpos_enum_sources = gnome.mkenums_simple(
   'pos-enum-types',
-  sources : phosh_osk_stub_enum_headers)
+  sources : libpos_enum_headers)
 
-osk_stub_deps = [
+libpos_deps = [
   gio_dep,
   gnome_desktop_dep,
   gtk_dep,
@@ -21,12 +21,38 @@ osk_stub_deps = [
   cc.find_library('rt', required: false),
 ]
 
-phosh_osk_stub_resources = gnome.compile_resources(
-  'phosh-osk-stub-resources',
+pos_resources = gnome.compile_resources(
+  'pos-resources',
   'phosh-osk-stub.gresources.xml',
-
+  extra_args: '--manual-register',
   c_name: 'pos',
 )
+
+libpos_sources = files(
+  'pos-char-popup.h',
+  'pos-char-popup.c',
+  'pos-enums.h',
+  'pos-main.c',
+  'pos-main.h',
+  'pos-osk-dbus.h',
+  'pos-osk-dbus.c',
+  'pos-osk-key.h',
+  'pos-osk-key.c',
+  'pos-osk-widget.h',
+  'pos-osk-widget.c',
+  'pos-vk-driver.h',
+  'pos-vk-driver.c',
+  'pos-virtual-keyboard.h',
+  'pos-virtual-keyboard.c',
+)
+
+libpos_generated_sources = [
+  generated_dbus_sources,
+  libpos_enum_sources,
+  pos_resources,
+  wl_proto_headers,
+  wl_proto_sources,
+]
 
 # copied verbatim from phoh
 phosh_contrib_sources = files(
@@ -37,28 +63,45 @@ phosh_contrib_sources = files(
 )
 
 pos_inc = ['.', 'contrib/' ]
+pos_includes = [pos_inc, root_inc, dbus_inc, proto_inc]
 
-executable('phosh-osk-stub', ['phosh-osk-stub.c',
-			      'pos-char-popup.h',
-			      'pos-char-popup.c',
-			      'pos-input-surface.h',
-			      'pos-input-surface.c',
-			      'pos-osk-dbus.h',
-			      'pos-osk-dbus.c',
-			      'pos-osk-key.h',
-			      'pos-osk-key.c',
-			      'pos-osk-widget.h',
-			      'pos-osk-widget.c',
-			      'pos-vk-driver.h',
-			      'pos-vk-driver.c',
-			      'pos-virtual-keyboard.h',
-			      'pos-virtual-keyboard.c',
-			     ] +
-			     generated_dbus_sources +
-			     phosh_osk_stub_enum_sources +
-			     phosh_osk_stub_resources +
-			     phosh_contrib_sources +
-			     wl_proto_sources,
-           include_directories: [root_inc, pos_inc],
+pos_lib = static_library(
+  'pos',
+  libpos_sources,
+  libpos_generated_sources,
+  phosh_contrib_sources,
+  dependencies: libpos_deps,
+  include_directories: pos_includes,
+  install: false)
+
+libpos_dep = declare_dependency(
+  include_directories: pos_includes,
+  link_with: pos_lib,
+  dependencies: libpos_deps)
+
+executable('phosh-osk-stub',
+	   'phosh-osk-stub.c',
+	   'pos-input-surface.h',
+	   'pos-input-surface.c',
+           include_directories: pos_includes,
            install: true,
-           dependencies: osk_stub_deps)
+           dependencies: libpos_dep)
+
+if get_option('gtk_doc')
+  pos_gir_extra_args = [
+    '--quiet',
+   ]
+
+  pos_gir = gnome.generate_gir(pos_lib,
+                 sources: libpos_sources,
+               nsversion: '0',
+               namespace: 'Pos',
+         export_packages: 'pos-0',
+           symbol_prefix: 'pos',
+       identifier_prefix: 'Pos',
+                includes: ['Gio-2.0', 'Gtk-3.0', 'Handy-1'],
+                 install: false,
+              extra_args: pos_gir_extra_args,
+            dependencies: libpos_dep,
+   )
+endif

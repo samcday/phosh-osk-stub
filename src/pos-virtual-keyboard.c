@@ -22,15 +22,6 @@
 #include <sys/mman.h>
 
 
-/**
- * SECTION:virtual-keyboard
- * @short_description: Virtual keyboard wirering
- * @Title: PosVirtualKeyboard
- *
- * A Wayland virtual keyboard that gets its keymaps from GNOME.
- * It's not concerned with any rendering.
- */
-
 enum {
   PROP_0,
   PROP_VIRTUAL_KEYBOARD_MANAGER,
@@ -39,6 +30,12 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PosVirtualKeyboard:
+ *
+ * A Wayland virtual keyboard that gets its keymaps from GNOME.
+ * It's not concerned with any rendering.
+ */
 struct _PosVirtualKeyboard {
   GObject                                 parent;
 

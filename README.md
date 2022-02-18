@@ -54,6 +54,10 @@ The result should look something like this:
 ![character popover](screenshots/pos-de.png)
 ![inscript/malayalam](screenshots/pos-wide-in+mal.png)
 
+## Development Documentation
+
+API documentation is at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub
+
 [main]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/tree/main
 [.gitlab-ci.yml]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/.gitlab-ci.yml
 [debian/control]:https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/debian/control

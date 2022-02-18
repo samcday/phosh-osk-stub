@@ -10,14 +10,6 @@
 
 #include "pos-char-popup.h"
 
-/**
- * SECTION:char-popup
- * @short_description: PosCharPopup
- * @Title: PosCharPopup
- *
- * A character popup
- */
-
 enum {
   SELECTED,
   N_SIGNALS
@@ -31,6 +23,11 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PosCharPopup:
+ *
+ * A character popup
+ */
 struct _PosCharPopup {
   GtkPopover parent;
 

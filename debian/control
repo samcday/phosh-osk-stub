@@ -7,8 +7,10 @@ Build-Depends:
  json-glib-tools,
  libsystemd-dev,
  libfeedback-dev,
- libglib2.0-doc <!nodoc>,
+ gi-docgen <!nodoc>,
+ gobject-introspection <!nodoc>,
  libgnome-desktop-3-dev,
+ libgirepository1.0-dev <!nodoc>,
  libgtk-3-dev,
  libhandy-1-dev (>= 1.1.90),
  libjson-glib-dev,
@@ -25,6 +27,17 @@ Depends:
  ${misc:Depends},
  ${shlibs:Depends},
 Description: OSK stub to fulfill session dependencies
- Phosh's session wants a sm.puri.OSK0. For testing on non-phone's
- this stub fulfills the necessary dependencies.
+ Phosh's session wants a sm.puri.OSK0. For testing this stub fulfills the
+ necessary dependencies and can be used for input debugging and experiments.
 
+Package: phosh-osk-stub-doc
+Architecture: all
+Section: doc
+Build-Profiles: <!nodoc>
+Depends:
+ ${misc:Depends},
+Description: OSK stub to fulfill session dependencies
+ Phosh's session wants a sm.puri.OSK0. For testing this stub fulfills the
+ necessary dependencies and can be used for input debugging and experiments.
+ .
+ This package contains the development documentation.
