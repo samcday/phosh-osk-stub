@@ -10,14 +10,6 @@
 
 #include "pos-osk-key.h"
 
-/**
- * SECTION:osk-key
- * @short_description: A key on osk widget
- * @Title: PosOskKey
- *
- * A key on the osk widget
- */
-
 enum {
   PROP_0,
   PROP_USE,
@@ -33,6 +25,11 @@ enum {
 };
 static GParamSpec *props[PROP_LAST_PROP];
 
+/**
+ * PosOskKey:
+ *
+ * A key on the osk widget
+ */
 struct _PosOskKey {
   GObject           parent;
 
