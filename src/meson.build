@@ -86,3 +86,22 @@ executable('phosh-osk-stub',
            include_directories: pos_includes,
            install: true,
            dependencies: libpos_dep)
+
+if get_option('gtk_doc')
+  pos_gir_extra_args = [
+    '--quiet',
+   ]
+
+  pos_gir = gnome.generate_gir(pos_lib,
+                 sources: libpos_sources,
+               nsversion: '0',
+               namespace: 'Pos',
+         export_packages: 'pos-0',
+           symbol_prefix: 'pos',
+       identifier_prefix: 'Pos',
+                includes: ['Gio-2.0', 'Gtk-3.0', 'Handy-1'],
+                 install: false,
+              extra_args: pos_gir_extra_args,
+            dependencies: libpos_dep,
+   )
+endif
