@@ -13,11 +13,11 @@
 G_BEGIN_DECLS
 
 /* Some common symbols used elsewhere */
-#define OSK_SYMBOL_SPACE " "
-#define OSK_SYMBOL_LEFT "KEY_LEFT"
-#define OSK_SYMBOL_RIGHT "KEY_RIGHT"
-#define OSK_SYMBOL_UP "KEY_UP"
-#define OSK_SYMBOL_DOWN "KEY_DOWN"
+#define POS_OSK_SYMBOL_SPACE " "
+#define POS_OSK_SYMBOL_LEFT "KEY_LEFT"
+#define POS_OSK_SYMBOL_RIGHT "KEY_RIGHT"
+#define POS_OSK_SYMBOL_UP "KEY_UP"
+#define POS_OSK_SYMBOL_DOWN "KEY_DOWN"
 
 #define POS_TYPE_OSK_KEY (pos_osk_key_get_type ())
 

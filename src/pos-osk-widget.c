@@ -150,10 +150,10 @@ on_drag_update (PosOskWidget *self,
   delta_y = self->last_y - off_y;
 
   if (ABS (delta_x) > KEY_DIST_X) {
-    symbol =  delta_x > 0 ? OSK_SYMBOL_LEFT : OSK_SYMBOL_RIGHT;
+    symbol =  delta_x > 0 ? POS_OSK_SYMBOL_LEFT : POS_OSK_SYMBOL_RIGHT;
     self->last_x = off_x;
   } else if (ABS (delta_y) > KEY_DIST_Y) {
-    symbol =  delta_y > 0 ? OSK_SYMBOL_UP : OSK_SYMBOL_DOWN;
+    symbol =  delta_y > 0 ? POS_OSK_SYMBOL_UP : POS_OSK_SYMBOL_DOWN;
     self->last_y = off_y;
   }
 
@@ -798,7 +798,7 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
 
   g_debug ("Long press '%s'", pos_osk_key_get_label (key) ?: pos_osk_key_get_symbol (key));
 
-  if (g_strcmp0 (pos_osk_key_get_symbol (key), OSK_SYMBOL_SPACE) == 0) {
+  if (g_strcmp0 (pos_osk_key_get_symbol (key), POS_OSK_SYMBOL_SPACE) == 0) {
     pos_osk_widget_set_mode (self, POS_OSK_WIDGET_MODE_CURSOR);
     return;
   }
