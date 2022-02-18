@@ -25,13 +25,6 @@
 #define LAYOUT_COLS 10
 #define LAYOUT_ROWS 4
 
-/**
- * SECTION:osk-widget
- * @short_description: An osk widget
- * @Title: PosOskWidget
- *
- * Renders the keyboard and reacts to keypresses by signal emissions.
- */
 enum {
   OSK_KEY_DOWN,
   OSK_KEY_UP,
@@ -98,7 +91,11 @@ typedef struct {
   double                    width;
 } PosOskWidgetLayout;
 
-
+/**
+ * PosOskWidget:
+ *
+ * Renders the keyboard and reacts to keypresses by signal emissions.
+ */
 struct _PosOskWidget {
   GtkDrawingArea       parent;
 
