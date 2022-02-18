@@ -13,14 +13,6 @@
 #include "pos-osk-dbus.h"
 #include "pos-osk0-dbus.h"
 
-/**
- * SECTION:osk-dbus
- * @short_description: sm.puri.OSK0 DBus Interface
- * @Title: PosOskDbus
- *
- * Provides the sm.puri.OSK0 DBus interface
- */
-
 #define OSK0_BUS_PATH "/sm/puri/OSK0"
 #define OSK0_BUS_NAME "sm.puri.OSK0"
 
@@ -31,6 +23,11 @@ enum {
   PROP_LAST_PROP
 };
 
+/**
+ * PosOskDbus:
+ *
+ * Provides the sm.puri.OSK0 DBus interface
+ */
 struct _PosOskDbus {
   PosDbusOSK0Skeleton parent;
 
