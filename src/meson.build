@@ -29,6 +29,7 @@ pos_resources = gnome.compile_resources(
 )
 
 libpos_sources = files(
+  'pos.h',
   'pos-char-popup.h',
   'pos-char-popup.c',
   'pos-enums.h',

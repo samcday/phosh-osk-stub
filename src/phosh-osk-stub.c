@@ -9,11 +9,7 @@
 #define G_LOG_DOMAIN "phosh-osk-stub"
 
 #include "config.h"
-#include "pos-main.h"
-#include "pos-osk-dbus.h"
-#include "pos-input-surface.h"
-#include "pos-vk-driver.h"
-#include "pos-virtual-keyboard.h"
+#include "pos.h"
 
 #include "input-method-unstable-v2-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
