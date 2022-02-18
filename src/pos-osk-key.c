@@ -348,6 +348,15 @@ pos_osk_key_get_layer (PosOskKey *self)
 }
 
 
+/**
+ * pos_osk_key_get_symbols:
+ * @self: The key
+ *
+ * Get the additional symbols. For the primary symbol see
+ * [method@Pos.OskKey.get_symbol].
+ *
+ * Returns: (transfer none): The key's additional symbols
+ */
 GStrv
 pos_osk_key_get_symbols (PosOskKey *self)
 {
