@@ -6,7 +6,7 @@ phosh_osk_stub_enum_sources = gnome.mkenums_simple(
   'pos-enum-types',
   sources : phosh_osk_stub_enum_headers)
 
-osk_stub_deps = [
+phosh_osk_stub_deps = [
   gio_dep,
   gnome_desktop_dep,
   gtk_dep,
@@ -62,4 +62,4 @@ executable('phosh-osk-stub', ['phosh-osk-stub.c',
 			     wl_proto_sources,
            include_directories: [root_inc, pos_inc],
            install: true,
-           dependencies: osk_stub_deps)
+           dependencies: phosh_osk_stub_deps)
