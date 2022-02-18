@@ -24,15 +24,6 @@
 #define GNOME_DESKTOP_USE_UNSTABLE_API
 #include <libgnome-desktop/gnome-xkb-info.h>
 
-/**
- * SECTION:input-surface
- * @short_description: Input surface of the os stub
- * @Title: PosInputSurface
- *
- * Main surface that has all the widgets. Should not bother
- * how the OSK is driven.
- */
-
 enum {
   PROP_0,
   PROP_SCREEN_KEYBOARD_ENABLED,
@@ -48,6 +39,12 @@ typedef struct {
   gint64   last_frame;
 } PosInputSurfaceAnimation;
 
+/**
+ * PosInputSurface:
+ *
+ * Main surface that has all the widgets. Should not bother
+ * how the OSK is driven.
+ */
 struct _PosInputSurface {
   PhoshLayerSurface        parent;
 
