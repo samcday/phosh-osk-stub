@@ -163,7 +163,7 @@ static void
 stub_session_register (const char *client_id)
 {
   const char *startup_id;
-  GError *err = NULL;
+  g_autoptr (GError) err = NULL;
 
   if (!_proxy) {
     _proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
@@ -177,7 +177,6 @@ stub_session_register (const char *client_id)
                                             &err);
     if (!_proxy) {
       g_debug ("Failed to contact gnome-session: %s", err->message);
-      g_clear_error (&err);
       return;
     }
   }
@@ -422,7 +421,7 @@ int
 main (int argc, char *argv[])
 {
   g_autoptr (GOptionContext) opt_context = NULL;
-  GError *err = NULL;
+  g_autoptr (GError) err = NULL;
   gboolean version = FALSE;
 
   const GOptionEntry options [] = {
@@ -435,7 +434,6 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (opt_context, options, NULL);
   if (!g_option_context_parse (opt_context, &argc, &argv, &err)) {
     g_warning ("%s", err->message);
-    g_clear_error (&err);
     return EXIT_FAILURE;
   }
 
