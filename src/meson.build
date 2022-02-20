@@ -33,6 +33,8 @@ libpos_sources = files(
   'pos-char-popup.h',
   'pos-char-popup.c',
   'pos-enums.h',
+  'pos-input-method.h',
+  'pos-input-method.c',
   'pos-main.c',
   'pos-main.h',
   'pos-osk-dbus.h',
