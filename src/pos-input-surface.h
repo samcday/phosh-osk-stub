@@ -14,17 +14,9 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PosInputSurface, pos_input_surface, POS, INPUT_SURFACE, PhoshLayerSurface)
 
-/* Input method */
-void     pos_input_surface_set_active          (PosInputSurface *self, gboolean active);
-gboolean pos_input_surface_get_active          (PosInputSurface *self);
-void     pos_input_surface_set_purpose         (PosInputSurface *self, guint purpose);
-void     pos_input_surface_set_hint            (PosInputSurface *self, guint hint);
-void     pos_input_surface_done                (PosInputSurface *self);
-/* Surface */
-void     pos_input_surface_set_visible (PosInputSurface *self, gboolean visible);
-
-/* input method */
-void     pos_input_method_send_string (const char *symbol, guint serial);
-
+void     pos_input_surface_set_visible     (PosInputSurface *self, gboolean visible);
+gboolean pos_input_surface_get_im_active   (PosInputSurface *self);
+gboolean pos_input_surface_is_completer_active (PosInputSurface *self);
+gboolean pos_input_surface_get_active      (PosInputSurface *self);
 
 G_END_DECLS
