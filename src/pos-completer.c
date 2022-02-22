@@ -36,7 +36,7 @@
 
 G_DEFINE_INTERFACE (PosCompleter, pos_completer, G_TYPE_OBJECT)
 
-/* TODO: all the brackets, etc also language dependent, tab, etc */
+/* TODO: all the brackets, also language dependent, tab, etc */
 static const char * const completion_end_symbols[] = {
   " ",
   ".",
@@ -45,6 +45,9 @@ static const char * const completion_end_symbols[] = {
   ":",
   "?",
   "!",
+  "(", ")",
+  "{", "}",
+  "[", "]",
   NULL,
 };
 
@@ -358,7 +361,7 @@ gboolean
 pos_completer_symbol_is_word_separator (const char *symbol,
                                         gboolean   *is_ws)
 {
-  /* TODO: use hash table */
+  /* TODO: use hash table - or rather just use is_alnum? */
   for (int i = 0; i < g_strv_length ((GStrv)completion_end_symbols); i++) {
     if (strcmp (symbol, completion_end_symbols[i]) == 0) {
       if (i == 0 && is_ws != NULL)

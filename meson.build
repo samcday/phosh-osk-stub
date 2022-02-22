@@ -110,6 +110,9 @@ wayland_client_dep = dependency('wayland-client', version: '>=1.14')
 wayland_protos_dep = dependency('wayland-protocols', version: '>=1.12')
 xkbcommon_dep = dependency('xkbcommon')
 
+# For completion engines
+presage_dep = cc.find_library('presage')
+
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)

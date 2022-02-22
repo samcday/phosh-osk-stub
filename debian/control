@@ -15,6 +15,7 @@ Build-Depends:
  libgtk-3-dev,
  libhandy-1-dev (>= 1.1.90),
  libjson-glib-dev,
+ libpresage-dev,
  libwayland-dev,
  libxml2-utils,
  meson,
