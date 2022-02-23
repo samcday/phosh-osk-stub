@@ -1,0 +1,18 @@
+phosh-osk-stub 0.0.1
+--------------------
+Released: February 2022
+* This is an alpha release
+* Debug surface for IM state
+* Initial keyboard widget with popovers for additional
+  characters on long press
+* Cursor movement via long press on space
+* Switches layouts via swipe
+* Animates show/hide
+* Can parse a subset of gnome-shell's keyboard layouts 
+  to avoid duplication.
+* Falls back to virtual-keyboard protocol for e.g.
+  X11 apps.
+* Handles sm.puri.OSK0 DBus interface
+* Initial layouts
+  tested: de, in+mal, us
+  untested: ara, bg, cz, in+bolnagri, pl, ru
