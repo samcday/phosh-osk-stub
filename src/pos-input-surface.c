@@ -157,7 +157,7 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
     pos_vk_driver_key_down (self->keyboard_driver, symbol);
     pos_vk_driver_key_up (self->keyboard_driver, symbol);
   } else {
-    pos_input_method_send_string (self->input_method, symbol);
+    pos_input_method_send_string (self->input_method, symbol, TRUE);
   }
 }
 

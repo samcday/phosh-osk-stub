@@ -36,11 +36,17 @@ const char                    *pos_input_method_get_surrounding_text (PosInputMe
                                                                       guint *cursor);
 guint                          pos_input_method_get_serial (PosInputMethod *self);
 
-/* TODO: allow to not commit */
 void                           pos_input_method_send_string (PosInputMethod *self,
-                                                             const char *string);
+                                                             const char *string,
+                                                             gboolean commit);
 void                           pos_input_method_send_preedit (PosInputMethod *self,
                                                               const char *preedit,
                                                               guint start,
-                                                              guint end);
+                                                              guint end,
+                                                              gboolean commit);
+void                          pos_input_method_delete_surrounding_text (PosInputMethod *self,
+                                                                        guint before_length,
+                                                                        guint after_length,
+                                                                        gboolean commit);
+void                          pos_input_method_commit (PosInputMethod *self);
 G_END_DECLS
