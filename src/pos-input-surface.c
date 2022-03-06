@@ -10,6 +10,7 @@
 
 #include "config.h"
 
+#include "pos-input-method.h"
 #include "pos-input-surface.h"
 #include "pos-osk-widget.h"
 #include "pos-vk-driver.h"
@@ -26,6 +27,7 @@
 
 enum {
   PROP_0,
+  PROP_INPUT_METHOD,
   PROP_SCREEN_KEYBOARD_ENABLED,
   PROP_KEYBOARD_DRIVER,
   PROP_SURFACE_VISIBLE,
@@ -58,11 +60,7 @@ struct _PosInputSurface {
   GnomeXkbInfo            *xkbinfo;
 
   /* wayland input-method */
-  gboolean                 active;
-  guint                    serial;
-  guint                    purpose;
-  guint                    hint;
-  gboolean                 pending;
+  PosInputMethod          *input_method;
 
   /* active column */
   GtkWidget               *active_label;
@@ -89,14 +87,9 @@ struct _PosInputSurface {
 
 G_DEFINE_TYPE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SURFACE)
 
-static const char *purposes[] = { "normal", "alpha", "digits", "number", "phone", "url",
-                                  "email", "name", "password", "pin", "date", "time", "datetime",
-                                  "terminal", NULL };
-
 static const char *hints[] = { "completion", "spellcheck", "auto_capitalization",
                                "lowercase", "uppercase", "titlecase", "hidden_text",
                                "sensitive_data", "latin", "multiline", NULL};
-
 
 /* Select proper style sheet in case of high contrast */
 static void
@@ -156,11 +149,12 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
 
   g_debug ("Key: '%s' symbol", symbol);
 
-  if (g_str_has_prefix (symbol, "KEY_") || !self->active) {
+  if (g_str_has_prefix (symbol, "KEY_") ||
+      !pos_input_method_get_active (self->input_method)) {
     pos_vk_driver_key_down (self->keyboard_driver, symbol);
     pos_vk_driver_key_up (self->keyboard_driver, symbol);
   } else {
-    pos_input_method_send_string (symbol, self->serial);
+    pos_input_method_send_string (self->input_method, symbol);
   }
 }
 
@@ -272,6 +266,9 @@ pos_input_surface_set_property (GObject      *object,
   PosInputSurface *self = POS_INPUT_SURFACE (object);
 
   switch (property_id) {
+  case PROP_INPUT_METHOD:
+    self->input_method = g_value_dup_object (value);
+    break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     pos_screen_keyboard_set_enabled (self, g_value_get_boolean (value));
     break;
@@ -310,6 +307,151 @@ pos_input_surface_get_property (GObject    *object,
 }
 
 
+static char *
+pos_enum_to_nick (GType g_enum_type, gint value)
+{
+  gchar *result;
+  GEnumClass *enum_class;
+  GEnumValue *enum_value;
+
+  g_return_val_if_fail (G_TYPE_IS_ENUM (g_enum_type), NULL);
+
+  enum_class = g_type_class_ref (g_enum_type);
+
+  /* Already warned */
+  if (enum_class == NULL)
+    return g_strdup_printf ("%d", value);
+
+  enum_value = g_enum_get_value (enum_class, value);
+
+  if (enum_value == NULL)
+    result = g_strdup_printf ("%d", value);
+  else
+    result = g_strdup (enum_value->value_nick);
+
+  g_type_class_unref (enum_class);
+  return result;
+}
+
+
+static char *
+hint_to_str (PosInputMethodHint hint)
+{
+  g_autoptr (GPtrArray) h = g_ptr_array_new ();
+
+  /* TODO: can use enum names here */
+  for (unsigned i = 0; i < g_strv_length ((GStrv)hints); i++) {
+    if (hint & (1 << i)) {
+      g_ptr_array_add (h, (gpointer)hints[i]);
+    }
+  }
+
+  if (h->pdata == NULL)
+    g_ptr_array_add (h, "none");
+  g_ptr_array_add (h, NULL);
+  return g_strjoinv (", ",  (GStrv)h->pdata);
+}
+
+
+static void
+on_im_pending_changed (PosInputSurface *self, PosImState *pending, PosInputMethod *im)
+{
+  g_autofree char *hint = NULL;
+  g_autofree char *purpose = NULL;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+
+  hint = hint_to_str (pending->hint);
+  gtk_label_set_label (GTK_LABEL (self->hint_pending_label), hint);
+
+  purpose = pos_enum_to_nick (POS_TYPE_INPUT_METHOD_PURPOSE, pending->purpose);
+  gtk_label_set_label (GTK_LABEL (self->purpose_pending_label), purpose);
+  gtk_label_set_label (GTK_LABEL (self->active_pending_label), pending->active ? "true" : "false");
+}
+
+
+static void
+on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
+{
+  g_autofree char *purpose = NULL;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+
+  purpose = pos_enum_to_nick (POS_TYPE_INPUT_METHOD_PURPOSE,
+                              pos_input_method_get_purpose (im));
+  gtk_label_set_label (GTK_LABEL (self->purpose_label), purpose);
+}
+
+
+static void
+on_im_hint_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
+{
+  PosInputMethodHint hint;
+  g_autofree char *str = NULL;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+
+  hint = pos_input_method_get_hint (im);
+  str = hint_to_str (hint);
+  gtk_label_set_label (GTK_LABEL (self->hint_label), str);
+}
+
+
+static void
+on_im_text_change_cause_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
+{
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+}
+
+
+static void
+on_im_active_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
+{
+  gboolean active;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+
+  active = pos_input_method_get_active (im);
+  gtk_label_set_label (GTK_LABEL (self->active_label), active ? "true" : "false");
+
+  g_debug ("%s: %d", __func__, active);
+}
+
+
+static void
+on_im_done (PosInputSurface *self)
+{
+  g_autofree char *commits = NULL;
+
+  g_debug ("%s", __func__);
+  commits = g_strdup_printf ("%d", pos_input_method_get_serial (self->input_method));
+  gtk_label_set_label (GTK_LABEL (self->commits_label), commits);
+}
+
+static void
+pos_input_surface_constructed (GObject *object)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (object);
+
+  g_object_connect (self->input_method,
+                    "swapped-signal::pending-changed", on_im_pending_changed, self,
+                    "swapped-signal::done", on_im_done, self,
+                    "swapped-signal::notify::active", on_im_active_changed, self,
+                    "swapped-signal::notify::purpose", on_im_purpose_changed, self,
+                    "swapped-signal::notify::hint", on_im_hint_changed, self,
+                    "swapped-signal::notify::text-change-cause",
+                    on_im_text_change_cause_changed, self,
+                    NULL);
+
+  G_OBJECT_CLASS (pos_input_surface_parent_class)->constructed (object);
+}
+
+
 static void
 pos_input_surface_dispose (GObject *object)
 {
@@ -327,6 +469,7 @@ pos_input_surface_finalize (GObject *object)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (object);
 
+  g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
   g_clear_object (&self->input_settings);
   g_clear_object (&self->xkbinfo);
@@ -337,6 +480,7 @@ pos_input_surface_finalize (GObject *object)
   G_OBJECT_CLASS (pos_input_surface_parent_class)->finalize (object);
 }
 
+
 static void
 pos_input_surface_class_init (PosInputSurfaceClass *klass)
 {
@@ -345,6 +489,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 
   object_class->get_property = pos_input_surface_get_property;
   object_class->set_property = pos_input_surface_set_property;
+  object_class->constructed = pos_input_surface_constructed;
   object_class->dispose = pos_input_surface_dispose;
   object_class->finalize = pos_input_surface_finalize;
 
@@ -363,6 +508,16 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
 
+  /**
+   * PosInputSurface:input-method:
+   *
+   * A zwp_input_method_v2
+   */
+  props[PROP_INPUT_METHOD] =
+    g_param_spec_object ("input-method", "", "",
+                         POS_TYPE_INPUT_METHOD,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   /**
    * PosInputSurface:enable
    *
@@ -535,75 +690,13 @@ pos_input_surface_init (PosInputSurface *self)
   on_gtk_theme_name_changed (self, NULL, gtk_settings);
 }
 
-void
-pos_input_surface_set_purpose (PosInputSurface *self, guint purpose)
-{
-  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
-  g_return_if_fail (purpose < g_strv_length ((GStrv)purposes));
-
-  self->purpose = purpose;
-  gtk_label_set_label (GTK_LABEL (self->purpose_pending_label), purposes[purpose]);
-}
-
-void
-pos_input_surface_set_hint (PosInputSurface *self, guint hint)
-{
-  g_autoptr (GPtrArray) h = g_ptr_array_new ();
-  g_autofree char *str = NULL;
-
-  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
-
-  self->hint = hint;
-
-  for (unsigned i = 0; i < g_strv_length ((GStrv)hints); i++) {
-    if (hint & (1 << i)) {
-      g_ptr_array_add (h, (gpointer)hints[i]);
-    }
-  }
-
-  if (!h->pdata)
-    g_ptr_array_add (h, "none");
-
-  g_ptr_array_add (h, NULL);
-  str = g_strjoinv (", ",  (GStrv)h->pdata);
-  gtk_label_set_label (GTK_LABEL (self->hint_pending_label), str);
-}
-
-void
-pos_input_surface_set_active (PosInputSurface *self, gboolean active)
-{
-  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
-
-  self->active = active;
-  gtk_label_set_label (GTK_LABEL (self->active_pending_label), active ? "true" : "false");
-}
 
 gboolean
 pos_input_surface_get_active (PosInputSurface *self)
 {
   g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
 
-  return self->active;
-}
-
-void
-pos_input_surface_done (PosInputSurface *self)
-{
-  const char *text;
-  g_autofree char *commits = NULL;
-
-  text = gtk_label_get_label (GTK_LABEL (self->active_pending_label));
-  gtk_label_set_label (GTK_LABEL (self->active_label), text);
-
-  text = gtk_label_get_label (GTK_LABEL (self->purpose_pending_label));
-  gtk_label_set_label (GTK_LABEL (self->purpose_label), text);
-
-  text = gtk_label_get_label (GTK_LABEL (self->hint_pending_label));
-  gtk_label_set_label (GTK_LABEL (self->hint_label), text);
-
-  self->serial++;
-  commits = g_strdup_printf ("%d", self->serial);
-  gtk_label_set_label (GTK_LABEL (self->commits_label), commits);
+  return pos_input_method_get_active (self->input_method);
 }
 
 
@@ -620,7 +713,8 @@ pos_input_surface_set_visible (PosInputSurface *self, gboolean visible)
 
   self->animation.show = visible;
   self->animation.last_frame = -1;
-  self->animation.progress = reverse_ease_out_cubic (1.0 - hdy_ease_out_cubic (self->animation.progress));
+  self->animation.progress =
+    reverse_ease_out_cubic (1.0 - hdy_ease_out_cubic (self->animation.progress));
 
   gtk_widget_add_tick_callback (GTK_WIDGET (self), animate_cb, NULL, NULL);
 }

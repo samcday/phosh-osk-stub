@@ -9,11 +9,7 @@
 #define G_LOG_DOMAIN "phosh-osk-stub"
 
 #include "config.h"
-#include "pos-main.h"
-#include "pos-osk-dbus.h"
-#include "pos-input-surface.h"
-#include "pos-vk-driver.h"
-#include "pos-virtual-keyboard.h"
+#include "pos.h"
 
 #include "input-method-unstable-v2-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
@@ -52,16 +48,13 @@ static struct wl_registry *_registry;
 static struct wl_seat *_seat;
 static struct zwlr_layer_shell_v1 *_layer_shell;
 static struct zwp_input_method_manager_v2 *_input_method_manager;
-struct zwp_input_method_v2 *_input_method;
 static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
 
-gboolean _active;
 PosDebugFlags _debug_flags;
 PosOskDbus *_osk_dbus;
 
 
 /* TODO:
- *  - move input method to class
  *  - allow to force virtual-keyboard instead of input-method
  */
 
@@ -163,7 +156,7 @@ static void
 stub_session_register (const char *client_id)
 {
   const char *startup_id;
-  GError *err = NULL;
+  g_autoptr (GError) err = NULL;
 
   if (!_proxy) {
     _proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
@@ -177,7 +170,6 @@ stub_session_register (const char *client_id)
                                             &err);
     if (!_proxy) {
       g_debug ("Failed to contact gnome-session: %s", err->message);
-      g_clear_error (&err);
       return;
     }
   }
@@ -193,116 +185,23 @@ stub_session_register (const char *client_id)
                      NULL);
 }
 
-
-static void
-handle_activate (void                       *data,
-                 struct zwp_input_method_v2 *zwp_input_method_v2)
-{
-  g_debug ("%s", __func__);
-
-  pos_input_surface_set_active (_input_surface, TRUE);
-}
-
-
-static void
-handle_deactivate (void                       *data,
-                   struct zwp_input_method_v2 *zwp_input_method_v2)
-{
-  g_debug ("%s", __func__);
-
-  pos_input_surface_set_active (_input_surface, FALSE);
-}
-
-
-static void
-handle_surrounding_text (void                       *data,
-                         struct zwp_input_method_v2 *zwp_input_method_v2,
-                         const char                 *text,
-                         uint32_t                    cursor,
-                         uint32_t                    anchor)
-{
-  g_debug ("%s: text: %s", __func__, text);
-}
-
-
-static void
-handle_text_change_cause (void                       *data,
-                          struct zwp_input_method_v2 *zwp_input_method_v2,
-                          uint32_t                    cause)
-{
-  g_debug ("%s: cause: %u", __func__, cause);
-}
-
-
-static void
-handle_content_type (void                       *data,
-                     struct zwp_input_method_v2 *zwp_input_method_v2,
-                     uint32_t                    hint,
-                     uint32_t                    purpose)
-{
-  g_debug ("%s, hint: %d, purpose: %d", __func__, hint, purpose);
-  pos_input_surface_set_purpose (_input_surface, purpose);
-  pos_input_surface_set_hint (_input_surface, hint);
-}
-
-
-static void
-handle_done (void                       *data,
-             struct zwp_input_method_v2 *zwp_input_method_v2)
-{
-  gboolean pending_active = pos_input_surface_get_active (_input_surface);
-
-  g_debug ("%s: %d %d", __func__, _active, pending_active);
-
-  if (_active != pending_active) {
-    _active = pending_active;
-    if (!(_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW))
-      pos_input_surface_set_visible (_input_surface, _active);
-  }
-
-  pos_input_surface_done (_input_surface);
-}
-
-
-static void
-handle_unavailable (void                       *data,
-                    struct zwp_input_method_v2 *zwp_input_method_v2)
-{
-  g_debug ("%s", __func__);
-}
-
-
-static const struct zwp_input_method_v2_listener input_method_listener = {
-  .activate = handle_activate,
-  .deactivate = handle_deactivate,
-  .surrounding_text = handle_surrounding_text,
-  .text_change_cause = handle_text_change_cause,
-  .content_type = handle_content_type,
-  .done = handle_done,
-  .unavailable = handle_unavailable,
-};
-
-
-void
-pos_input_method_send_string (const char *symbol, guint serial)
-{
-  zwp_input_method_v2_commit_string (_input_method, symbol);
-  zwp_input_method_v2_commit (_input_method, serial);
-}
-
-
 #define INPUT_SURFACE_HEIGHT 200
 
 static void
 create_input_surface (struct wl_seat                         *seat,
                       struct zwp_virtual_keyboard_manager_v1 *virtual_keyboard_manager,
+                      struct zwp_input_method_manager_v2     *im_manager,
                       struct zwlr_layer_shell_v1             *layer_shell)
 {
+  gboolean show;
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
+  g_autoptr (PosInputMethod) im = NULL;
 
   virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
+
+  im = pos_input_method_new (im_manager, seat);
 
   _input_surface = g_object_new (POS_TYPE_INPUT_SURFACE,
                                  "layer-shell", layer_shell,
@@ -314,6 +213,7 @@ create_input_surface (struct wl_seat                         *seat,
                                  "kbd-interactivity", FALSE,
                                  "exclusive-zone", INPUT_SURFACE_HEIGHT,
                                  "namespace", "osk",
+                                 "input-method", im,
                                  "keyboard-driver", vk_driver,
                                  NULL);
 
@@ -323,6 +223,15 @@ create_input_surface (struct wl_seat                         *seat,
                           _osk_dbus,
                           "visible",
                           G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
+
+  show = _debug_flags & POS_DEBUG_FLAG_FORCE_SHOW;
+  if (show) {
+    pos_input_surface_set_visible (_input_surface, TRUE);
+  } else {
+    g_object_bind_property (im, "active",
+                            _input_surface, "surface-visible",
+                            G_BINDING_SYNC_CREATE);
+  }
 
   gtk_window_present (GTK_WINDOW (_input_surface));
 }
@@ -349,16 +258,8 @@ registry_handle_global (void               *data,
 
   if (_seat && _input_method_manager && _layer_shell && _virtual_keyboard_manager &&
       !_input_surface) {
-    gboolean show;
-
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
-    create_input_surface (_seat, _virtual_keyboard_manager, _layer_shell);
-
-    _input_method = zwp_input_method_manager_v2_get_input_method (_input_method_manager, _seat);
-    zwp_input_method_v2_add_listener (_input_method, &input_method_listener, NULL);
-
-    show = _debug_flags & POS_DEBUG_FLAG_FORCE_SHOW;
-    pos_input_surface_set_visible (_input_surface, !!show);
+    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell);
   }
 }
 
@@ -422,7 +323,7 @@ int
 main (int argc, char *argv[])
 {
   g_autoptr (GOptionContext) opt_context = NULL;
-  GError *err = NULL;
+  g_autoptr (GError) err = NULL;
   gboolean version = FALSE;
 
   const GOptionEntry options [] = {
@@ -435,7 +336,6 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (opt_context, options, NULL);
   if (!g_option_context_parse (opt_context, &argc, &argv, &err)) {
     g_warning ("%s", err->message);
-    g_clear_error (&err);
     return EXIT_FAILURE;
   }
 
