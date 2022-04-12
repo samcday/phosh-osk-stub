@@ -25,6 +25,9 @@
 #define LAYOUT_COLS 10
 #define LAYOUT_ROWS 4
 
+#define KEY_REPEAT_DELAY 700
+#define KEY_REPEAT_INTERVAL 50
+
 enum {
   OSK_KEY_DOWN,
   OSK_KEY_UP,
@@ -110,6 +113,7 @@ struct _PosOskWidget {
   PosOskKey           *current;
   GtkGestureLongPress *long_press;
   GtkWidget           *char_popup;
+  guint                repeat_id;
 
   /* Cursor movement */
   GtkGesture          *cursor_drag;
@@ -667,6 +671,40 @@ pos_osk_widget_locate_key (PosOskWidget *self, double x, double y)
 
 
 static gboolean
+on_key_repeat (gpointer data)
+{
+  PosOskWidget *self = POS_OSK_WIDGET (data);
+
+  g_return_val_if_fail (self->current, G_SOURCE_REMOVE);
+
+  g_signal_emit (self, signals[OSK_KEY_DOWN], 0, pos_osk_key_get_symbol (self->current));
+  g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (self->current));
+  g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (self->current));
+
+  return G_SOURCE_CONTINUE;
+}
+
+
+static gboolean
+on_repeat_timeout (gpointer data)
+{
+  PosOskWidget *self = POS_OSK_WIDGET (data);
+
+  self->repeat_id = g_timeout_add (KEY_REPEAT_INTERVAL, on_key_repeat, self);
+  g_source_set_name_by_id (self->repeat_id, "[pos-key-repeat]");
+
+  return G_SOURCE_REMOVE;
+}
+
+
+static void
+key_repeat_cancel (PosOskWidget *self)
+{
+  g_clear_handle_id (&self->repeat_id, g_source_remove);
+}
+
+
+static gboolean
 pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
 {
   PosOskWidget *self = POS_OSK_WIDGET (widget);
@@ -688,6 +726,10 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
 
   g_signal_emit (self, signals[OSK_KEY_DOWN], 0, pos_osk_key_get_symbol (key));
 
+  if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_KEY) {
+    self->repeat_id = g_timeout_add (KEY_REPEAT_DELAY, on_repeat_timeout, self);
+    g_source_set_name_by_id (self->repeat_id, "[pos-key-repeat-timeout]");
+  }
   return GDK_EVENT_STOP;
 }
 
@@ -701,6 +743,7 @@ pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
   g_debug ("Button release: %f, %f, button: %d, state: %d",
            event->x, event->y, event->button, event->state);
 
+  key_repeat_cancel (self);
   pos_osk_widget_set_mode (self, POS_OSK_WIDGET_MODE_KEYBOARD);
 
   if (event->button != 1)
@@ -738,6 +781,8 @@ pos_osk_widget_cancel_press (PosOskWidget *self)
 {
   if (self->current == NULL)
     return;
+
+  key_repeat_cancel (self);
 
   pos_osk_widget_set_key_pressed (self, self->current, FALSE);
   g_signal_emit (self, signals[OSK_KEY_CANCELLED], 0, pos_osk_key_get_symbol (self->current));
@@ -796,6 +841,7 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
   g_debug ("Long press '%s'", pos_osk_key_get_label (key) ?: pos_osk_key_get_symbol (key));
 
   if (g_strcmp0 (pos_osk_key_get_symbol (key), POS_OSK_SYMBOL_SPACE) == 0) {
+    key_repeat_cancel (self);
     pos_osk_widget_set_mode (self, POS_OSK_WIDGET_MODE_CURSOR);
     return;
   }
@@ -1033,6 +1079,7 @@ pos_osk_widget_finalize (GObject *object)
 {
   PosOskWidget *self = POS_OSK_WIDGET (object);
 
+  g_clear_handle_id (&self->repeat_id, g_source_remove);
   pos_osk_widget_layout_free (&self->layout);
   g_clear_object (&self->long_press);
   g_clear_pointer (&self->name, g_free);
