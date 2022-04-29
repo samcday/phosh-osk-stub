@@ -713,6 +713,8 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
   g_debug ("Button press: %f, %f, button: %d, state: %d",
            event->x, event->y, event->button, event->state);
 
+  if (event->type != GDK_BUTTON_PRESS)
+    return FALSE;
 
   key = pos_osk_widget_locate_key (self, event->x, event->y);
   g_return_val_if_fail (key != NULL, GDK_EVENT_PROPAGATE);
