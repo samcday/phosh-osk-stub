@@ -1327,6 +1327,9 @@ pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
   g_debug ("Switching to mode: %d", mode);
   self->mode = mode;
 
+  if (mode == POS_OSK_WIDGET_MODE_CURSOR)
+    self->current = NULL;
+
   self->last_x = self->last_y = 0.0;
   gtk_widget_queue_draw (GTK_WIDGET (self));
 }
