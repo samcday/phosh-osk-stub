@@ -80,6 +80,7 @@ pos_lib = static_library(
   install: false)
 
 libpos_dep = declare_dependency(
+  sources: libpos_generated_sources,
   include_directories: pos_includes,
   link_with: pos_lib,
   dependencies: libpos_deps)
