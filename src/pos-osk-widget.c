@@ -713,6 +713,8 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
   g_debug ("Button press: %f, %f, button: %d, state: %d",
            event->x, event->y, event->button, event->state);
 
+  if (event->type != GDK_BUTTON_PRESS)
+    return FALSE;
 
   key = pos_osk_widget_locate_key (self, event->x, event->y);
   g_return_val_if_fail (key != NULL, GDK_EVENT_PROPAGATE);
@@ -1326,6 +1328,9 @@ pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
 
   g_debug ("Switching to mode: %d", mode);
   self->mode = mode;
+
+  if (mode == POS_OSK_WIDGET_MODE_CURSOR)
+    self->current = NULL;
 
   self->last_x = self->last_y = 0.0;
   gtk_widget_queue_draw (GTK_WIDGET (self));
