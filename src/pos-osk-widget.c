@@ -560,10 +560,10 @@ select_symbols2 (PosOskWidget *self, PosOskKey *key)
   if (pos_osk_key_get_layer (key) != POS_OSK_WIDGET_LAYER_CAPS)
     return self->layer;
 
-  if (pos_osk_widget_get_level (self) == POS_OSK_WIDGET_LAYER_SYMBOLS)
+  if (pos_osk_widget_get_layer (self) == POS_OSK_WIDGET_LAYER_SYMBOLS)
     return POS_OSK_WIDGET_LAYER_SYMBOLS2;
 
-  if (pos_osk_widget_get_level (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2)
+  if (pos_osk_widget_get_layer (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2)
     return POS_OSK_WIDGET_LAYER_SYMBOLS;
 
   return self->layer;
@@ -1240,7 +1240,7 @@ pos_osk_widget_new (void)
 
 
 PosOskWidgetLayer
-pos_osk_widget_get_level (PosOskWidget *self)
+pos_osk_widget_get_layer (PosOskWidget *self)
 {
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), POS_OSK_WIDGET_LAYER_NORMAL);
 
@@ -1273,7 +1273,7 @@ pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer)
         continue;
 
       pressed = (self->layer == pos_osk_key_get_layer (akey)) ||
-        (pos_osk_widget_get_level (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2);
+        (pos_osk_widget_get_layer (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2);
 
       pos_osk_widget_set_key_pressed (self, akey, pressed);
     }
