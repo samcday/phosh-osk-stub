@@ -296,7 +296,7 @@ pos_input_surface_get_property (GObject    *object,
 
   switch (property_id) {
   case PROP_SCREEN_KEYBOARD_ENABLED:
-    g_value_set_boolean (value, self->screen_keyboard_enabled);
+    g_value_set_boolean (value, pos_input_surface_get_screen_keyboard_enabled (self));
     break;
   case PROP_SURFACE_VISIBLE:
     g_value_set_boolean (value, pos_input_surface_get_visible (self));
@@ -727,4 +727,13 @@ pos_input_surface_get_visible (PosInputSurface *self)
   g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
 
   return self->surface_visible;
+}
+
+
+gboolean
+pos_input_surface_get_screen_keyboard_enabled (PosInputSurface *self)
+{
+  g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
+
+  return self->screen_keyboard_enabled;
 }
