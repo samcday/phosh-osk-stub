@@ -170,6 +170,7 @@ on_visible_child_changed (PosInputSurface *self)
 
   osk = POS_OSK_WIDGET (child);
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_name (osk));
+  pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
 }
 
 static void
