@@ -184,7 +184,7 @@ on_drag_cancel (PosOskWidget *self)
 
 
 static PosOskWidgetKeyboardLayer *
-pos_osk_widget_get_layer (PosOskWidget *self, PosOskWidgetLayer layer)
+pos_osk_widget_get_keyboard_layer (PosOskWidget *self, PosOskWidgetLayer layer)
 {
   g_return_val_if_fail (layer <= POS_OSK_WIDGET_LAST_LAYER,
                         &self->layout.layers[POS_OSK_WIDGET_LAYER_NORMAL]);
@@ -207,7 +207,7 @@ pos_osk_widget_get_layer_row (PosOskWidget *self, PosOskWidgetLayer layer, guint
 
   g_return_val_if_fail (row < self->layout.n_rows, 0);
 
-  l = pos_osk_widget_get_layer (self, layer);
+  l = pos_osk_widget_get_keyboard_layer (self, layer);
   return &l->rows[row];
 }
 
@@ -458,7 +458,7 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
     PosOskWidgetKeyboardLayer *layer;
     JsonObject *alayer;
 
-    layer = pos_osk_widget_get_layer (self, l);
+    layer = pos_osk_widget_get_keyboard_layer (self, l);
     if (l > POS_OSK_WIDGET_LAST_LAYER) {
       g_warning ("Skipping layer %d", l);
       continue;
@@ -995,7 +995,7 @@ pos_osk_widget_size_allocate (GtkWidget *widget, GdkRectangle *allocation)
   self->height = allocation->height;
 
   for (int l = 0; l <= POS_OSK_WIDGET_LAST_LAYER; l++) {
-    PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_layer (self, l);
+    PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_keyboard_layer (self, l);
     layer->key_width = self->width / layer->width;
     layer->key_height = KEY_HEIGHT;
     layer->offset_x = 0.5 * (self->width - (layer->width * layer->key_width));
