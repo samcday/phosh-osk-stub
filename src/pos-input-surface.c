@@ -177,7 +177,7 @@ pos_screen_keyboard_set_enabled (PosInputSurface *self, gboolean enable)
 {
   const char *msg = enable ? "enabled" : "disabled";
 
-  g_debug ("Input surface enable: %s", msg);
+  g_debug ("Screen keyboard enable: %s", msg);
 
   if (enable == self->screen_keyboard_enabled)
     return;
