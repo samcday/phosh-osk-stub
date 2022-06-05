@@ -79,7 +79,7 @@ typedef struct {
 } PosOskWidgetKeyboardLayer;
 
 /**
- * PosOskWidgetLayout
+ * PosOskWidgetLayout:
  *
  * Information about a keyboard layout. The keys
  * are grouped in different layers that are displayed
