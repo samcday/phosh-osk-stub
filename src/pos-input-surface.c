@@ -214,7 +214,12 @@ pos_input_surface_move (PosInputSurface *self)
   if (self->animation.show) {
     gtk_widget_show (GTK_WIDGET (self));
   } else if (self->animation.progress >= 1.0 && !self->animation.show) {
+    GtkWidget *widget;
+
     gtk_widget_hide (GTK_WIDGET (self));
+    widget = hdy_deck_get_visible_child (self->deck);
+    if (POS_IS_OSK_WIDGET (widget))
+      pos_osk_widget_set_layer (POS_OSK_WIDGET (widget), POS_OSK_WIDGET_LAYER_NORMAL);
   }
 
   phosh_layer_surface_wl_surface_commit (PHOSH_LAYER_SURFACE (self));
