@@ -184,6 +184,7 @@ pos_screen_keyboard_set_enabled (PosInputSurface *self, gboolean enable)
 
   self->screen_keyboard_enabled = enable;
   gtk_label_set_label (GTK_LABEL (self->a11y_label), msg);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SCREEN_KEYBOARD_ENABLED]);
 }
 
 
