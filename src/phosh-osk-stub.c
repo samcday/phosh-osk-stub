@@ -185,6 +185,40 @@ stub_session_register (const char *client_id)
                      NULL);
 }
 
+
+static gboolean
+set_surface_prop_surface_visible (GBinding     *binding,
+                                  const GValue *from_value,
+                                  GValue       *to_value,
+                                  gpointer      user_data)
+{
+  PosInputSurface *input_surface = POS_INPUT_SURFACE (user_data);
+  gboolean enabled, visible = g_value_get_boolean (from_value);
+
+  enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+  g_debug ("active: %d, enabled: %d", visible, enabled);
+  if (enabled == FALSE)
+    visible = FALSE;
+
+  g_value_set_boolean (to_value, visible);
+
+  return TRUE;
+}
+
+
+static void
+on_screen_keyboard_enabled_changed (PosInputSurface *input_surface)
+{
+  gboolean enabled;
+
+  if (pos_input_surface_get_visible (input_surface) == FALSE)
+    return;
+
+  enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+  pos_input_surface_set_visible (input_surface, enabled);
+}
+
+
 #define INPUT_SURFACE_HEIGHT 200
 
 static void
@@ -228,9 +262,15 @@ create_input_surface (struct wl_seat                         *seat,
   if (show) {
     pos_input_surface_set_visible (_input_surface, TRUE);
   } else {
-    g_object_bind_property (im, "active",
-                            _input_surface, "surface-visible",
-                            G_BINDING_SYNC_CREATE);
+    g_object_bind_property_full (im, "active",
+                                 _input_surface, "surface-visible",
+                                 G_BINDING_SYNC_CREATE,
+                                 set_surface_prop_surface_visible,
+                                 NULL,
+                                 _input_surface,
+                                 NULL);
+    g_signal_connect (_input_surface, "notify::screen-keyboard-enabled",
+                      G_CALLBACK (on_screen_keyboard_enabled_changed), NULL);
   }
 
   gtk_window_present (GTK_WINDOW (_input_surface));
