@@ -18,7 +18,8 @@ G_DECLARE_FINAL_TYPE (PosOskWidget, pos_osk_widget, POS, OSK_WIDGET, GtkDrawingA
 
 PosOskWidget      *pos_osk_widget_new (void);
 const char       *pos_osk_widget_get_name (PosOskWidget *self);
-PosOskWidgetLayer pos_osk_widget_get_level (PosOskWidget *self);
+void              pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer);
+PosOskWidgetLayer pos_osk_widget_get_layer (PosOskWidget *self);
 gboolean          pos_osk_widget_set_layout (PosOskWidget *self,
                                              const char   *display_name,
                                              const char   *layout,

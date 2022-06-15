@@ -47,7 +47,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC (PosImState, pos_im_state_free);
  * zwp_input_method_v2 protocol easing things like
  * double buffering state.
  *
- * The properties reflect applied which is only updated
+ * The properties reflect applied state which is only updated
  * when the input method receives the `done` event form the
  * compositor.
  */

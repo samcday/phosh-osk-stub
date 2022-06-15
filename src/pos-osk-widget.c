@@ -184,7 +184,7 @@ on_drag_cancel (PosOskWidget *self)
 
 
 static PosOskWidgetKeyboardLayer *
-pos_osk_widget_get_layer (PosOskWidget *self, PosOskWidgetLayer layer)
+pos_osk_widget_get_keyboard_layer (PosOskWidget *self, PosOskWidgetLayer layer)
 {
   g_return_val_if_fail (layer <= POS_OSK_WIDGET_LAST_LAYER,
                         &self->layout.layers[POS_OSK_WIDGET_LAYER_NORMAL]);
@@ -207,7 +207,7 @@ pos_osk_widget_get_layer_row (PosOskWidget *self, PosOskWidgetLayer layer, guint
 
   g_return_val_if_fail (row < self->layout.n_rows, 0);
 
-  l = pos_osk_widget_get_layer (self, layer);
+  l = pos_osk_widget_get_keyboard_layer (self, layer);
   return &l->rows[row];
 }
 
@@ -458,7 +458,7 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
     PosOskWidgetKeyboardLayer *layer;
     JsonObject *alayer;
 
-    layer = pos_osk_widget_get_layer (self, l);
+    layer = pos_osk_widget_get_keyboard_layer (self, l);
     if (l > POS_OSK_WIDGET_LAST_LAYER) {
       g_warning ("Skipping layer %d", l);
       continue;
@@ -560,10 +560,10 @@ select_symbols2 (PosOskWidget *self, PosOskKey *key)
   if (pos_osk_key_get_layer (key) != POS_OSK_WIDGET_LAYER_CAPS)
     return self->layer;
 
-  if (pos_osk_widget_get_level (self) == POS_OSK_WIDGET_LAYER_SYMBOLS)
+  if (pos_osk_widget_get_layer (self) == POS_OSK_WIDGET_LAYER_SYMBOLS)
     return POS_OSK_WIDGET_LAYER_SYMBOLS2;
 
-  if (pos_osk_widget_get_level (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2)
+  if (pos_osk_widget_get_layer (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2)
     return POS_OSK_WIDGET_LAYER_SYMBOLS;
 
   return self->layer;
@@ -584,19 +584,19 @@ pos_osk_widget_set_key_pressed (PosOskWidget *self, PosOskKey *key, gboolean pre
 static void
 switch_layer (PosOskWidget *self, PosOskKey *key)
 {
-  PosOskWidgetLayer old_layer = self->layer;
+  PosOskWidgetLayer new_layer = self->layer;
   PosOskWidgetLayer layer = pos_osk_key_get_layer (key);
 
   if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_TOGGLE) {
-    self->layer = select_symbols2 (self, key);
-    if (self->layer == old_layer) {
+    new_layer = select_symbols2 (self, key);
+    if (new_layer == self->layer) {
       switch (layer) {
       case POS_OSK_WIDGET_LAYER_CAPS:
       case POS_OSK_WIDGET_LAYER_SYMBOLS:
-        if (self->layer == layer)
-          self->layer = POS_OSK_WIDGET_LAYER_NORMAL;
+        if (new_layer == layer)
+          new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
         else
-          self->layer = layer;
+          new_layer = layer;
         break;
       case POS_OSK_WIDGET_LAYER_NORMAL:
       case POS_OSK_WIDGET_LAYER_SYMBOLS2:
@@ -606,37 +606,16 @@ switch_layer (PosOskWidget *self, PosOskKey *key)
       }
     }
     /* Reset caps layer on every (non toggle) key press */
-  } else if (self->layer == POS_OSK_WIDGET_LAYER_CAPS) {
-    self->layer = POS_OSK_WIDGET_LAYER_NORMAL;
+  } else if (new_layer == POS_OSK_WIDGET_LAYER_CAPS) {
+    new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
   }
 
-  if (self->layer >= self->layout.n_layers) {
+  if (new_layer >= self->layout.n_layers) {
     g_warning ("Inexistent layer %d", self->layer);
-    self->layer = POS_OSK_WIDGET_LAYER_NORMAL;
+    new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
   }
 
-  if (old_layer != self->layer) {
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_LAYER]);
-    gtk_widget_queue_draw (GTK_WIDGET (self));
-  }
-
-  /* Update key state for rendering */
-  for (int r = 0; r < self->layout.n_rows; r++) {
-    PosOskWidgetRow *row = pos_osk_widget_get_row (self, r);
-
-    for (int k = 0; k < pos_osk_widget_row_get_num_keys (row); k++) {
-      PosOskKey *akey = g_ptr_array_index (row->keys, k);
-      gboolean pressed;
-
-      if (pos_osk_key_get_use (akey) != POS_OSK_KEY_USE_TOGGLE)
-        continue;
-
-      pressed = (self->layer == pos_osk_key_get_layer (akey)) ||
-                (pos_osk_widget_get_level (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2);
-
-      pos_osk_widget_set_key_pressed (self, akey, pressed);
-    }
-  }
+  pos_osk_widget_set_layer (self, new_layer);
 }
 
 
@@ -1016,7 +995,7 @@ pos_osk_widget_size_allocate (GtkWidget *widget, GdkRectangle *allocation)
   self->height = allocation->height;
 
   for (int l = 0; l <= POS_OSK_WIDGET_LAST_LAYER; l++) {
-    PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_layer (self, l);
+    PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_keyboard_layer (self, l);
     layer->key_width = self->width / layer->width;
     layer->key_height = KEY_HEIGHT;
     layer->offset_x = 0.5 * (self->width - (layer->width * layer->key_width));
@@ -1261,11 +1240,44 @@ pos_osk_widget_new (void)
 
 
 PosOskWidgetLayer
-pos_osk_widget_get_level (PosOskWidget *self)
+pos_osk_widget_get_layer (PosOskWidget *self)
 {
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), POS_OSK_WIDGET_LAYER_NORMAL);
 
   return self->layer;
+}
+
+
+void
+pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer)
+{
+  g_return_if_fail (POS_IS_OSK_WIDGET (self));
+
+  if (layer == self->layer)
+    return;
+
+  self->layer = layer;
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_LAYER]);
+  gtk_widget_queue_draw (GTK_WIDGET (self));
+
+  /* Update key state for rendering */
+  for (int r = 0; r < self->layout.n_rows; r++) {
+    PosOskWidgetRow *row = pos_osk_widget_get_row (self, r);
+
+    for (int k = 0; k < pos_osk_widget_row_get_num_keys (row); k++) {
+      PosOskKey *akey = g_ptr_array_index (row->keys, k);
+      gboolean pressed;
+
+      if (pos_osk_key_get_use (akey) != POS_OSK_KEY_USE_TOGGLE)
+        continue;
+
+      pressed = (self->layer == pos_osk_key_get_layer (akey)) ||
+        (pos_osk_widget_get_layer (self) == POS_OSK_WIDGET_LAYER_SYMBOLS2);
+
+      pos_osk_widget_set_key_pressed (self, akey, pressed);
+    }
+  }
 }
 
 
