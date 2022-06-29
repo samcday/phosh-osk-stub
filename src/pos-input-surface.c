@@ -178,13 +178,14 @@ pos_screen_keyboard_set_enabled (PosInputSurface *self, gboolean enable)
 {
   const char *msg = enable ? "enabled" : "disabled";
 
-  g_debug ("Input surface enable: %s", msg);
+  g_debug ("Screen keyboard enable: %s", msg);
 
   if (enable == self->screen_keyboard_enabled)
     return;
 
   self->screen_keyboard_enabled = enable;
   gtk_label_set_label (GTK_LABEL (self->a11y_label), msg);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_SCREEN_KEYBOARD_ENABLED]);
 }
 
 
@@ -301,10 +302,10 @@ pos_input_surface_get_property (GObject    *object,
 
   switch (property_id) {
   case PROP_SCREEN_KEYBOARD_ENABLED:
-    g_value_set_boolean (value, self->screen_keyboard_enabled);
+    g_value_set_boolean (value, pos_input_surface_get_screen_keyboard_enabled (self));
     break;
   case PROP_SURFACE_VISIBLE:
-    g_value_set_boolean (value, self->surface_visible);
+    g_value_set_boolean (value, pos_input_surface_get_visible (self));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -723,4 +724,22 @@ pos_input_surface_set_visible (PosInputSurface *self, gboolean visible)
     reverse_ease_out_cubic (1.0 - hdy_ease_out_cubic (self->animation.progress));
 
   gtk_widget_add_tick_callback (GTK_WIDGET (self), animate_cb, NULL, NULL);
+}
+
+
+gboolean
+pos_input_surface_get_visible (PosInputSurface *self)
+{
+  g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
+
+  return self->surface_visible;
+}
+
+
+gboolean
+pos_input_surface_get_screen_keyboard_enabled (PosInputSurface *self)
+{
+  g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
+
+  return self->screen_keyboard_enabled;
 }
