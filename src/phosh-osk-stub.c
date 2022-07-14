@@ -219,6 +219,8 @@ on_screen_keyboard_enabled_changed (PosInputSurface *input_surface)
 }
 
 
+static void on_input_surface_gone (gpointer data, GObject *unused);
+
 #define INPUT_SURFACE_HEIGHT 200
 
 static void
@@ -274,6 +276,17 @@ create_input_surface (struct wl_seat                         *seat,
   }
 
   gtk_window_present (GTK_WINDOW (_input_surface));
+
+  g_object_weak_ref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
+}
+
+
+static void
+on_input_surface_gone (gpointer data, GObject *unused)
+{
+  g_debug ("Input surface gone, recreating");
+
+  create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell);
 }
 
 
@@ -402,6 +415,9 @@ main (int argc, char *argv[])
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
   g_object_unref (_proxy);
+
+  /* Remove weak ref so input-surface doesn't get recreated */
+  g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
   gtk_widget_destroy (GTK_WIDGET (_input_surface));
   g_clear_object (&_osk_dbus);
 
