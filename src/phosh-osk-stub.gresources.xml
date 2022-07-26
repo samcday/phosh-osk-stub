@@ -7,6 +7,7 @@
     <file compressed="true">stylesheet/adwaita-dark.css</file>
     <file compressed="true">stylesheet/adwaita-hc-light.css</file>
     <file compressed="true">stylesheet/common.css</file>
+    <!-- from gnome-shell -->
     <file preprocess="json-stripblanks">layouts/ara.json</file>
     <file preprocess="json-stripblanks">layouts/bg.json</file>
     <file preprocess="json-stripblanks">layouts/cz.json</file>
@@ -16,6 +17,8 @@
     <file preprocess="json-stripblanks">layouts/pl.json</file>
     <file preprocess="json-stripblanks">layouts/ru.json</file>
     <file preprocess="json-stripblanks">layouts/us.json</file>
+    <!-- handcrafted -->
+    <file preprocess="json-stripblanks" >layouts/terminal.json</file>
   </gresource>
   <gresource prefix="/sm/puri/phosh/osk-stub/icons/">
     <file alias="keyboard-enter-symbolic.svg">../data/icons/keyboard-enter-symbolic.svg</file>

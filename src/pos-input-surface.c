@@ -77,6 +77,7 @@ struct _PosInputSurface {
   /* OSK */
   GHashTable              *osks;
   HdyDeck                 *deck;
+  GtkWidget               *osk_terminal;
 
   /* TODO: this should be an interface for different keyboard drivers */
   PosVkDriver             *keyboard_driver;
@@ -513,7 +514,10 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, hint_pending_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, a11y_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
+  gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
+  gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
 
   /**
    * PosInputSurface:input-method:
@@ -596,7 +600,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 {
   g_autoptr (GVariant) sources = NULL;
   g_autoptr (GHashTable) new = NULL;
-  g_auto (GStrv) old = NULL;
+  g_autofree GStrv old = NULL;
   GStrv old_keys;
   GVariantIter iter;
   const char *id = NULL;
@@ -611,7 +615,6 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   /* Get us a copy of the keys since we remove elements while iterating */
   old_keys = (GStrv)g_hash_table_get_keys_as_array (self->osks, NULL);
   old = g_strdupv (old_keys);
-  g_free (old_keys);
   new = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
   while (g_variant_iter_next (&iter, "(&s&s)", &type, &id)) {
@@ -681,6 +684,7 @@ pos_input_surface_init (PosInputSurface *self)
   self->osks = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify)gtk_widget_destroy);
   self->xkbinfo = gnome_xkb_info_new ();
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
+
   g_object_connect (self->input_settings,
                     "swapped-signal::changed::sources",
                     G_CALLBACK (on_input_setting_changed), self,
@@ -695,6 +699,8 @@ pos_input_surface_init (PosInputSurface *self)
   g_signal_connect_swapped (gtk_settings, "notify::gtk-theme-name",
                             G_CALLBACK (on_gtk_theme_name_changed), self);
   on_gtk_theme_name_changed (self, NULL, gtk_settings);
+
+  pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal), "Terminal", "terminal", NULL, NULL);
 }
 
 

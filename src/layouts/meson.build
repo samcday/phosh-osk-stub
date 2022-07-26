@@ -10,6 +10,8 @@ layouts = files(
   'pl.json',
   'ru.json',
   'us.json',
+  # custom lauouts
+  'terminal.json',
 )
 
 if json_glib_utils.found()
