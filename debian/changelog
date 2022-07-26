@@ -1,3 +1,62 @@
+phosh-osk-stub (0.20.0~beta1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * Sync version number with phosh. This makes sure older phosh-osk-stub
+    in the archive doesn't replace us.
+  * osk-stub: Use g_autoptr for GError
+  * Add input-method.
+    Move the wayland bits into a separate object
+  * Use input-method instead of open coding
+  * Move input-surface to lib.
+    This allows us to include it in the documentation and separates
+    things more from the binary
+  * osk-widget: Add key repeat
+  * gitlab-ci: Skip doc build when using PKG_ONLY
+  * osk-widget: Cancel current symbol in cursor mode.
+    Otherwise we emit a space character when space is released after cursor mode
+  * osk-widget: Ignore double click.
+  * build: Add generated sources to library dependency.
+    Otherwise generated files like the DBus headers might not be around
+    when compiling pos-osk-stub.c.
+  * pos-input-method: Fix typo
+  * pos-input-surface: Notify about screen-keyboard-enabled prop changes.
+    The property is G_PARAM_EXPLICIT_NOTIFY.
+  * pos-osk-widget: Fix doc string
+  * pos-input-surface: Drop (for now) unused prototype
+  * pos-input-surface: Add getter for 'surface-visible'
+  * pos-input-surface: Add getter for 'screen-keyboard-visible' property
+  * pos-input-surface: Handle screen-keyboard-enabled gsetting.
+    So far we only adjusted the debug surface string.
+  * pos-osk-widget: Split setting of layer to separate function.
+    This will allow to trigger it from other parts of the code
+  * pos-osk-widget: Rename get_layer to get_keyboard_layer.
+    This avoids confusion between the Layer enum and the KeyboardLayer
+    struct.
+  * pos-osk-widget: Rename get_level to get_layer.
+    This makes it match the property and the setter.
+  * pos-input-surface: Reset keyboard layer when current osk changes
+  * pos-input-surface: Reset keyboard layer to normal on fold.
+    This makes sure the user dosn't see "random" levels when e.g. switching
+    between apps.
+  * data: Indicate that we're using feedbackd.
+    This will allow configuration tools to pick up that intent.
+  * Recreate input surface when it goes away.
+    This can happen when e.g. the output with it is unplugged.
+  * osk-widget: Allow to parse PosOskKey.
+    Allow to parse the key object rather than just plain strings as we
+    do in the current layouts. This allows us to wire up tab, etc in
+    layouts.
+  * vk-driver: Add function keys
+  * Add initial terminal layout.
+    This lacks menu key, pos1/end, pg-up/pg-down, esc and control
+  * data: Add icon to desktop file
+
+  [ InsanePrawn ]
+  * vk-driver: Add keycode for ESC
+  * terminal: Add ~, TAB and ESC
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 26 Jul 2022 11:59:46 +0200
+
 phosh-osk-stub (0.0.1) experimental; urgency=medium
 
   * Initial release

@@ -1,3 +1,11 @@
+phosh-osk-stub 0.20.0~beta1
+---------------------------
+Released: July 2022
+* Add key repeat 
+* Honor screen-keyboard-enabled gsetting
+* Intial "terminal like" keyboard (Function keys, ESC, Tab)
+* Lots of internal rework and fixes
+
 phosh-osk-stub 0.0.1
 --------------------
 Released: February 2022
