@@ -924,21 +924,25 @@ render_icon (cairo_t            *cr,
              GtkStyleContext    *context,
              GtkIconTheme       *icon_theme,
              const gchar        *icon,
-             const GdkRectangle *box)
+             const GdkRectangle *box,
+             int                 scale)
 {
   int icon_size;
+  cairo_surface_t *surface;
 
   g_autoptr (GtkIconInfo) icon_info = NULL;
   g_autoptr (GdkPixbuf) pixbuf = NULL;
 
   icon_size = MIN (KEY_ICON_SIZE, box->height / 2);
-  icon_info = gtk_icon_theme_lookup_icon (icon_theme, icon, icon_size, 0);
-  g_return_if_fail (icon_info);
+  icon_info = gtk_icon_theme_lookup_icon_for_scale (icon_theme, icon, icon_size, scale, 0);
+
   pixbuf = gtk_icon_info_load_symbolic_for_context (icon_info, context, NULL, NULL);
 
-  gtk_render_icon (context, cr, pixbuf,
-                   (box->width - icon_size) / 2,
-                   (box->height - icon_size) / 2);
+  surface = gdk_cairo_surface_create_from_pixbuf (pixbuf, scale, NULL);
+  gtk_render_icon_surface (context, cr, surface,
+                           (box->width - icon_size) / 2,
+                           (box->height - icon_size) / 2);
+  cairo_surface_destroy (surface);
 }
 
 
@@ -954,7 +958,9 @@ draw_key (PosOskWidget *self, PosOskKey *key, cairo_t *cr, double col, double ro
   g_autofree char *symbol = NULL;
   gboolean pressed;
   double width;
+  int scale;
 
+  scale = gtk_widget_get_scale_factor (GTK_WIDGET (self));
   state = gtk_style_context_get_state (self->key_context);
   gtk_style_context_get_color (self->key_context, state, &fg_color);
 
@@ -981,7 +987,7 @@ draw_key (PosOskWidget *self, PosOskKey *key, cairo_t *cr, double col, double ro
       GdkScreen *screen = gtk_widget_get_screen (GTK_WIDGET (self));
       GtkIconTheme *icon_theme = gtk_icon_theme_get_for_screen (screen);
 
-      render_icon (cr, self->key_context, icon_theme, icon, box);
+      render_icon (cr, self->key_context, icon_theme, icon, box, scale);
     } else {
       render_label (cr, self->key_context, label ?: symbol, box);
     }
