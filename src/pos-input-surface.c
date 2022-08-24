@@ -159,6 +159,27 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
   }
 }
 
+
+static void
+on_btn_copy_clicked (PosInputSurface *self)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+
+  pos_vk_driver_key_down (self->keyboard_driver, "KEY_COPY");
+  pos_vk_driver_key_up (self->keyboard_driver, "KEY_COPY");
+}
+
+
+static void
+on_btn_paste_clicked (PosInputSurface *self)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+
+  pos_vk_driver_key_down (self->keyboard_driver, "KEY_PASTE");
+  pos_vk_driver_key_up (self->keyboard_driver, "KEY_PASTE");
+}
+
+
 static void
 on_visible_child_changed (PosInputSurface *self)
 {
@@ -515,6 +536,8 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, a11y_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
+  gtk_widget_class_bind_template_callback (widget_class, on_btn_copy_clicked);
+  gtk_widget_class_bind_template_callback (widget_class, on_btn_paste_clicked);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);

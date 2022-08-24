@@ -36,8 +36,9 @@ struct _PosVkDriver {
 G_DEFINE_TYPE (PosVkDriver, pos_vk_driver, G_TYPE_OBJECT)
 
 typedef enum {
-  POS_KEYCODE_MODIFIER_NONE = 0,
-  POS_KEYCODE_MODIFIER_SHIFT = 1,
+  POS_KEYCODE_MODIFIER_NONE =  0,
+  POS_KEYCODE_MODIFIER_SHIFT = 1 << 0,
+  POS_KEYCODE_MODIFIER_CTRL =  1 << 1,
 } PosKeycodeModifier;
 
 typedef struct {
@@ -160,6 +161,8 @@ static const PosKeycode keycodes_us[] = {
   { "KEY_F10", KEY_F10, POS_KEYCODE_MODIFIER_NONE },
   { "KEY_F11", KEY_F11, POS_KEYCODE_MODIFIER_NONE },
   { "KEY_F12", KEY_F12, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_COPY", KEY_C, POS_KEYCODE_MODIFIER_CTRL },
+  { "KEY_PASTE", KEY_V, POS_KEYCODE_MODIFIER_CTRL },
 };
 
 static void
@@ -234,15 +237,18 @@ void
 pos_vk_driver_key_down (PosVkDriver *self, const char *key)
 {
   PosKeycode *keycode;
-  guint modifiers;
+  guint modifiers = POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE;
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
 
   keycode = g_hash_table_lookup (self->keycodes, key);
   g_return_if_fail (keycode);
 
-  modifiers = (keycode->modifiers & POS_KEYCODE_MODIFIER_SHIFT) ?
-              POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT : POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE;
+  if (keycode->modifiers & POS_KEYCODE_MODIFIER_SHIFT)
+    modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT;
+  if (keycode->modifiers & POS_KEYCODE_MODIFIER_CTRL)
+    modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
+
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
                                       modifiers,
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
