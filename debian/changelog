@@ -1,3 +1,15 @@
+phosh-osk-stub (0.21.0) experimental; urgency=medium
+
+  * vk-driver: Handle CTRL modifier
+  * vk-driver: Handle KEY_{COPY,PASTE} as copy/paste keys
+  * input-surface: Add copy/paste buttons.
+    Let's see how this works out. E.g. it won't work in terminals.
+  * ci: Update Debian image
+  * osk-widget: Unblur icons.
+    I've had these in screenshots and that doesn't look nice.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 31 Aug 2022 11:39:55 +0200
+
 phosh-osk-stub (0.20.0) experimental; urgency=medium
 
   * Release 0.20.0. No changes over 0.20.0~beta1.
