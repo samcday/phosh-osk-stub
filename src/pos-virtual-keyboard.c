@@ -150,6 +150,12 @@ on_input_setting_changed (PosVirtualKeyboard *self, const char *key, GSettings *
   g_variant_iter_init (&iter, sources);
   g_variant_iter_next (&iter, "(ss)", &type, &id);
 
+  if (type == NULL) {
+    g_warning ("Failed to read keyboard layouts, setting default");
+    set_xkb_keymap (self, NULL, NULL, NULL);
+    return;
+  }
+
   if (g_strcmp0 (type, "xkb")) {
     g_debug ("Not a xkb layout: '%s' - ignoring", id);
     return;
