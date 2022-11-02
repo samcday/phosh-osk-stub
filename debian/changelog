@@ -1,3 +1,34 @@
+phosh-osk-stub (0.22.0) experimental; urgency=medium
+
+  * virtual-keyboard: Set default keymap if there are no layouts.
+    When there are no layouts define set the default keymap. Failing to do
+    so would make us abort with a protocol error as we'd send keys but never
+    sent a keymap.
+  * Clarify 'force-show' debug setting handling.
+    Use it to override the GSetting rather than always showing the surface.
+    The later was broken and is less useful as we usually want to hide
+    the surface without text-input.
+    The current interpretation of the option allows us to e.g. to run
+    with GSETTINGS_BACKEND=memory easily.
+  * data: Remove unused icons
+  * build: Fix gettext package name
+  * gitignore: Ignore doc package.
+    Also drop nonexistent subprojects
+  * input-surface: Construct parent object first
+  * input-surface: Reduce row spacing on debug page.
+    This allows us to fit more information
+  * input-surface: Display surrounding text
+  * pos-input-method: Fix return argument.
+    Return NULL in case of API misuse
+  * input-method: Allow to buffer client state.
+    If we want to bother about preedit and surrounding-text we need to buffer
+    client state and only apply on explicit commit. Add the necessary helpers
+    to do that.
+  * input-surface: Use actions instead of signals.  This will ease the move to
+    a menu later on.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 02 Nov 2022 18:37:44 +0100
+
 phosh-osk-stub (0.21.0) experimental; urgency=medium
 
   * vk-driver: Handle CTRL modifier
