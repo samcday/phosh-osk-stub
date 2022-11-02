@@ -32,6 +32,10 @@
 
 #define APP_ID "sm.puri.OSK0"
 
+/**
+ * PosDebugFlags:
+ * @POS_DEBUG_FLAG_FORCE_SHOW: Ignore the `screen-keyboard-enabled` GSetting and always enable the OSK
+ */
 typedef enum _PosDebugFlags {
   POS_DEBUG_FLAG_NONE = 0,
   POS_DEBUG_FLAG_FORCE_SHOW    = 1 << 0,
@@ -195,7 +199,11 @@ set_surface_prop_surface_visible (GBinding     *binding,
   PosInputSurface *input_surface = POS_INPUT_SURFACE (user_data);
   gboolean enabled, visible = g_value_get_boolean (from_value);
 
-  enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+  if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW)
+    enabled = TRUE;
+  else
+    enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+
   g_debug ("active: %d, enabled: %d", visible, enabled);
   if (enabled == FALSE)
     visible = FALSE;
@@ -229,7 +237,6 @@ create_input_surface (struct wl_seat                         *seat,
                       struct zwp_input_method_manager_v2     *im_manager,
                       struct zwlr_layer_shell_v1             *layer_shell)
 {
-  gboolean show;
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
@@ -260,17 +267,16 @@ create_input_surface (struct wl_seat                         *seat,
                           "visible",
                           G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
 
-  show = _debug_flags & POS_DEBUG_FLAG_FORCE_SHOW;
-  if (show) {
+  g_object_bind_property_full (im, "active",
+                               _input_surface, "surface-visible",
+                               G_BINDING_SYNC_CREATE,
+                               set_surface_prop_surface_visible,
+                               NULL,
+                               _input_surface,
+                               NULL);
+  if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW) {
     pos_input_surface_set_visible (_input_surface, TRUE);
   } else {
-    g_object_bind_property_full (im, "active",
-                                 _input_surface, "surface-visible",
-                                 G_BINDING_SYNC_CREATE,
-                                 set_surface_prop_surface_visible,
-                                 NULL,
-                                 _input_surface,
-                                 NULL);
     g_signal_connect (_input_surface, "notify::screen-keyboard-enabled",
                       G_CALLBACK (on_screen_keyboard_enabled_changed), NULL);
   }
