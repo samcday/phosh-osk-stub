@@ -36,6 +36,7 @@ enum {
   PROP_KEYBOARD_DRIVER,
   PROP_SURFACE_VISIBLE,
   PROP_COMPLETER_ACTIVE,
+  PROP_COMPLETION_ENABLED,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -91,6 +92,7 @@ struct _PosInputSurface {
 
   PosCompleter            *completer;
   GtkWidget               *completion_bar;
+  gboolean                 completion_enabled;
 };
 
 
@@ -489,6 +491,19 @@ reverse_ease_out_cubic (double t)
 
 
 static void
+pos_input_surface_set_completion_enabled (PosInputSurface *self, gboolean enable)
+{
+  if (self->completion_enabled == enable)
+    return;
+
+  self->completion_enabled = enable;
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETION_ENABLED]);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
+}
+
+
+static void
 pos_input_surface_set_property (GObject      *object,
                                 guint         property_id,
                                 const GValue *value,
@@ -512,6 +527,9 @@ pos_input_surface_set_property (GObject      *object,
     break;
   case PROP_SURFACE_VISIBLE:
     pos_input_surface_set_visible (self, g_value_get_boolean (value));
+    break;
+  case PROP_COMPLETION_ENABLED:
+    pos_input_surface_set_completion_enabled (self, g_value_get_boolean (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -540,6 +558,9 @@ pos_input_surface_get_property (GObject    *object,
     break;
   case PROP_COMPLETER_ACTIVE:
     g_value_set_boolean (value, pos_input_surface_is_completer_active (self));
+    break;
+  case PROP_COMPLETION_ENABLED:
+    g_value_set_boolean (value, self->completion_enabled);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -888,6 +909,17 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
     g_param_spec_boolean ("completer-active", "", "", FALSE,
                           G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * PosInputSurface:completion-enabled
+   *
+   * %TRUE if the user enabled completion. That does imply that completion is actually active
+   * as this also depends on an input-method being present, a completer configured, etc. This
+   * setting merely reflects the users intent.
+   */
+  props[PROP_COMPLETION_ENABLED] =
+    g_param_spec_boolean ("completion-enabled", "", "", FALSE,
+                          G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
   props[PROP_KEYBOARD_DRIVER] =
     g_param_spec_object ("keyboard-driver", "", "",
                          /* TODO: should be an interface */
@@ -1042,6 +1074,7 @@ pos_input_surface_init (PosInputSurface *self)
                                   "win",
                                   G_ACTION_GROUP (self->action_map));
 
+
   /* Ensure initial sync */
   self->screen_keyboard_enabled = -1;
   self->surface_visible = -1;
@@ -1133,6 +1166,9 @@ pos_input_surface_is_completer_active (PosInputSurface *self)
     return FALSE;
 
   if (pos_input_method_get_active (self->input_method) == FALSE)
+    return FALSE;
+
+  if (self->completion_enabled == FALSE)
     return FALSE;
 
   /* We only complete input purpose `normal` */
