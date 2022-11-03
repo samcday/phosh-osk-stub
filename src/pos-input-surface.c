@@ -467,6 +467,8 @@ pos_input_surface_constructed (GObject *object)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (object);
 
+  G_OBJECT_CLASS (pos_input_surface_parent_class)->constructed (object);
+
   g_object_connect (self->input_method,
                     "swapped-signal::pending-changed", on_im_pending_changed, self,
                     "swapped-signal::done", on_im_done, self,
@@ -476,8 +478,6 @@ pos_input_surface_constructed (GObject *object)
                     "swapped-signal::notify::text-change-cause",
                     on_im_text_change_cause_changed, self,
                     NULL);
-
-  G_OBJECT_CLASS (pos_input_surface_parent_class)->constructed (object);
 }
 
 
