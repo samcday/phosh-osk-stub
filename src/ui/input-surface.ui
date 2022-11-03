@@ -75,7 +75,7 @@
                     <child>
                       <object class="GtkGrid" id="committed_grid">
                         <property name="visible">True</property>
-                        <property name="row-spacing">6</property>
+                        <property name="row-spacing">0</property>
                         <property name="column-spacing">6</property>
                         <child>
                           <object class="GtkLabel">
@@ -188,7 +188,7 @@
                     <child>
                       <object class="GtkGrid" id="pending_grid">
                         <property name="visible">True</property>
-                        <property name="row-spacing">6</property>
+                        <property name="row-spacing">0</property>
                         <property name="column-spacing">6</property>
                         <child>
                           <object class="GtkLabel">
@@ -280,7 +280,7 @@
                     <child>
                       <object class="GtkGrid" id="gnome_grid">
                         <property name="visible">True</property>
-                        <property name="row-spacing">6</property>
+                        <property name="row-spacing">0</property>
                         <property name="column-spacing">6</property>
                         <child>
                           <object class="GtkLabel">
