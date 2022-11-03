@@ -405,7 +405,9 @@ pos_input_method_class_init (PosInputMethodClass *klass)
    * PosInputMethod::done:
    *
    * The done signal is sent when the state changes sent by the compositor
-   * should be applied.
+   * should be applied. The `active`, `surrounding-text`, `text-change-cause`,
+   * `purpose` and `hint` properties are then guaranteed to have the values
+   * sent by the compositor.
    */
   signals[DONE] =
     g_signal_new ("done",
@@ -487,7 +489,7 @@ pos_input_method_get_hint (PosInputMethod *self)
 const char *
 pos_input_method_get_surrounding_text (PosInputMethod *self, guint *anchor, guint *cursor)
 {
-  g_return_val_if_fail (POS_IS_INPUT_METHOD (self), POS_INPUT_METHOD_HINT_NONE);
+  g_return_val_if_fail (POS_IS_INPUT_METHOD (self), NULL);
 
   if (anchor)
     *anchor = self->submitted->anchor;
@@ -506,17 +508,69 @@ pos_input_method_get_serial (PosInputMethod *self)
   return self->serial;
 }
 
+/**
+ * pos_input_method_send_string:
+ * @self: The input method
+ * @string: The text to send
+ * @commit: Whether to invoke `commit` request as well
+ *
+ * This sends the given text via a `commit_string` request.
+ */
 void
-pos_input_method_send_string (PosInputMethod *self, const char *string)
+pos_input_method_send_string (PosInputMethod *self, const char *string, gboolean commit)
 {
   zwp_input_method_v2_commit_string (self->input_method, string);
-  zwp_input_method_v2_commit (self->input_method, self->serial);
+  if (commit)
+    pos_input_method_commit (self);
 }
 
+/**
+ * pos_input_method_send_preedit:
+ * @self: The input method
+ * @preedit: The preedit to send
+ * @commit: Whether to invoke `commit` request as well
+ *
+ * This sends the given text via a `set_preedit_string` request.
+ */
 void
 pos_input_method_send_preedit (PosInputMethod *self, const char *preedit,
-                               guint cstart, guint cend)
+                               guint cstart, guint cend, gboolean commit)
 {
   zwp_input_method_v2_set_preedit_string (self->input_method, preedit, cstart, cend);
+  if (commit)
+    pos_input_method_commit (self);
+}
+
+/**
+ * pos_input_method_delete_surrounding_text:
+ * @self: The input method
+ * @before_length: Number of bytes before cursor to delete
+ * @after_length: Number of bytes after cursor to delete
+ * @commit: Whether to invoke `commit` request as well
+ *
+ * This deletes text around the cursor using the `delete_surrounding_text` request.
+ */
+void
+pos_input_method_delete_surrounding_text (PosInputMethod *self,
+                                          guint before_length,
+                                          guint after_length,
+                                          gboolean commit)
+{
+  zwp_input_method_v2_delete_surrounding_text (self->input_method, before_length, after_length);
+  if (commit)
+    pos_input_method_commit (self);
+}
+
+/**
+ * pos_input_method_commit:
+ * @self: The input method
+ *
+ * Sends a `commit` request to the compositor so that any pending
+ * `commit_string`, `set_preedit_string` and `delete_surrounding_text`.
+ * changes get applied.
+ */
+void
+pos_input_method_commit (PosInputMethod *self)
+{
   zwp_input_method_v2_commit (self->input_method, self->serial);
 }
