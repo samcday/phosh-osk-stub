@@ -66,11 +66,13 @@ struct _PosInputSurface {
   GtkWidget               *active_label;
   GtkWidget               *purpose_label;
   GtkWidget               *hint_label;
+  GtkWidget               *st_label;
   GtkWidget               *commits_label;
   /* pending column */
   GtkWidget               *active_pending_label;
   GtkWidget               *purpose_pending_label;
   GtkWidget               *hint_pending_label;
+  GtkWidget               *st_pending_label;
   /* GNOME column */
   GtkWidget               *a11y_label;
 
@@ -397,6 +399,8 @@ on_im_pending_changed (PosInputSurface *self, PosImState *pending, PosInputMetho
   purpose = pos_enum_to_nick (POS_TYPE_INPUT_METHOD_PURPOSE, pending->purpose);
   gtk_label_set_label (GTK_LABEL (self->purpose_pending_label), purpose);
   gtk_label_set_label (GTK_LABEL (self->active_pending_label), pending->active ? "true" : "false");
+
+  gtk_label_set_label (GTK_LABEL (self->st_pending_label), pending->surrounding_text);
 }
 
 
@@ -434,6 +438,24 @@ on_im_text_change_cause_changed (PosInputSurface *self, GParamSpec *pspec, PosIn
 {
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
+}
+
+
+static void
+on_im_surrounding_text_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
+{
+  const char *text;
+  guint anchor, cursor;
+  g_autofree char *label = NULL;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+
+  text = pos_input_method_get_surrounding_text (im, &anchor, &cursor);
+
+  if (text)
+    label = g_strdup_printf ("'%s' (%u, %u)", text, anchor, cursor);
+  gtk_label_set_label (GTK_LABEL (self->st_label), label);
 }
 
 
@@ -477,6 +499,8 @@ pos_input_surface_constructed (GObject *object)
                     "swapped-signal::notify::hint", on_im_hint_changed, self,
                     "swapped-signal::notify::text-change-cause",
                     on_im_text_change_cause_changed, self,
+                    "swapped-signal::notify::surrounding-text",
+                    on_im_surrounding_text_changed, self,
                     NULL);
 }
 
@@ -529,10 +553,12 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, active_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, purpose_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, hint_label);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, st_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, commits_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, active_pending_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, purpose_pending_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, hint_pending_label);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, st_pending_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, a11y_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
