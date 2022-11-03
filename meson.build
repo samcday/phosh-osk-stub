@@ -111,7 +111,7 @@ wayland_protos_dep = dependency('wayland-protocols', version: '>=1.12')
 xkbcommon_dep = dependency('xkbcommon')
 
 config_h = configuration_data()
-config_h.set_quoted('GETTEXT_PACKAGE', 'phosh')
+config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 
