@@ -36,7 +36,7 @@
                     <child>
                       <object class="GtkButton">
                         <property name="visible">True</property>
-                        <signal name="clicked" handler="on_btn_copy_clicked" swapped="yes"/>
+                        <property name="action-name">win.clipboard-copy</property>
                         <child>
                           <object class="GtkImage">
                             <property name="visible">True</property>
@@ -51,7 +51,7 @@
                     <child>
                       <object class="GtkButton">
                         <property name="visible">True</property>
-                        <signal name="clicked" handler="on_btn_paste_clicked" swapped="yes"/>
+                        <property name="action-name">win.clipboard-paste</property>
                         <child>
                           <object class="GtkImage">
                             <property name="visible">True</property>

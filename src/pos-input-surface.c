@@ -86,6 +86,8 @@ struct _PosInputSurface {
 
   GtkCssProvider          *css_provider;
   char                    *theme_name;
+
+  GActionMap              *action_map;
 };
 
 G_DEFINE_TYPE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SURFACE)
@@ -163,9 +165,11 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
 
 
 static void
-on_btn_copy_clicked (PosInputSurface *self)
+clipboard_copy_activated (GSimpleAction *action,
+                          GVariant      *parameter,
+                          gpointer       data)
 {
-  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
 
   pos_vk_driver_key_down (self->keyboard_driver, "KEY_COPY");
   pos_vk_driver_key_up (self->keyboard_driver, "KEY_COPY");
@@ -173,9 +177,11 @@ on_btn_copy_clicked (PosInputSurface *self)
 
 
 static void
-on_btn_paste_clicked (PosInputSurface *self)
+clipboard_paste_activated (GSimpleAction *action,
+                           GVariant      *parameter,
+                           gpointer       data)
 {
-  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
 
   pos_vk_driver_key_down (self->keyboard_driver, "KEY_PASTE");
   pos_vk_driver_key_up (self->keyboard_driver, "KEY_PASTE");
@@ -529,6 +535,7 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->css_provider);
   g_clear_pointer (&self->theme_name, g_free);
   g_clear_pointer (&self->osks, g_hash_table_destroy);
+  g_clear_object (&self->action_map);
 
   G_OBJECT_CLASS (pos_input_surface_parent_class)->finalize (object);
 }
@@ -562,8 +569,6 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, a11y_label);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
-  gtk_widget_class_bind_template_callback (widget_class, on_btn_copy_clicked);
-  gtk_widget_class_bind_template_callback (widget_class, on_btn_paste_clicked);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
@@ -714,10 +719,26 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 }
 
 
+static GActionEntry entries[] =
+{
+  { .name = "clipboard-copy", .activate = clipboard_copy_activated },
+  { .name = "clipboard-paste", .activate = clipboard_paste_activated },
+};
+
+
 static void
 pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
+
+  self->action_map = G_ACTION_MAP (g_simple_action_group_new ());
+  g_action_map_add_action_entries (self->action_map,
+                                   entries,
+                                   G_N_ELEMENTS (entries),
+                                   self);
+  gtk_widget_insert_action_group (GTK_WIDGET (self),
+                                  "win",
+                                  G_ACTION_GROUP (self->action_map));
 
   /* Ensure initial sync */
   self->screen_keyboard_enabled = -1;
