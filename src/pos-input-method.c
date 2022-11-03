@@ -487,7 +487,7 @@ pos_input_method_get_hint (PosInputMethod *self)
 const char *
 pos_input_method_get_surrounding_text (PosInputMethod *self, guint *anchor, guint *cursor)
 {
-  g_return_val_if_fail (POS_IS_INPUT_METHOD (self), POS_INPUT_METHOD_HINT_NONE);
+  g_return_val_if_fail (POS_IS_INPUT_METHOD (self), NULL);
 
   if (anchor)
     *anchor = self->submitted->anchor;
