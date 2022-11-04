@@ -37,6 +37,11 @@ variables:
     DIST: bookworm
     BUILD_OPTS:  ${COMMON_BUILD_OPTS}
 
+.bookworm_prep: &bookworm_prep
+  before_script:
+    - apt-get -y update
+    - apt-get -y build-dep .
+
 .build_step: &build_step
   script:
     - 'echo "Build opts: ${BUILD_OPTS}"'
@@ -68,6 +73,7 @@ sanity:
 build:native-debian-bookworm:
   stage: build
   image: ${DEBIAN_IMAGE}
+  <<: *bookworm_prep
   <<: *bookworm_vars
   <<: *build_step
   artifacts:
@@ -80,6 +86,7 @@ build:native-debian-bookworm:
 test:native-debian-bookworm:
   stage: test+docs
   image: ${DEBIAN_IMAGE}
+  <<: *bookworm_prep
   needs:
     - build:native-debian-bookworm
   <<: *bookworm_vars
@@ -91,6 +98,7 @@ test:native-debian-bookworm:
 doc:
   stage: test+docs
   image: ${DEBIAN_IMAGE}
+  <<: *bookworm_prep
   needs: []
   variables:
     BUILD_OPTS: >-
