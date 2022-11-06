@@ -42,8 +42,6 @@ typedef enum _PosDebugFlags {
 } PosDebugFlags;
 
 
-static GMainLoop *loop;
-
 static PosInputSurface *_input_surface;
 
 static struct wl_display *_display;
@@ -72,6 +70,8 @@ print_version (void)
 static gboolean
 quit_cb (gpointer user_data)
 {
+  GMainLoop *loop = user_data;
+
   g_info ("Caught signal, shutting down...");
 
   if (loop)
@@ -101,6 +101,8 @@ client_proxy_signal_cb (GDBusProxy *proxy,
                         GVariant   *parameters,
                         gpointer    user_data)
 {
+  GMainLoop *loop = user_data;
+
   if (g_strcmp0 (signal_name, "QueryEndSession") == 0) {
     g_debug ("Got QueryEndSession signal");
     respond_to_end_session (proxy, FALSE);
@@ -109,7 +111,7 @@ client_proxy_signal_cb (GDBusProxy *proxy,
     respond_to_end_session (proxy, TRUE);
   } else if (g_strcmp0 (signal_name, "Stop") == 0) {
     g_debug ("Got Stop signal");
-    quit_cb (NULL);
+    quit_cb (loop);
   }
 }
 
@@ -119,6 +121,7 @@ on_client_registered (GObject      *source_object,
                       GAsyncResult *res,
                       gpointer      user_data)
 {
+  GMainLoop *loop = user_data;
   GVariant *variant;
   GDBusProxy *client_proxy;
   GError *error = NULL;
@@ -148,7 +151,7 @@ on_client_registered (GObject      *source_object,
   }
 
   g_signal_connect (client_proxy, "g-signal",
-                    G_CALLBACK (client_proxy_signal_cb), NULL);
+                    G_CALLBACK (client_proxy_signal_cb), loop);
 
   g_free (object_path);
   g_variant_unref (variant);
@@ -156,7 +159,7 @@ on_client_registered (GObject      *source_object,
 
 
 static GDBusProxy *
-pos_session_register (const char *client_id)
+pos_session_register (const char *client_id, GMainLoop *loop)
 {
   GDBusProxy *proxy;
   const char *startup_id;
@@ -184,7 +187,7 @@ pos_session_register (const char *client_id)
                      -1,
                      NULL,
                      (GAsyncReadyCallback) on_client_registered,
-                     NULL);
+                     loop);
 
   return proxy;
 }
@@ -381,6 +384,7 @@ parse_debug_env (void)
 int
 main (int argc, char *argv[])
 {
+  g_autoptr (GMainLoop) loop = NULL;
   g_autoptr (GDBusProxy) proxy = NULL;
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
@@ -410,17 +414,16 @@ main (int argc, char *argv[])
 
   gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/sm/puri/phosh/osk-stub/icons");
 
-  proxy = pos_session_register (APP_ID);
+  proxy = pos_session_register (APP_ID, loop);
   if (!setup_input_method ())
     return EXIT_FAILURE;
 
   loop = g_main_loop_new (NULL, FALSE);
 
-  g_unix_signal_add (SIGTERM, quit_cb, NULL);
-  g_unix_signal_add (SIGINT, quit_cb, NULL);
+  g_unix_signal_add (SIGTERM, quit_cb, loop);
+  g_unix_signal_add (SIGINT, quit_cb, loop);
 
   g_main_loop_run (loop);
-  g_main_loop_unref (loop);
 
   /* Remove weak ref so input-surface doesn't get recreated */
   g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
