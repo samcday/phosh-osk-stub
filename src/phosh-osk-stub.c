@@ -74,11 +74,7 @@ quit_cb (gpointer user_data)
 
   g_info ("Caught signal, shutting down...");
 
-  if (loop)
-    g_main_loop_quit (loop);
-  else
-    exit (0);
-
+  g_main_loop_quit (loop);
   return FALSE;
 }
 
