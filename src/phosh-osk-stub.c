@@ -387,9 +387,14 @@ main (int argc, char *argv[])
   g_autoptr (GDBusProxy) proxy = NULL;
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
-  gboolean version = FALSE;
+  gboolean version = FALSE, replace = FALSE, allow_replace = FALSE;
+  GBusNameOwnerFlags flags;
 
   const GOptionEntry options [] = {
+    {"replace", 0, 0, G_OPTION_ARG_NONE, &replace,
+     "Replace DBus service", NULL},
+    {"allow-replacement", 0, 0, G_OPTION_ARG_NONE, &allow_replace,
+     "Allow replacement of DBus service", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -415,7 +420,9 @@ main (int argc, char *argv[])
 
   proxy = pos_session_register (APP_ID, loop);
 
-  _osk_dbus = pos_osk_dbus_new ();
+  flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
+    (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
+  _osk_dbus = pos_osk_dbus_new (flags);
   if (!setup_input_method (_osk_dbus))
     return EXIT_FAILURE;
 

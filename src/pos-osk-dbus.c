@@ -19,9 +19,10 @@
 
 enum {
   PROP_0,
-  PROP_VISIBLE,
+  PROP_NAME_OWNER_FLAGS,
   PROP_LAST_PROP
 };
+static GParamSpec *props[PROP_LAST_PROP];
 
 /**
  * PosOskDbus:
@@ -34,6 +35,7 @@ struct _PosOskDbus {
   gboolean            visible;
   guint               dbus_name_id;
   gboolean            acquired;
+  GBusNameOwnerFlags  name_owner_flags;
 };
 
 static void pos_osk_dbus_osk0_iface_init (PosDbusOSK0Iface *iface);
@@ -41,6 +43,45 @@ static void pos_osk_dbus_osk0_iface_init (PosDbusOSK0Iface *iface);
 G_DEFINE_TYPE_WITH_CODE (PosOskDbus, pos_osk_dbus,
                          POS_DBUS_TYPE_OSK0_SKELETON,
                          G_IMPLEMENT_INTERFACE (POS_DBUS_TYPE_OSK0, pos_osk_dbus_osk0_iface_init))
+
+
+static void
+pos_osk_dbus_set_property (GObject      *object,
+                           guint         property_id,
+                           const GValue *value,
+                           GParamSpec   *pspec)
+{
+  PosOskDbus *self = POS_OSK_DBUS (object);
+
+  switch (property_id) {
+  case PROP_NAME_OWNER_FLAGS:
+    self->name_owner_flags = g_value_get_flags (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
+pos_osk_dbus_get_property (GObject    *object,
+                           guint       property_id,
+                           GValue     *value,
+                           GParamSpec *pspec)
+{
+  PosOskDbus *self = POS_OSK_DBUS (object);
+
+  switch (property_id) {
+  case PROP_NAME_OWNER_FLAGS:
+    g_value_set_flags (value, self->name_owner_flags);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
 
 static void
 pos_osk_dbus_finalize (GObject *object)
@@ -75,13 +116,6 @@ pos_osk_dbus_osk0_iface_init (PosDbusOSK0Iface *iface)
   iface->handle_set_visible = pos_osk_dbus_handle_set_visible;
 }
 
-static void
-pos_osk_dbus_class_init (PosOskDbusClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  object_class->finalize = pos_osk_dbus_finalize;
-}
 
 static void
 on_name_acquired (GDBusConnection *connection,
@@ -135,12 +169,16 @@ on_bus_acquired (GDBusConnection *connection,
 
 
 static void
-pos_osk_dbus_init (PosOskDbus *self)
+pos_osk_dbus_constructed (GObject *object)
 {
+  PosOskDbus *self = POS_OSK_DBUS (object);
+
+  G_OBJECT_CLASS (pos_osk_dbus_parent_class)->constructed (object);
+
+  g_warning ("%d", self->name_owner_flags);
   self->dbus_name_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                                        OSK0_BUS_NAME,
-                                       G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT |
-                                       G_BUS_NAME_OWNER_FLAGS_REPLACE,
+                                       self->name_owner_flags,
                                        on_bus_acquired,
                                        on_name_acquired,
                                        on_name_lost,
@@ -149,8 +187,36 @@ pos_osk_dbus_init (PosOskDbus *self)
 }
 
 
-PosOskDbus *
-pos_osk_dbus_new (void)
+static void
+pos_osk_dbus_class_init (PosOskDbusClass *klass)
 {
-  return POS_OSK_DBUS (g_object_new (POS_TYPE_OSK_DBUS, NULL));
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = pos_osk_dbus_finalize;
+  object_class->constructed = pos_osk_dbus_constructed;
+  object_class->set_property = pos_osk_dbus_set_property;
+  object_class->get_property = pos_osk_dbus_get_property;
+
+  props[PROP_NAME_OWNER_FLAGS] =
+    g_param_spec_flags ("name-owner-flags", "", "",
+                        G_TYPE_BUS_NAME_OWNER_FLAGS,
+                        0,
+                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+}
+
+
+static void
+pos_osk_dbus_init (PosOskDbus *self)
+{
+}
+
+
+PosOskDbus *
+pos_osk_dbus_new (GBusNameOwnerFlags flags)
+{
+  return POS_OSK_DBUS (g_object_new (POS_TYPE_OSK_DBUS,
+                                     "name-owner-flags", flags,
+                                     NULL));
 }
