@@ -229,11 +229,18 @@ static void
 create_input_surface (struct wl_seat                         *seat,
                       struct zwp_virtual_keyboard_manager_v1 *virtual_keyboard_manager,
                       struct zwp_input_method_manager_v2     *im_manager,
-                      struct zwlr_layer_shell_v1             *layer_shell)
+                      struct zwlr_layer_shell_v1             *layer_shell,
+                      PosOskDbus                             *osk_dbus)
 {
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
+
+  g_assert (seat);
+  g_assert (virtual_keyboard_manager);
+  g_assert (im_manager);
+  g_assert (layer_shell);
+  g_assert (osk_dbus);
 
   virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
@@ -254,7 +261,6 @@ create_input_surface (struct wl_seat                         *seat,
                                  "keyboard-driver", vk_driver,
                                  NULL);
 
-  _osk_dbus = pos_osk_dbus_new ();
   g_object_bind_property (_input_surface,
                           "surface-visible",
                           _osk_dbus,
@@ -286,7 +292,8 @@ on_input_surface_gone (gpointer data, GObject *unused)
 {
   g_debug ("Input surface gone, recreating");
 
-  create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell);
+  create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                        _osk_dbus);
 }
 
 
@@ -312,7 +319,8 @@ registry_handle_global (void               *data,
   if (_seat && _input_method_manager && _layer_shell && _virtual_keyboard_manager &&
       !_input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
-    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell);
+    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                          _osk_dbus);
   }
 }
 
@@ -333,7 +341,7 @@ static const struct wl_registry_listener registry_listener = {
 
 
 static gboolean
-setup_input_method (void)
+setup_input_method (PosOskDbus *osk_dbus)
 {
   GdkDisplay *gdk_display;
 
@@ -406,7 +414,9 @@ main (int argc, char *argv[])
   gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/sm/puri/phosh/osk-stub/icons");
 
   proxy = pos_session_register (APP_ID, loop);
-  if (!setup_input_method ())
+
+  _osk_dbus = pos_osk_dbus_new ();
+  if (!setup_input_method (_osk_dbus))
     return EXIT_FAILURE;
 
   loop = g_main_loop_new (NULL, FALSE);
