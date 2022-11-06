@@ -399,6 +399,26 @@ select_layout_change_state (GSimpleAction *action,
 }
 
 
+static void
+switch_language (PosInputSurface *self, const char *locale)
+{
+  gboolean success;
+  g_autoptr (GError) err = NULL;
+
+  if (self->completer == NULL)
+    return;
+
+  g_debug ("Switching language, locale: '%s'", locale);
+  success = pos_completer_set_language (self->completer, locale, &err);
+  if (success == FALSE) {
+    g_warning ("Failed to set language: %s, switching to '%s' instead",
+               err->message, POS_COMPLETER_DEFAULT_LANG);
+    pos_completer_set_language (self->completer, POS_COMPLETER_DEFAULT_LANG, NULL);
+  }
+
+  pos_completion_bar_set_completions (POS_COMPLETION_BAR (self->completion_bar), NULL);
+}
+
 
 static void
 on_visible_child_changed (PosInputSurface *self)
@@ -413,6 +433,8 @@ on_visible_child_changed (PosInputSurface *self)
   osk = POS_OSK_WIDGET (child);
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_display_name (osk));
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
+
+  switch_language (self, pos_osk_widget_get_locale (osk));
 }
 
 static void

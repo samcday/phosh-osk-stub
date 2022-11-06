@@ -310,6 +310,32 @@ pos_completer_set_surrounding_text (PosCompleter *self,
   return iface->set_surrounding_text (self, before_text, after_text);
 }
 
+/**
+ * pos_completer_set_language:
+ * @self: The completer
+ * @locale: The language to set
+ * @error: The error location
+ *
+ * Let the completer pick a language based on the given locale.. If an
+ * error occurs %FALSE is returned and @error set to the error.
+ *
+ * Returns: %TRUE on success. On error %FALSE.
+ */
+gboolean
+pos_completer_set_language (PosCompleter *self, const char *locale, GError **error)
+{
+  PosCompleterInterface *iface;
+
+  g_return_val_if_fail (POS_IS_COMPLETER (self), FALSE);
+
+  iface = POS_COMPLETER_GET_IFACE (self);
+  /* optional */
+  if (iface->set_language == NULL)
+    return TRUE;
+
+  return iface->set_language (self, locale, error);
+}
+
 /* Used by completers to simplify implenetations */
 
 /**

@@ -23,6 +23,7 @@
 
 #define MAX_COMPLETIONS 3
 #define CONFIG_NGRM_PREDICTOR_DBFILE "Presage.Predictors.DefaultSmoothedNgramPredictor.DBFILENAME"
+#define CONFIG_NGRM_PREDICTOR_USER_DBFILE "Presage.Predictors.UserSmoothedNgramPredictor.DBFILENAME"
 
 enum {
   PROP_0,
@@ -55,6 +56,8 @@ struct _PosCompleterPresage {
   presage_t             presage;
   char                 *presage_past;
   char                 *presage_future;
+
+  char                 *lang;
 };
 
 
@@ -180,6 +183,76 @@ pos_completer_presage_set_surrounding_text (PosCompleter *iface,
 }
 
 
+static gboolean
+pos_completer_presage_set_language (PosCompleter *completer, const char *locale, GError **error)
+{
+  PosCompleterPresage *self = POS_COMPLETER_PRESAGE (completer);
+  g_autofree char *dbdir = NULL;
+  g_autofree char *dbfile = NULL;
+  g_autofree char *dbpath = NULL;
+  g_auto (GStrv) parts = NULL;
+  gboolean ret;
+  const char *lang;
+  presage_error_code_t result;
+
+  g_return_val_if_fail (POS_IS_COMPLETER_PRESAGE (self), FALSE);
+
+  /* TODO: e.g. de-AT, de-CH */
+  parts = g_strsplit (locale, "-", 1);
+  lang = parts[0];
+
+  /* TODO: likely better to use locale and fall back to lang */
+  if (g_strcmp0 (self->lang, lang) == 0)
+    return TRUE;
+
+  g_debug ("Switching to language '%s'", lang);
+
+  dbfile = g_strdup_printf ("database_%s.db", lang);
+  dbpath = g_build_path (G_DIR_SEPARATOR_S, PRESAGE_DICT_DIR, dbfile, NULL);
+
+  if (g_file_test (dbpath, G_FILE_TEST_EXISTS) == FALSE) {
+    g_set_error (error,
+                 POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_LANG_INIT,
+                 "No db %s for %s - please fix", dbpath, lang);
+    return FALSE;
+  }
+
+  result = presage_config_set (self->presage, CONFIG_NGRM_PREDICTOR_DBFILE, dbpath);
+  if (result != PRESAGE_OK) {
+    g_set_error (error,
+                 POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_LANG_INIT,
+                 "Failed to set db %s", dbpath);
+    return FALSE;
+  }
+
+  g_clear_pointer (&dbfile, g_free);
+  g_clear_pointer (&dbpath, g_free);
+
+  /* presage example uses a single file, we use one file per language */
+  dbdir = g_build_path ("/", g_get_user_data_dir (), "phosh-osk-stub", NULL);
+  dbpath = g_strdup_printf ("%s/lm_%s.db", dbdir, lang);
+  ret = g_mkdir_with_parents (dbdir, 0755);
+  if (ret != 0) {
+    g_set_error (error,
+                 G_IO_ERROR, g_io_error_from_errno (ret),
+                 "Failed to set user db %s: %s", dbpath, g_strerror (ret));
+  }
+
+  result = presage_config_set (self->presage, CONFIG_NGRM_PREDICTOR_USER_DBFILE, dbpath);
+  if (result != PRESAGE_OK) {
+    g_set_error (error,
+                 POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_LANG_INIT,
+                 "Failed to set user db %s", dbpath);
+    return FALSE;
+  }
+
+  g_free (self->lang);
+  self->lang = g_strdup (lang);
+
+  return TRUE;
+}
+
+
 static void
 pos_completer_presage_set_property (GObject      *object,
                                     guint         property_id,
@@ -245,6 +318,7 @@ pos_completer_presage_finalize (GObject *object)
   g_clear_pointer (&self->after_text, g_free);
   g_clear_pointer (&self->presage_past, g_free);
   g_clear_pointer (&self->presage_future, g_free);
+  g_clear_pointer (&self->lang, g_free);
   presage_free (self->presage);
 
   G_OBJECT_CLASS (pos_completer_presage_parent_class)->finalize (object);
@@ -297,8 +371,6 @@ pos_completer_presage_get_future_stream (void *data)
 }
 
 
-
-
 static gboolean
 pos_completer_presage_initable_init (GInitable    *initable,
                                      GCancellable *cancelable,
@@ -307,8 +379,6 @@ pos_completer_presage_initable_init (GInitable    *initable,
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (initable);
   presage_error_code_t result;
   g_autofree char *max = NULL;
-  g_autofree char *dbfilename = NULL;
-  const char *dbfile;
 
   /* FIXME: presage gets confused otherwise and doesn't predict */
   setlocale (LC_NUMERIC, "C.UTF-8");
@@ -320,7 +390,7 @@ pos_completer_presage_initable_init (GInitable    *initable,
 
   if (result != PRESAGE_OK) {
     g_set_error (error,
-                 G_IO_ERROR, G_IO_ERROR_FAILED,
+                 POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_ENGINE_INIT,
                  "Failed to init presage engine");
     return FALSE;
   }
@@ -329,19 +399,11 @@ pos_completer_presage_initable_init (GInitable    *initable,
   presage_config_set (self->presage, "Presage.Selector.SUGGESTIONS", max);
   presage_config_set (self->presage, "Presage.Selector.REPEAT_SUGGESTIONS", "yes");
 
-  /* Allow override for debugging */
-  dbfile = g_getenv ("POS_PRESAGE_DB");
-  if (dbfile)
-    presage_config_set (self->presage, CONFIG_NGRM_PREDICTOR_DBFILE, dbfile);
-
-  result = presage_config (self->presage, CONFIG_NGRM_PREDICTOR_DBFILE, &dbfilename);
-  if (result != PRESAGE_OK) {
-    g_set_error (error,
-                 G_IO_ERROR, G_IO_ERROR_FAILED,
-                 "Failed to read presage predictor database file name");
+  /* Set up default language */
+  if (pos_completer_presage_set_language (POS_COMPLETER (self), POS_COMPLETER_DEFAULT_LANG, error) == FALSE)
     return FALSE;
-  }
-  g_debug ("Presage completer inited with db '%s'", dbfilename);
+
+  g_debug ("Presage completer inited with lang '%s'", self->lang);
 
   return TRUE;
 }
@@ -386,6 +448,7 @@ pos_completer_presage_interface_init (PosCompleterInterface *iface)
   iface->get_before_text = pos_completer_presage_get_before_text;
   iface->get_after_text = pos_completer_presage_get_after_text;
   iface->set_surrounding_text = pos_completer_presage_set_surrounding_text;
+  iface->set_language = pos_completer_presage_set_language;
 }
 
 
