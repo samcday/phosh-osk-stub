@@ -75,7 +75,7 @@ quit_cb (gpointer user_data)
   g_info ("Caught signal, shutting down...");
 
   if (loop)
-    g_idle_add ((GSourceFunc) g_main_loop_quit, loop);
+    g_main_loop_quit (loop);
   else
     exit (0);
 
