@@ -106,7 +106,6 @@ on_bus_acquired (GDBusConnection *connection,
                  gpointer         user_data)
 {
   gboolean success;
-
   g_autoptr (GError) err = NULL;
   PosOskDbus *self = POS_OSK_DBUS (user_data);
 
