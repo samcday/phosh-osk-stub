@@ -43,7 +43,6 @@ typedef enum _PosDebugFlags {
 
 
 static GMainLoop *loop;
-static GDBusProxy *_proxy;
 
 static PosInputSurface *_input_surface;
 
@@ -156,30 +155,29 @@ on_client_registered (GObject      *source_object,
 }
 
 
-static void
-stub_session_register (const char *client_id)
+static GDBusProxy *
+pos_session_register (const char *client_id)
 {
+  GDBusProxy *proxy;
   const char *startup_id;
   g_autoptr (GError) err = NULL;
 
-  if (!_proxy) {
-    _proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
-                                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
-                                            G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START_AT_CONSTRUCTION,
-                                            NULL,
-                                            GNOME_SESSION_DBUS_NAME,
-                                            GNOME_SESSION_DBUS_OBJECT,
-                                            GNOME_SESSION_DBUS_INTERFACE,
-                                            NULL,
-                                            &err);
-    if (!_proxy) {
-      g_debug ("Failed to contact gnome-session: %s", err->message);
-      return;
-    }
+  proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
+                                         G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+                                         G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START_AT_CONSTRUCTION,
+                                         NULL,
+                                         GNOME_SESSION_DBUS_NAME,
+                                         GNOME_SESSION_DBUS_OBJECT,
+                                         GNOME_SESSION_DBUS_INTERFACE,
+                                         NULL,
+                                         &err);
+  if (proxy == NULL) {
+    g_debug ("Failed to contact gnome-session: %s", err->message);
+    return NULL;
   }
 
   startup_id = g_getenv ("DESKTOP_AUTOSTART_ID");
-  g_dbus_proxy_call (_proxy,
+  g_dbus_proxy_call (proxy,
                      "RegisterClient",
                      g_variant_new ("(ss)", client_id, startup_id ? startup_id : ""),
                      G_DBUS_CALL_FLAGS_NONE,
@@ -187,6 +185,8 @@ stub_session_register (const char *client_id)
                      NULL,
                      (GAsyncReadyCallback) on_client_registered,
                      NULL);
+
+  return proxy;
 }
 
 
@@ -381,6 +381,7 @@ parse_debug_env (void)
 int
 main (int argc, char *argv[])
 {
+  g_autoptr (GDBusProxy) proxy = NULL;
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
   gboolean version = FALSE;
@@ -409,7 +410,7 @@ main (int argc, char *argv[])
 
   gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/sm/puri/phosh/osk-stub/icons");
 
-  stub_session_register (APP_ID);
+  proxy = pos_session_register (APP_ID);
   if (!setup_input_method ())
     return EXIT_FAILURE;
 
@@ -420,7 +421,6 @@ main (int argc, char *argv[])
 
   g_main_loop_run (loop);
   g_main_loop_unref (loop);
-  g_object_unref (_proxy);
 
   /* Remove weak ref so input-surface doesn't get recreated */
   g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
