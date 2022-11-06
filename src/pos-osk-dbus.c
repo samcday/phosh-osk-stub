@@ -20,6 +20,7 @@
 enum {
   PROP_0,
   PROP_NAME_OWNER_FLAGS,
+  PROP_HAS_NAME,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -34,7 +35,7 @@ struct _PosOskDbus {
 
   gboolean            visible;
   guint               dbus_name_id;
-  gboolean            acquired;
+  gboolean            has_name;
   GBusNameOwnerFlags  name_owner_flags;
 };
 
@@ -75,6 +76,9 @@ pos_osk_dbus_get_property (GObject    *object,
   switch (property_id) {
   case PROP_NAME_OWNER_FLAGS:
     g_value_set_flags (value, self->name_owner_flags);
+    break;
+  case PROP_HAS_NAME:
+    g_value_set_boolean (value, self->has_name);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -125,7 +129,8 @@ on_name_acquired (GDBusConnection *connection,
   PosOskDbus *self = POS_OSK_DBUS (user_data);
 
   g_debug ("Acquired name %s", name);
-  self->acquired = TRUE;
+  self->has_name = TRUE;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_HAS_NAME]);
 }
 
 
@@ -141,10 +146,13 @@ on_name_lost (GDBusConnection *connection,
     return;
   }
 
-  if (self->acquired)
+  if (self->has_name) {
     g_debug ("Lost DBus name '%s'", name);
-  else
+    self->has_name = FALSE;
+    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_HAS_NAME]);
+  } else {
     g_warning ("Failed to acquire DBus name '%s'", name);
+  }
 }
 
 
@@ -175,7 +183,6 @@ pos_osk_dbus_constructed (GObject *object)
 
   G_OBJECT_CLASS (pos_osk_dbus_parent_class)->constructed (object);
 
-  g_warning ("%d", self->name_owner_flags);
   self->dbus_name_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                                        OSK0_BUS_NAME,
                                        self->name_owner_flags,
@@ -202,6 +209,11 @@ pos_osk_dbus_class_init (PosOskDbusClass *klass)
                         G_TYPE_BUS_NAME_OWNER_FLAGS,
                         0,
                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  props[PROP_HAS_NAME] =
+    g_param_spec_boolean ("has-name", "", "",
+                          FALSE,
+                          G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
