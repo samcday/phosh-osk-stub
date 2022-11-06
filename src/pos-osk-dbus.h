@@ -18,5 +18,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (PosOskDbus, pos_osk_dbus, POS, OSK_DBUS, PosDbusOSK0Skeleton)
 
 PosOskDbus *pos_osk_dbus_new (GBusNameOwnerFlags flags);
+gboolean    pos_osk_dbus_has_name (PosOskDbus *self);
 
 G_END_DECLS

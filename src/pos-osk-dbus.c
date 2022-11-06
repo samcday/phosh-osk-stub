@@ -232,3 +232,12 @@ pos_osk_dbus_new (GBusNameOwnerFlags flags)
                                      "name-owner-flags", flags,
                                      NULL));
 }
+
+
+gboolean
+pos_osk_dbus_has_name (PosOskDbus *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_DBUS (self), FALSE);
+
+  return self->has_name;
+}

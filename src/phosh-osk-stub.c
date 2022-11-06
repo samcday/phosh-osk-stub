@@ -222,6 +222,15 @@ on_screen_keyboard_enabled_changed (PosInputSurface *input_surface)
 
 
 static void on_input_surface_gone (gpointer data, GObject *unused);
+static void on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused);
+
+static void
+dispose_input_surface (PosInputSurface *input_surface)
+{
+  /* Remove weak ref so input-surface doesn't get recreated */
+  g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
+  gtk_widget_destroy (GTK_WIDGET (_input_surface));
+}
 
 #define INPUT_SURFACE_HEIGHT 200
 
@@ -294,6 +303,24 @@ on_input_surface_gone (gpointer data, GObject *unused)
 
   create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
                         _osk_dbus);
+}
+
+
+static void
+on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused)
+{
+  gboolean has_name;
+
+  has_name = pos_osk_dbus_has_name (dbus);
+  g_debug ("Has dbus name: %d", has_name);
+
+  if (has_name == FALSE) {
+    dispose_input_surface (_input_surface);
+    _input_surface = NULL;
+  } else if (_input_surface == NULL) {
+    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                          dbus);
+  }
 }
 
 
@@ -423,6 +450,8 @@ main (int argc, char *argv[])
   flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
     (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
   _osk_dbus = pos_osk_dbus_new (flags);
+  g_signal_connect (_osk_dbus, "notify::has-name", G_CALLBACK (on_has_dbus_name_changed), NULL);
+
   if (!setup_input_method (_osk_dbus))
     return EXIT_FAILURE;
 
@@ -433,9 +462,8 @@ main (int argc, char *argv[])
 
   g_main_loop_run (loop);
 
-  /* Remove weak ref so input-surface doesn't get recreated */
-  g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
-  gtk_widget_destroy (GTK_WIDGET (_input_surface));
+  if (_input_surface)
+    dispose_input_surface (_input_surface);
   g_clear_object (&_osk_dbus);
 
   pos_uninit ();
