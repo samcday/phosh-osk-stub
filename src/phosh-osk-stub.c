@@ -118,8 +118,8 @@ on_client_registered (GObject      *source_object,
                       gpointer      user_data)
 {
   GMainLoop *loop = user_data;
-  GVariant *variant;
   GDBusProxy *client_proxy;
+  g_autoptr (GVariant) variant = NULL;
   g_autoptr (GError) err = NULL;
   g_autofree char *object_path = NULL;
 
@@ -146,8 +146,6 @@ on_client_registered (GObject      *source_object,
 
   g_signal_connect (client_proxy, "g-signal",
                     G_CALLBACK (client_proxy_signal_cb), loop);
-
-  g_variant_unref (variant);
 }
 
 
