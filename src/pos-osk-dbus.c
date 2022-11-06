@@ -33,6 +33,7 @@ struct _PosOskDbus {
 
   gboolean            visible;
   guint               dbus_name_id;
+  gboolean            acquired;
 };
 
 static void pos_osk_dbus_osk0_iface_init (PosDbusOSK0Iface *iface);
@@ -87,7 +88,10 @@ on_name_acquired (GDBusConnection *connection,
                   const char      *name,
                   gpointer         user_data)
 {
+  PosOskDbus *self = POS_OSK_DBUS (user_data);
+
   g_debug ("Acquired name %s", name);
+  self->acquired = TRUE;
 }
 
 
@@ -96,7 +100,17 @@ on_name_lost (GDBusConnection *connection,
               const char      *name,
               gpointer         user_data)
 {
-  g_debug ("Lost or failed to acquire name %s", name);
+  PosOskDbus *self = POS_OSK_DBUS (user_data);
+
+  if (connection == NULL) {
+    g_critical ("Failed to connect to session DBus");
+    return;
+  }
+
+  if (self->acquired)
+    g_debug ("Lost DBus name '%s'", name);
+  else
+    g_warning ("Failed to acquire DBus name '%s'", name);
 }
 
 
