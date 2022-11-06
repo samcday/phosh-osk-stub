@@ -120,13 +120,12 @@ on_client_registered (GObject      *source_object,
   GMainLoop *loop = user_data;
   GVariant *variant;
   GDBusProxy *client_proxy;
-  GError *error = NULL;
+  g_autoptr (GError) err = NULL;
   char *object_path = NULL;
 
-  variant = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object), res, &error);
+  variant = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object), res, &err);
   if (!variant) {
-    g_warning ("Unable to register client: %s", error->message);
-    g_error_free (error);
+    g_warning ("Unable to register client: %s", err->message);
     return;
   }
 
@@ -139,10 +138,9 @@ on_client_registered (GObject      *source_object,
                                                 object_path,
                                                 GNOME_SESSION_CLIENT_PRIVATE_DBUS_INTERFACE,
                                                 NULL,
-                                                &error);
+                                                &err);
   if (!client_proxy) {
-    g_warning ("Unable to get the session client proxy: %s", error->message);
-    g_error_free (error);
+    g_warning ("Unable to get the session client proxy: %s", err->message);
     return;
   }
 
