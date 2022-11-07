@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Guido Günther <agx@sigxcpu.org>
 Build-Depends:
  debhelper-compat (= 13),
+ dh-exec,
  json-glib-tools,
  libsystemd-dev,
  libfeedback-dev,
