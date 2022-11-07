@@ -1,3 +1,10 @@
+phosh-osk-stub 0.22.0
+---------------------
+Released: November 2022
+* Make `force-show` debug option more useful
+* Fixes and cleanups that were dormant in other branches
+* Sync up with phosh's versioning
+
 phosh-osk-stub 0.21.0
 ---------------------
 Released: Septemnber 2022
