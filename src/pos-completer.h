@@ -10,6 +10,29 @@
 
 G_BEGIN_DECLS
 
+GQuark pos_completer_error_quark(void);
+
+/**
+ * POS_COMPLETER_ERROR:
+ *
+ * Error domain for completers. Errors in this domain will be from the
+ * #PosCompleterError enumeration.  See #GError for more information on
+ * error domains.
+ **/
+#define POS_COMPLETER_ERROR pos_completer_error_quark()
+
+/**
+ * PosCompleterError:
+ * @POS_COMPLETER_ERROR_ENGINE_INIT: The completer engine failed to init
+ * @POS_COMPLETER_ERROR_LANG_INIT: The completer engine failed to setup the language
+ *
+ * Errors emitted by the completion engines.
+ */
+typedef enum {
+  POS_COMPLETER_ERROR_ENGINE_INIT = 1,
+  POS_COMPLETER_ERROR_LANG_INIT = 2,
+} PosCompleterError;
+
 #define POS_TYPE_COMPLETER (pos_completer_get_type())
 G_DECLARE_INTERFACE (PosCompleter, pos_completer, POS, COMPLETER, GObject)
 

@@ -52,6 +52,18 @@ static const char * const completion_end_symbols[] = {
 };
 
 
+GQuark
+pos_completer_error_quark (void)
+{
+  static GQuark quark = 0;
+
+  if (!quark)
+    quark = g_quark_from_static_string ("pos-completer");
+
+  return quark;
+}
+
+
 void
 pos_completer_default_init (PosCompleterInterface *iface)
 {
