@@ -45,6 +45,7 @@ test_c_args = [
   '-Werror=shift-count-overflow',
   '-Werror=shift-overflow=2',
   '-Werror=implicit-fallthrough=3',
+  '-Werror=implicit-function-declaration',
   '-Wfloat-equal',
   '-Wformat-nonliteral',
   '-Wformat-security',

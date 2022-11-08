@@ -42,9 +42,6 @@ typedef enum _PosDebugFlags {
 } PosDebugFlags;
 
 
-static GMainLoop *loop;
-static GDBusProxy *_proxy;
-
 static PosInputSurface *_input_surface;
 
 static struct wl_display *_display;
@@ -73,13 +70,11 @@ print_version (void)
 static gboolean
 quit_cb (gpointer user_data)
 {
+  GMainLoop *loop = user_data;
+
   g_info ("Caught signal, shutting down...");
 
-  if (loop)
-    g_idle_add ((GSourceFunc) g_main_loop_quit, loop);
-  else
-    exit (0);
-
+  g_main_loop_quit (loop);
   return FALSE;
 }
 
@@ -102,6 +97,8 @@ client_proxy_signal_cb (GDBusProxy *proxy,
                         GVariant   *parameters,
                         gpointer    user_data)
 {
+  GMainLoop *loop = user_data;
+
   if (g_strcmp0 (signal_name, "QueryEndSession") == 0) {
     g_debug ("Got QueryEndSession signal");
     respond_to_end_session (proxy, FALSE);
@@ -110,7 +107,7 @@ client_proxy_signal_cb (GDBusProxy *proxy,
     respond_to_end_session (proxy, TRUE);
   } else if (g_strcmp0 (signal_name, "Stop") == 0) {
     g_debug ("Got Stop signal");
-    quit_cb (NULL);
+    quit_cb (loop);
   }
 }
 
@@ -120,15 +117,15 @@ on_client_registered (GObject      *source_object,
                       GAsyncResult *res,
                       gpointer      user_data)
 {
-  GVariant *variant;
+  GMainLoop *loop = user_data;
   GDBusProxy *client_proxy;
-  GError *error = NULL;
-  char *object_path = NULL;
+  g_autoptr (GVariant) variant = NULL;
+  g_autoptr (GError) err = NULL;
+  g_autofree char *object_path = NULL;
 
-  variant = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object), res, &error);
+  variant = g_dbus_proxy_call_finish (G_DBUS_PROXY (source_object), res, &err);
   if (!variant) {
-    g_warning ("Unable to register client: %s", error->message);
-    g_error_free (error);
+    g_warning ("Unable to register client: %s", err->message);
     return;
   }
 
@@ -141,52 +138,49 @@ on_client_registered (GObject      *source_object,
                                                 object_path,
                                                 GNOME_SESSION_CLIENT_PRIVATE_DBUS_INTERFACE,
                                                 NULL,
-                                                &error);
+                                                &err);
   if (!client_proxy) {
-    g_warning ("Unable to get the session client proxy: %s", error->message);
-    g_error_free (error);
+    g_warning ("Unable to get the session client proxy: %s", err->message);
     return;
   }
 
   g_signal_connect (client_proxy, "g-signal",
-                    G_CALLBACK (client_proxy_signal_cb), NULL);
-
-  g_free (object_path);
-  g_variant_unref (variant);
+                    G_CALLBACK (client_proxy_signal_cb), loop);
 }
 
 
-static void
-stub_session_register (const char *client_id)
+static GDBusProxy *
+pos_session_register (const char *client_id, GMainLoop *loop)
 {
+  GDBusProxy *proxy;
   const char *startup_id;
   g_autoptr (GError) err = NULL;
 
-  if (!_proxy) {
-    _proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
-                                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
-                                            G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START_AT_CONSTRUCTION,
-                                            NULL,
-                                            GNOME_SESSION_DBUS_NAME,
-                                            GNOME_SESSION_DBUS_OBJECT,
-                                            GNOME_SESSION_DBUS_INTERFACE,
-                                            NULL,
-                                            &err);
-    if (!_proxy) {
-      g_debug ("Failed to contact gnome-session: %s", err->message);
-      return;
-    }
+  proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
+                                         G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES |
+                                         G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START_AT_CONSTRUCTION,
+                                         NULL,
+                                         GNOME_SESSION_DBUS_NAME,
+                                         GNOME_SESSION_DBUS_OBJECT,
+                                         GNOME_SESSION_DBUS_INTERFACE,
+                                         NULL,
+                                         &err);
+  if (proxy == NULL) {
+    g_debug ("Failed to contact gnome-session: %s", err->message);
+    return NULL;
   }
 
   startup_id = g_getenv ("DESKTOP_AUTOSTART_ID");
-  g_dbus_proxy_call (_proxy,
+  g_dbus_proxy_call (proxy,
                      "RegisterClient",
                      g_variant_new ("(ss)", client_id, startup_id ? startup_id : ""),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
                      (GAsyncReadyCallback) on_client_registered,
-                     NULL);
+                     loop);
+
+  return proxy;
 }
 
 
@@ -228,6 +222,15 @@ on_screen_keyboard_enabled_changed (PosInputSurface *input_surface)
 
 
 static void on_input_surface_gone (gpointer data, GObject *unused);
+static void on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused);
+
+static void
+dispose_input_surface (PosInputSurface *input_surface)
+{
+  /* Remove weak ref so input-surface doesn't get recreated */
+  g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
+  gtk_widget_destroy (GTK_WIDGET (_input_surface));
+}
 
 #define INPUT_SURFACE_HEIGHT 200
 
@@ -235,11 +238,18 @@ static void
 create_input_surface (struct wl_seat                         *seat,
                       struct zwp_virtual_keyboard_manager_v1 *virtual_keyboard_manager,
                       struct zwp_input_method_manager_v2     *im_manager,
-                      struct zwlr_layer_shell_v1             *layer_shell)
+                      struct zwlr_layer_shell_v1             *layer_shell,
+                      PosOskDbus                             *osk_dbus)
 {
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
+
+  g_assert (seat);
+  g_assert (virtual_keyboard_manager);
+  g_assert (im_manager);
+  g_assert (layer_shell);
+  g_assert (osk_dbus);
 
   virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
@@ -260,7 +270,6 @@ create_input_surface (struct wl_seat                         *seat,
                                  "keyboard-driver", vk_driver,
                                  NULL);
 
-  _osk_dbus = pos_osk_dbus_new ();
   g_object_bind_property (_input_surface,
                           "surface-visible",
                           _osk_dbus,
@@ -292,7 +301,26 @@ on_input_surface_gone (gpointer data, GObject *unused)
 {
   g_debug ("Input surface gone, recreating");
 
-  create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell);
+  create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                        _osk_dbus);
+}
+
+
+static void
+on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused)
+{
+  gboolean has_name;
+
+  has_name = pos_osk_dbus_has_name (dbus);
+  g_debug ("Has dbus name: %d", has_name);
+
+  if (has_name == FALSE) {
+    dispose_input_surface (_input_surface);
+    _input_surface = NULL;
+  } else if (_input_surface == NULL) {
+    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                          dbus);
+  }
 }
 
 
@@ -318,7 +346,8 @@ registry_handle_global (void               *data,
   if (_seat && _input_method_manager && _layer_shell && _virtual_keyboard_manager &&
       !_input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
-    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell);
+    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                          _osk_dbus);
   }
 }
 
@@ -339,7 +368,7 @@ static const struct wl_registry_listener registry_listener = {
 
 
 static gboolean
-setup_input_method (void)
+setup_input_method (PosOskDbus *osk_dbus)
 {
   GdkDisplay *gdk_display;
 
@@ -381,11 +410,18 @@ parse_debug_env (void)
 int
 main (int argc, char *argv[])
 {
+  g_autoptr (GMainLoop) loop = NULL;
+  g_autoptr (GDBusProxy) proxy = NULL;
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
-  gboolean version = FALSE;
+  gboolean version = FALSE, replace = FALSE, allow_replace = FALSE;
+  GBusNameOwnerFlags flags;
 
   const GOptionEntry options [] = {
+    {"replace", 0, 0, G_OPTION_ARG_NONE, &replace,
+     "Replace DBus service", NULL},
+    {"allow-replacement", 0, 0, G_OPTION_ARG_NONE, &allow_replace,
+     "Allow replacement of DBus service", NULL},
     {"version", 0, 0, G_OPTION_ARG_NONE, &version,
      "Show version information", NULL},
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -409,22 +445,25 @@ main (int argc, char *argv[])
 
   gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/sm/puri/phosh/osk-stub/icons");
 
-  stub_session_register (APP_ID);
-  if (!setup_input_method ())
+  proxy = pos_session_register (APP_ID, loop);
+
+  flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
+    (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
+  _osk_dbus = pos_osk_dbus_new (flags);
+  g_signal_connect (_osk_dbus, "notify::has-name", G_CALLBACK (on_has_dbus_name_changed), NULL);
+
+  if (!setup_input_method (_osk_dbus))
     return EXIT_FAILURE;
 
   loop = g_main_loop_new (NULL, FALSE);
 
-  g_unix_signal_add (SIGTERM, quit_cb, NULL);
-  g_unix_signal_add (SIGINT, quit_cb, NULL);
+  g_unix_signal_add (SIGTERM, quit_cb, loop);
+  g_unix_signal_add (SIGINT, quit_cb, loop);
 
   g_main_loop_run (loop);
-  g_main_loop_unref (loop);
-  g_object_unref (_proxy);
 
-  /* Remove weak ref so input-surface doesn't get recreated */
-  g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
-  gtk_widget_destroy (GTK_WIDGET (_input_surface));
+  if (_input_surface)
+    dispose_input_surface (_input_surface);
   g_clear_object (&_osk_dbus);
 
   pos_uninit ();

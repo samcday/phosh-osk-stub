@@ -165,7 +165,7 @@
                             <property name="visible">True</property>
                             <property name="ellipsize">end</property>
                             <property name="halign">end</property>
-                            <property name="label">Surr.:</property>
+                            <property name="label">Surr:</property>
                           </object>
                           <packing>
                             <property name="top-attach">5</property>

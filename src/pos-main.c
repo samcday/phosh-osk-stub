@@ -58,4 +58,3 @@ pos_uninit (void)
 {
   pos_unregister_resource ();
 }
-

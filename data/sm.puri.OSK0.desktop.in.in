@@ -2,7 +2,7 @@
 Type=Application
 Name=On-screen keyboard stub
 Comment=On-screen keyboard stub
-Exec=@bindir@/phosh-osk-stub
+Exec=@bindir@/phosh-osk-stub --allow-replacement
 Categories=System;GNOME;Core;
 OnlyShowIn=Phosh;
 Icon=input-keyboard-symbolic
