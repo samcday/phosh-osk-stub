@@ -104,6 +104,23 @@ G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SU
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_MAP, pos_input_surface_action_map_iface_init)
   )
 
+
+/* This is a bit more strict than is_completer_active so it can be used
+   with active completer but also takes the OSK's mode into account */
+static gboolean
+pos_input_surface_is_completion_mode (PosInputSurface *self)
+{
+  GtkWidget *osk_widget;
+
+  if (pos_input_surface_is_completer_active(self) == FALSE)
+    return FALSE;
+
+  /* no completion in cursor mode */
+  osk_widget = hdy_deck_get_visible_child (self->deck);
+  return pos_osk_widget_get_mode (POS_OSK_WIDGET (osk_widget)) == POS_OSK_WIDGET_MODE_KEYBOARD;
+}
+
+
 static void
 on_completion_selected (PosInputSurface *self, const char *completion)
 {
@@ -127,6 +144,10 @@ on_completer_preedit_changed (PosInputSurface *self)
 {
   const char *preedit = NULL;
   int pos;
+
+  /* Only update preedit when in cursor mode as this updates preedit too */
+  if (pos_input_surface_is_completion_mode (self) == FALSE)
+    return;
 
   preedit = pos_completer_get_preedit (self->completer);
   pos = preedit ? strlen (preedit) : 0;
@@ -155,6 +176,10 @@ static void
 on_completer_update (PosInputSurface *self, const char *preedit, guint before, guint after)
 {
   guint pos = strlen (preedit);
+
+  /* In cursor mode we reset preedit, make sure to break the cycle */
+  if (pos_input_surface_is_completion_mode (self) == FALSE)
+    return;
 
   pos_input_method_delete_surrounding_text (self->input_method, before, after, FALSE);
   pos_input_method_send_preedit (self->input_method, preedit, pos, pos, TRUE);
@@ -228,7 +253,7 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
     return;
   }
 
-  if (pos_input_surface_is_completer_active (self)) {
+  if (pos_input_surface_is_completion_mode (self)) {
     handled = pos_completer_feed_symbol (self->completer, symbol);
     if (handled)
       return;
@@ -243,6 +268,27 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
 
   if (pos_input_surface_is_completer_active (self))
     pos_completer_set_preedit (self->completer, NULL);
+}
+
+
+static void
+on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_widget)
+{
+  g_autofree char *preedit = NULL;
+
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
+
+  /* We only want to clear preedit when entering cursor mode */
+  if (pos_input_surface_is_completion_mode (self) == TRUE)
+    return;
+
+  preedit = g_strdup (pos_completer_get_preedit (self->completer));
+
+  g_debug ("%s: Submitting %s", __func__, preedit);
+  pos_completer_set_preedit (self->completer, NULL);
+  pos_input_method_send_preedit (self->input_method, "", 0, 0, FALSE);
+  pos_input_method_send_string (self->input_method, preedit, TRUE);
 }
 
 
@@ -817,7 +863,6 @@ pos_input_surface_check_resize (GtkContainer *container)
   g_object_get (self, "height", &height, NULL);
 
   if (gtk_widget_get_mapped (GTK_WIDGET (self)) && min.height != self->height) {
-    g_debug ("Setting height to %d", min.height);
     phosh_layer_surface_set_size (PHOSH_LAYER_SURFACE (self), -1, min.height);
     /* Don't interfere with animation */
     if (self->animation.progress >= 1.0) {
@@ -861,6 +906,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
+  gtk_widget_class_bind_template_callback (widget_class, on_osk_mode_changed);
 
   /**
    * PosInputSurface:input-method:
@@ -958,6 +1004,7 @@ insert_osk (PosInputSurface *self,
   g_object_connect (osk_widget,
                     "swapped-signal::key-down", G_CALLBACK (on_osk_key_down), self,
                     "swapped-signal::key-symbol", G_CALLBACK (on_osk_key_symbol), self,
+                    "swapped-signal::notify::mode", G_CALLBACK (on_osk_mode_changed), self,
                     NULL);
 
   hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);

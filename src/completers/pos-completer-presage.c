@@ -117,6 +117,7 @@ pos_completer_presage_set_preedit (PosCompleter *iface, const char *preedit)
   if (preedit)
     g_string_append (self->preedit, preedit);
   else {
+    /* No string: reset completions */
     pos_completer_presage_set_completions (POS_COMPLETER (self), NULL);
   }
 
