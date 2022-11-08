@@ -422,7 +422,7 @@ pos_input_method_class_init (PosInputMethodClass *klass)
    * @pending_state: The new pending state
    *
    * The pending state changed. Tracking pending state changes is only
-   * useful for debugging as only `appplied` state matters for the OSK.
+   * useful for debugging as only `applied` state matters for the OSK.
    */
   signals[PENDING_CHANGED] =
     g_signal_new ("pending-changed",
@@ -528,6 +528,8 @@ pos_input_method_send_string (PosInputMethod *self, const char *string, gboolean
  * pos_input_method_send_preedit:
  * @self: The input method
  * @preedit: The preedit to send
+ * @cstart: The start of the cursor
+ * @cend: The end of the cursor
  * @commit: Whether to invoke `commit` request as well
  *
  * This sends the given text via a `set_preedit_string` request.
