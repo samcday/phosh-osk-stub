@@ -36,10 +36,12 @@
 /**
  * PosDebugFlags:
  * @POS_DEBUG_FLAG_FORCE_SHOW: Ignore the `screen-keyboard-enabled` GSetting and always enable the OSK
+ * @POS_DEBUG_FLAG_FORCE_COMPLETEION: Force text completion to on
  */
 typedef enum _PosDebugFlags {
   POS_DEBUG_FLAG_NONE = 0,
   POS_DEBUG_FLAG_FORCE_SHOW    = 1 << 0,
+  POS_DEBUG_FLAG_FORCE_COMPLETEION = 1 << 1,
 } PosDebugFlags;
 
 
@@ -247,6 +249,7 @@ create_input_surface (struct wl_seat                         *seat,
   g_autoptr (PosInputMethod) im = NULL;
   g_autoptr (PosCompleter) completer = NULL;
   g_autoptr (GError) err = NULL;
+  gboolean force_completion;
 
   g_assert (seat);
   g_assert (virtual_keyboard_manager);
@@ -263,6 +266,7 @@ create_input_surface (struct wl_seat                         *seat,
 
   im = pos_input_method_new (im_manager, seat);
 
+  force_completion = !!(_debug_flags & POS_DEBUG_FLAG_FORCE_COMPLETEION);
   _input_surface = g_object_new (POS_TYPE_INPUT_SURFACE,
                                  /* layer-surface */
                                  "layer-shell", layer_shell,
@@ -278,6 +282,7 @@ create_input_surface (struct wl_seat                         *seat,
                                  "input-method", im,
                                  "keyboard-driver", vk_driver,
                                  "completer", completer,
+                                 "completion-enabled", force_completion,
                                  NULL);
 
   g_object_bind_property (_input_surface,
@@ -404,6 +409,8 @@ static GDebugKey debug_keys[] =
 {
   { .key = "force-show",
     .value = POS_DEBUG_FLAG_FORCE_SHOW,},
+  { .key = "force-completion",
+    .value = POS_DEBUG_FLAG_FORCE_COMPLETEION,},
 };
 
 static PosDebugFlags
