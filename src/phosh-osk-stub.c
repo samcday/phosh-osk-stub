@@ -318,8 +318,12 @@ on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused)
     dispose_input_surface (_input_surface);
     _input_surface = NULL;
   } else if (_input_surface == NULL) {
-    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
-                          dbus);
+    if (_seat && _virtual_keyboard_manager && _input_method_manager && _layer_shell) {
+      create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+                            dbus);
+    } else {
+      g_warning ("Wayland globals not yet read");
+    }
   }
 }
 

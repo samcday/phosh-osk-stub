@@ -66,7 +66,8 @@
         [
           {
             "symbol": "KEY_TAB",
-            "label": "⭾"
+            "label": "⭾",
+            "style": "sys"
           },
           [
             "a",
@@ -106,7 +107,8 @@
           ],
           {
             "symbol": "KEY_ESC",
-            "label": "ESC"
+            "label": "ESC",
+            "style": "sys"
           }
         ],
         [
@@ -221,7 +223,8 @@
         [
           {
             "symbol": "KEY_TAB",
-            "label": "⭾"
+            "label": "⭾",
+            "style": "sys"
           },
           [
             "A",

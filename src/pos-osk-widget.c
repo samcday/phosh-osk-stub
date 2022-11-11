@@ -264,6 +264,7 @@ get_common_key_post (PosOskWidgetLayer l, gint row)
                         "symbol", "KEY_BACKSPACE",
                         "icon", "edit-clear-symbolic",
                         "width", 1.5,
+                        "style", "sys",
                         NULL);
     break;
   case 3:
@@ -326,7 +327,8 @@ get_common_key_pre (PosOskWidgetLayer layer, gint row)
 
 
 static PosOskKey *
-get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *label, guint num_keys)
+get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *label,
+         const char *style, guint num_keys)
 {
   if (g_strcmp0 (symbol, " ") == 0) {
     double width;
@@ -343,6 +345,7 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *labe
                        "symbol", symbol,
                        "symbols", symbols,
                        "label", label,
+                       "style", style,
                        NULL);
 }
 
@@ -388,7 +391,7 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
       const gchar *symbol = json_array_get_string_element (all_symbols, 0);
 
       symbols = parse_symbols (all_symbols);
-      key = get_key (self, symbol, symbols, NULL, num_keys);
+      key = get_key (self, symbol, symbols, NULL, NULL, num_keys);
     } else if (JSON_NODE_HOLDS (key_node, JSON_NODE_OBJECT)) {
       key = POS_OSK_KEY (json_gobject_deserialize (POS_TYPE_OSK_KEY, key_node));
     } else {

@@ -5,6 +5,7 @@ pos-osk-widget {
   background-color: @theme_bg_color;
 }
 
+/* A regular (e.g. character, number) key */
 pos-key {
   color: @pos_key_fg_color;
   background: @pos_key_bg_color;
@@ -16,6 +17,16 @@ pos-key.pressed {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
+/* A non-character key (ESC, tab, ...) */
+pos-key.sys {
+  background: shade(@pos_key_bg_color, 0.75);
+}
+
+pos-key.sys.pressed {
+  background: shade(@pos_key_bg_color, 0.6);
+}
+
+/* a layer toggle */
 pos-key.toggle {
   background: shade(@pos_key_bg_color, 0.75);
 }

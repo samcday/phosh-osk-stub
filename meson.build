@@ -18,12 +18,14 @@ pkglibdir = join_paths(libdir, meson.project_name())
 systemddir = join_paths(prefix, 'lib/systemd')
 systemduserdir = join_paths(systemddir, 'user')
 
-glib_ver = 'GLIB_VERSION_2_62'
+glib_ver = '2.62'
+glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
+glib_ver_cmp = '>=@0@'.format(glib_ver)
 
 add_project_arguments([
   '-DHAVE_CONFIG_H',
-  '-DGLIB_VERSION_MIN_REQUIRED=@0@'.format(glib_ver),
-  '-DGLIB_VERSION_MAX_REQUIRED=@0@'.format(glib_ver),
+  '-DGLIB_VERSION_MIN_REQUIRED=@0@'.format(glib_ver_str),
+  '-DGLIB_VERSION_MAX_REQUIRED=@0@'.format(glib_ver_str),
   '-DG_LOG_USE_STRUCTURED',
 ], language: 'c')
 
@@ -87,11 +89,9 @@ add_project_arguments(
 gnome = import('gnome')
 i18n  = import('i18n')
 
-glib_ver = '>= 2.62'
-
-glib_dep = dependency('glib-2.0', version: glib_ver)
-gio_dep = dependency('gio-2.0', version: glib_ver)
-gobject_dep = dependency('gobject-2.0', version: glib_ver)
+glib_dep = dependency('glib-2.0', version: glib_ver_cmp)
+gio_dep = dependency('gio-2.0', version: glib_ver_cmp)
+gobject_dep = dependency('gobject-2.0', version: glib_ver_cmp)
 gnome_desktop_dep = dependency('gnome-desktop-3.0', version: '>=3.26')
 gsettings_desktop_schemas_dep = dependency('gsettings-desktop-schemas')
 gtk_dep = dependency('gtk+-3.0', version: '>=3.22')
