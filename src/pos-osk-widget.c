@@ -264,6 +264,7 @@ get_common_key_post (PosOskWidgetLayer l, gint row)
                         "symbol", "KEY_BACKSPACE",
                         "icon", "edit-clear-symbolic",
                         "width", 1.5,
+                        "style", "sys",
                         NULL);
     break;
   case 3:
