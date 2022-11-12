@@ -664,7 +664,7 @@ insert_layout (PosInputSurface *self, const char *type, const char *id)
 
   if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id, &display_name, NULL,
                                        &layout, &variant)) {
-    g_debug ("Failed to get layout info for %s", id);
+    g_warning ("Failed to get layout info for %s", id);
     return NULL;
   }
   if (STR_IS_NULL_OR_EMPTY (variant))
