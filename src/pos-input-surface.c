@@ -740,7 +740,8 @@ static void
 pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
-
+  const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
+  
   self->action_map = G_ACTION_MAP (g_simple_action_group_new ());
   g_action_map_add_action_entries (self->action_map,
                                    entries,
@@ -765,16 +766,17 @@ pos_input_surface_init (PosInputSurface *self)
   self->xkbinfo = gnome_xkb_info_new ();
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
 
-  g_object_connect (self->input_settings,
-                    "swapped-signal::changed::sources",
-                    G_CALLBACK (on_input_setting_changed), self,
-                    "swapped-signal::changed::xkb-options",
-                    G_CALLBACK (on_input_setting_changed), self,
-                    NULL);
-  on_input_setting_changed (self, NULL, self->input_settings);
-  const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
-  if (test_layout)
+  if (test_layout) {
     insert_layout (self, "xkb", test_layout);
+  } else {
+    g_object_connect (self->input_settings,
+                      "swapped-signal::changed::sources",
+                      G_CALLBACK (on_input_setting_changed), self,
+                      "swapped-signal::changed::xkb-options",
+                      G_CALLBACK (on_input_setting_changed), self,
+                      NULL);
+    on_input_setting_changed (self, NULL, self->input_settings);
+  }
 
   gtk_settings = gtk_settings_get_default ();
   g_object_set (G_OBJECT (gtk_settings), "gtk-application-prefer-dark-theme", TRUE, NULL);
