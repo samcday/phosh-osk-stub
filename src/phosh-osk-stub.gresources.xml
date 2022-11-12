@@ -9,14 +9,33 @@
     <file compressed="true">stylesheet/common.css</file>
     <!-- from gnome-shell -->
     <file preprocess="json-stripblanks">layouts/ara.json</file>
+    <file preprocess="json-stripblanks">layouts/be.json</file>    
     <file preprocess="json-stripblanks">layouts/bg.json</file>
+    <file preprocess="json-stripblanks">layouts/by.json</file>
+    <file preprocess="json-stripblanks">layouts/ca.json</file>
     <file preprocess="json-stripblanks">layouts/cz.json</file>
     <file preprocess="json-stripblanks">layouts/de.json</file>
+    <file preprocess="json-stripblanks">layouts/dk.json</file>
+    <file preprocess="json-stripblanks">layouts/ee.json</file>
+    <file preprocess="json-stripblanks">layouts/es.json</file>
+    <file preprocess="json-stripblanks">layouts/fi.json</file>
     <file preprocess="json-stripblanks">layouts/in+bolnagri.json</file>
     <file preprocess="json-stripblanks">layouts/in+mal.json</file>
+    <file preprocess="json-stripblanks">layouts/it.json</file>
+    <file preprocess="json-stripblanks">layouts/lt.json</file>
+    <file preprocess="json-stripblanks">layouts/lv.json</file>
+    <file preprocess="json-stripblanks">layouts/my.json</file>
+    <file preprocess="json-stripblanks">layouts/nl.json</file>
+    <file preprocess="json-stripblanks">layouts/no.json</file>
+    <file preprocess="json-stripblanks">layouts/ph.json</file>
     <file preprocess="json-stripblanks">layouts/pl.json</file>
+    <file preprocess="json-stripblanks">layouts/pt.json</file>
+    <file preprocess="json-stripblanks">layouts/ro.json</file>
     <file preprocess="json-stripblanks">layouts/ru.json</file>
+    <file preprocess="json-stripblanks">layouts/se.json</file>
+    <file preprocess="json-stripblanks">layouts/ua.json</file>
     <file preprocess="json-stripblanks">layouts/us.json</file>
+    <file preprocess="json-stripblanks">layouts/vn.json</file>
     <!-- handcrafted -->
     <file preprocess="json-stripblanks" >layouts/terminal.json</file>
   </gresource>
