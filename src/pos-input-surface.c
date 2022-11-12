@@ -612,7 +612,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 }
 
 
-static GtkWidget *
+static PosOskWidget *
 insert_osk (PosInputSurface *self,
             const char      *name,
             const char      *display_name,
@@ -620,13 +620,13 @@ insert_osk (PosInputSurface *self,
             const char      *variant)
 {
   g_autoptr (GError) err = NULL;
-  GtkWidget *osk_widget;
+  PosOskWidget *osk_widget;
 
   osk_widget = g_hash_table_lookup (self->osks, name);
   if (osk_widget)
     return osk_widget;
 
-  osk_widget = GTK_WIDGET (pos_osk_widget_new ());
+  osk_widget = pos_osk_widget_new ();
   if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget),
                                   display_name, layout, variant, &err)) {
     g_warning ("Failed to load osk layout for %s: %s", name, err->message);
@@ -636,16 +636,43 @@ insert_osk (PosInputSurface *self,
   }
 
   g_debug ("Adding osk for layout '%s'", name);
-  gtk_widget_set_visible (osk_widget, TRUE);
+  gtk_widget_set_visible (GTK_WIDGET (osk_widget), TRUE);
   g_object_connect (osk_widget,
                     "swapped-signal::key-down", G_CALLBACK (on_osk_key_down), self,
                     "swapped-signal::key-symbol", G_CALLBACK (on_osk_key_symbol), self,
                     NULL);
 
-  hdy_deck_insert_child_after (self->deck, osk_widget, NULL);
+  hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);
   g_hash_table_insert (self->osks, g_strdup (name), osk_widget);
 
   return osk_widget;
+}
+
+
+static PosOskWidget *
+insert_layout (PosInputSurface *self, const char *type, const char *id)
+{
+  g_autofree char *name = NULL;
+  const gchar *layout = NULL;
+  const gchar *variant = NULL;
+  const gchar *display_name = NULL;
+
+  if (g_strcmp0 (type, "xkb")) {
+    g_debug ("Not a xkb layout: '%s' - ignoring", id);
+    return NULL;
+  }
+
+  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id, &display_name, NULL,
+                                       &layout, &variant)) {
+    g_debug ("Failed to get layout info for %s", id);
+    return NULL;
+  }
+  if (STR_IS_NULL_OR_EMPTY (variant))
+    name = g_strdup (layout);
+  else
+    name = g_strdup_printf ("%s+%s", layout, variant);
+
+  return insert_osk (self, name, display_name, layout, variant);
 }
 
 
@@ -672,33 +699,16 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   new = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
   while (g_variant_iter_next (&iter, "(&s&s)", &type, &id)) {
-    g_autofree char *name = NULL;
-    const gchar *layout = NULL;
-    const gchar *variant = NULL;
-    const gchar *display_name = NULL;
-    GtkWidget *osk_widget;
+    PosOskWidget *osk_widget;
 
-    if (g_strcmp0 (type, "xkb")) {
-      g_debug ("Not a xkb layout: '%s' - ignoring", id);
+    osk_widget = insert_layout (self, type, id);
+    if (osk_widget == NULL)
       continue;
-    }
 
-    if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id, &display_name, NULL,
-                                         &layout, &variant)) {
-      g_debug ("Failed to get layout info for %s", id);
-      continue;
-    }
-    if (!STR_IS_NULL_OR_EMPTY (variant))
-      name = g_strdup_printf ("%s+%s", layout, variant);
-    else
-      name = g_strdup (layout);
-
-    osk_widget = insert_osk (self, name, display_name, layout, variant);
-    g_hash_table_add (new, g_strdup (name));
-
+    g_hash_table_add (new, g_strdup (pos_osk_widget_get_name (osk_widget)));
     if (!first_set) {
       first_set = TRUE;
-      hdy_deck_set_visible_child (self->deck, osk_widget);
+      hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));
     }
   }
 
@@ -762,6 +772,9 @@ pos_input_surface_init (PosInputSurface *self)
                     G_CALLBACK (on_input_setting_changed), self,
                     NULL);
   on_input_setting_changed (self, NULL, self->input_settings);
+  const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
+  if (test_layout)
+    insert_layout (self, "xkb", test_layout);
 
   gtk_settings = gtk_settings_get_default ();
   g_object_set (G_OBJECT (gtk_settings), "gtk-application-prefer-dark-theme", TRUE, NULL);
