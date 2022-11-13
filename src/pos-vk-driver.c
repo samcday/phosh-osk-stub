@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "pos-vk-driver"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "pos-vk-driver.h"
 

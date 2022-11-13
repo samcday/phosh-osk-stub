@@ -6,7 +6,7 @@
 
 #define G_LOG_DOMAIN "pos-char-popup"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "pos-char-popup.h"
 

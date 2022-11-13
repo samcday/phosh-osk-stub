@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "pos-osk-dbus"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "pos-osk-dbus.h"
 #include "pos-osk0-dbus.h"

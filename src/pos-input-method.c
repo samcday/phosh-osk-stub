@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "pos-input-method"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "pos-enums.h"
 #include "pos-enum-types.h"

@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "pos-input-surface"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "pos-input-method.h"
 #include "pos-input-surface.h"
