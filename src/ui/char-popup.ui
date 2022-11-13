@@ -4,9 +4,8 @@
   <template class="PosCharPopup" parent="GtkPopover">
     <property name="can-focus">False</property>
     <child>
-      <object class="GtkBox" id="symbols_box">
+      <object class="GtkGrid" id="symbols_grid">
         <property name="visible">True</property>
-        <property name="orientation">horizontal</property>
         <property name="hexpand">True</property>
         <property name="halign">center</property>
       </object>
