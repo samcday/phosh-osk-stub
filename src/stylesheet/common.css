@@ -61,10 +61,10 @@ pos-char-popup grid {
 }
 
 pos-char-popup button {
+  font-size: 120%;
   color: @pos_key_fg_color;
   background: @pos_key_bg_color;
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 10px;
   border-radius: 0px;
   border: none;
 }
