@@ -6,7 +6,7 @@
 
 #define G_LOG_DOMAIN "pos-char-popup"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "pos-char-popup.h"
 
@@ -31,7 +31,7 @@ static GParamSpec *props[PROP_LAST_PROP];
 struct _PosCharPopup {
   GtkPopover parent;
 
-  GtkWidget *symbols_box;
+  GtkWidget *symbols_grid;
 };
 G_DEFINE_TYPE (PosCharPopup, pos_char_popup, GTK_TYPE_POPOVER)
 
@@ -100,7 +100,7 @@ pos_char_popup_class_init (PosCharPopupClass *klass)
 
   gtk_widget_class_set_template_from_resource (widget_class,
                                                "/sm/puri/phosh/osk-stub/ui/char-popup.ui");
-  gtk_widget_class_bind_template_child (widget_class, PosCharPopup, symbols_box);
+  gtk_widget_class_bind_template_child (widget_class, PosCharPopup, symbols_grid);
 }
 
 
@@ -131,22 +131,51 @@ on_button_clicked (PosCharPopup *self, GtkButton *btn)
   g_signal_emit (self, signals[SELECTED], 0, symbol);
 }
 
+
+static guint
+elements_per_row (guint n_syms)
+{
+  switch (n_syms) {
+  case 0 ... 4:
+    /* one row */
+    return n_syms;
+  case 5 ... 10:
+    /* two rows */
+    return (n_syms + 1) / 2;
+  default:
+    return n_syms / 5;
+  }
+}
+
 void
 pos_char_popup_set_symbols (PosCharPopup *self, GStrv symbols)
 {
+  guint n_per_row, n_syms;
+  int left = 0, top = 0;
+
   g_return_if_fail (POS_IS_CHAR_POPUP (self));
 
-  gtk_container_foreach (GTK_CONTAINER (self->symbols_box),
+  gtk_container_foreach (GTK_CONTAINER (self->symbols_grid),
                          (GtkCallback) gtk_widget_destroy, NULL);
 
   if (symbols == NULL)
     return;
 
-  for (int i = 0; symbols[i] != NULL; i++) {
+  n_syms = g_strv_length (symbols);
+  n_per_row = elements_per_row (n_syms);
+
+  for (int i = 0; i < n_syms; i++) {
     GtkWidget *btn = gtk_button_new_with_label (symbols[i]);
 
     g_signal_connect_swapped (btn, "clicked", G_CALLBACK (on_button_clicked), self);
     gtk_widget_show (btn);
-    gtk_box_pack_start (GTK_BOX (self->symbols_box), btn, 0, 0, 0);
+
+    if (left == n_per_row) {
+      left = 0;
+      top++;
+    }
+
+    gtk_grid_attach (GTK_GRID (self->symbols_grid), btn, left, top, 1, 1);
+    left++;
   }
 }

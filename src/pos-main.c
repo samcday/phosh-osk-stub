@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "pos-main"
 
-#include "config.h"
+#include "pos-config.h"
 #include "pos-resources.h"
 #include "pos-main.h"
 #include "pos-osk-widget.h"

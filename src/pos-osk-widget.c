@@ -6,7 +6,7 @@
 
 #define G_LOG_DOMAIN "pos-osk-widget"
 
-#include "config.h"
+#include "pos-config.h"
 
 #include "util.h"
 #include "pos-char-popup.h"

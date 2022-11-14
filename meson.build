@@ -23,7 +23,6 @@ glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
 glib_ver_cmp = '>=@0@'.format(glib_ver)
 
 add_project_arguments([
-  '-DHAVE_CONFIG_H',
   '-DGLIB_VERSION_MIN_REQUIRED=@0@'.format(glib_ver_str),
   '-DGLIB_VERSION_MAX_REQUIRED=@0@'.format(glib_ver_str),
   '-DG_LOG_USE_STRUCTURED',
@@ -117,8 +116,8 @@ config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 
 configure_file(
-  input: 'config.h.in',
-  output: 'config.h',
+  input: 'pos-config.h.in',
+  output: 'pos-config.h',
   configuration: config_h,
 )
 

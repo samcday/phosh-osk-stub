@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "pos-virtual-keyboard"
 
-#include "config.h"
+#include "pos-config.h"
 #include "util.h"
 
 #include "pos-virtual-keyboard.h"

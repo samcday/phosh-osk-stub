@@ -8,7 +8,7 @@
 
 #define G_LOG_DOMAIN "phosh-osk-stub"
 
-#include "config.h"
+#include "pos-config.h"
 #include "pos.h"
 
 #include "input-method-unstable-v2-client-protocol.h"
