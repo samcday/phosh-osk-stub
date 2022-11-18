@@ -45,12 +45,14 @@ typedef enum {
  * PosOskKeyUse:
  * @POS_OSK_KEY_USE_KEY: a regular key (e.g. letter)
  * @POS_OSK_KEY_USE_TOGGLE: a key that toggles another layer
+ * @POS_OSK_KEY_USE_MENU: a key that opens a popup menu
  *
  * The use (purpose) of a key.
  */
 typedef enum  {
   POS_OSK_KEY_USE_KEY,
   POS_OSK_KEY_USE_TOGGLE,
+  POS_OSK_KEY_USE_MENU,
 } PosOskKeyUse;
 
 /**

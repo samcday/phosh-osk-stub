@@ -283,7 +283,7 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "symbol", "KEY_ENTER",
                         "icon", "keyboard-enter-symbolic",
-                        "width", 1.5,
+                        "width", 2.0,
                         "style", "return",
                         NULL);
     row->width += pos_osk_key_get_width (key);
@@ -317,14 +317,24 @@ add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
+                        "use", POS_OSK_KEY_USE_MENU,
+                        "icon", "layout-menu-symbolic",
+                        "width", 1.0,
+                        "style", "sys",
+                        NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, 0, key);
+
+    key = g_object_new (POS_TYPE_OSK_KEY,
                         "label", "?123",
                         "use", POS_OSK_KEY_USE_TOGGLE,
-                        "width", 1.5,
+                        "width", 1.0,
                         "layer", POS_OSK_WIDGET_LAYER_SYMBOLS,
                         "style", "toggle",
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, 0, key);
+
     break;
   case 0:
   case 1:
@@ -341,7 +351,7 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *labe
   if (g_strcmp0 (symbol, " ") == 0) {
     double width;
 
-    width = (num_keys == 5) ? 3.0 : 5.0;
+    width = (num_keys == 5) ? 2.0 : 4.0;
     return g_object_new (POS_TYPE_OSK_KEY,
                          "label", self->display_name,
                          "symbol", symbol,
@@ -775,6 +785,10 @@ pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
     g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
     g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (key));
     switch_layer (self, key);
+    break;
+
+  case POS_OSK_KEY_USE_MENU:
+    /* TODO: popover menu */
     break;
   default:
     g_assert_not_reached ();

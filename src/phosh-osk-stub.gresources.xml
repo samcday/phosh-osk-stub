@@ -43,5 +43,6 @@
   <gresource prefix="/sm/puri/phosh/osk-stub/icons/">
     <file alias="keyboard-enter-symbolic.svg">../data/icons/keyboard-enter-symbolic.svg</file>
     <file alias="keyboard-shift-filled-symbolic.svg">../data/icons/keyboard-shift-filled-symbolic.svg</file>
+    <file alias="layout-menu-symbolic.svg">../data/icons/layout-menu-symbolic.svg</file>
   </gresource>
 </gresources>
