@@ -753,6 +753,22 @@ get_popup_pos (PosOskKey *key, GdkRectangle *out)
 }
 
 
+static void
+pos_osk_widget_show_menu (PosOskWidget *self, PosOskKey *key)
+{
+  GVariantBuilder builder;
+  GActionGroup *group = gtk_widget_get_action_group (GTK_WIDGET (self), "win");
+  GdkRectangle rect;
+
+  get_popup_pos (key, &rect);
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_TUPLE);
+  g_variant_builder_add_value (&builder, g_variant_new ("i", rect.x));
+  g_variant_builder_add_value (&builder, g_variant_new ("i", rect.y));
+  g_action_group_activate_action (group, "menu", g_variant_builder_end (&builder));
+  pos_osk_key_set_pressed (key, FALSE);
+}
+
+
 static gboolean
 pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -788,7 +804,7 @@ pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
     break;
 
   case POS_OSK_KEY_USE_MENU:
-    /* TODO: popover menu */
+    pos_osk_widget_show_menu (self, key);
     break;
   default:
     g_assert_not_reached ();

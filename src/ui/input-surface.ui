@@ -35,4 +35,26 @@
       </object>
     </child>
   </template>
+
+  <object class="GtkPopoverMenu" id="menu_popup">
+    <property name="name">pos-menu-popup</property>
+    <child>
+      <object class="GtkBox">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkBox" id="menu_box_layouts">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="menu_box_config">
+            <property name="visible">True</property>
+            <property name="orientation">vertical</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
 </interface>
