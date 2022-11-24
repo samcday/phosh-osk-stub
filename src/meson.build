@@ -32,6 +32,8 @@ libpos_sources = files(
   'pos.h',
   'pos-char-popup.h',
   'pos-char-popup.c',
+  'pos-debug-widget.h',
+  'pos-debug-widget.c',
   'pos-enums.h',
   'pos-input-method.h',
   'pos-input-method.c',
