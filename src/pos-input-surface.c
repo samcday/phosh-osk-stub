@@ -543,7 +543,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   g_autoptr (GVariant) sources = NULL;
   g_autoptr (GHashTable) new = NULL;
   g_autofree GStrv old = NULL;
-  GStrv old_keys;
+  g_autofree GStrv old_keys = NULL;
   GVariantIter iter;
   const char *id = NULL;
   const char *type = NULL;
