@@ -25,6 +25,8 @@
 #define LAYOUT_COLS 10
 #define LAYOUT_ROWS 4
 
+#define MINIMUM_WIDTH 360
+
 #define KEY_REPEAT_DELAY 700
 #define KEY_REPEAT_INTERVAL 50
 
@@ -1090,6 +1092,24 @@ pos_osk_widget_finalize (GObject *object)
 
 
 static void
+pos_osk_widget_get_preferred_height (GtkWidget       *widget,
+                                     gint            *minimum_height,
+                                     gint            *natural_height)
+{
+  *minimum_height = *natural_height = KEY_HEIGHT * LAYOUT_ROWS;
+
+}
+
+static void
+pos_osk_widget_get_preferred_width  (GtkWidget       *widget,
+                                     gint            *minimum_width,
+                                     gint            *natural_width)
+{
+  *minimum_width = *natural_width = MINIMUM_WIDTH;
+}
+
+
+static void
 pos_osk_widget_class_init (PosOskWidgetClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -1103,6 +1123,9 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   widget_class->button_press_event = pos_osk_widget_button_press_event;
   widget_class->button_release_event = pos_osk_widget_button_release_event;
   widget_class->motion_notify_event = pos_osk_widget_motion_notify_event;
+  widget_class->get_preferred_height = pos_osk_widget_get_preferred_height;
+  widget_class->get_preferred_width = pos_osk_widget_get_preferred_width;
+
 
   /**
    * PosOskWidget:layer
