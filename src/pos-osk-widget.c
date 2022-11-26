@@ -257,13 +257,13 @@ pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 }
 
 
-static PosOskKey *
-get_common_key_post (PosOskWidgetLayer l, gint row)
+static void
+add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
 
   /* TODO: we could create these only once and g_object_ref them */
-  switch (row) {
+  switch (rownum) {
   case 2:
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "symbol", "KEY_BACKSPACE",
@@ -271,6 +271,8 @@ get_common_key_post (PosOskWidgetLayer l, gint row)
                         "width", 1.5,
                         "style", "sys",
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, -1, key);
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
@@ -279,37 +281,34 @@ get_common_key_post (PosOskWidgetLayer l, gint row)
                         "width", 1.5,
                         "style", "return",
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, -1, key);
     break;
   case 0:
   case 1:
   default:
-    key = NULL;
     break;
   }
-
-  return key;
 }
 
 
-static PosOskKey *
-get_common_key_pre (PosOskWidgetLayer layer, gint row)
+static void
+add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
-  PosOskWidgetLayer l;
-  const char *icon;
 
   /* TODO: we could create these only once and g_object_ref them */
-  switch (row) {
+  switch (rownum) {
   case 2:
-    l = POS_OSK_WIDGET_LAYER_CAPS;
-    icon = "keyboard-shift-filled-symbolic";
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "use", POS_OSK_KEY_USE_TOGGLE,
-                        "icon", icon,
+                        "icon", "keyboard-shift-filled-symbolic",
                         "width", 1.5,
                         "style", "toggle",
-                        "layer", l,
+                        "layer", POS_OSK_WIDGET_LAYER_CAPS,
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, 0, key);
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
@@ -319,15 +318,14 @@ get_common_key_pre (PosOskWidgetLayer layer, gint row)
                         "layer", POS_OSK_WIDGET_LAYER_SYMBOLS,
                         "style", "toggle",
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, 0, key);
     break;
   case 0:
   case 1:
   default:
-    key = NULL;
     break;
   }
-
-  return key;
 }
 
 
@@ -378,13 +376,12 @@ static void
 parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidgetLayer l, guint r)
 {
   gsize num_keys;
-  PosOskKey *common_key;
-  double width = 0.0;
 
   num_keys = json_array_get_length (arow);
   row->keys = g_ptr_array_sized_new (num_keys + 2);
   g_ptr_array_set_free_func (row->keys, g_object_unref);
 
+  row->width = 0.0;
   for (int i = 0; i < num_keys; i++) {
     JsonNode *key_node;
     g_autoptr (PosOskKey) key = NULL;
@@ -404,23 +401,12 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
       continue;
     }
 
-    width += pos_osk_key_get_width (key);
+    row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, -1, g_steal_pointer (&key));
   }
 
-  common_key = get_common_key_pre (l, r);
-  if (common_key) {
-    width += pos_osk_key_get_width (common_key);
-    g_ptr_array_insert (row->keys, 0, g_steal_pointer (&common_key));
-  }
-
-  common_key = get_common_key_post (l, r);
-  if (common_key) {
-    width += pos_osk_key_get_width (common_key);
-    g_ptr_array_insert (row->keys, -1, g_steal_pointer (&common_key));
-  }
-
-  row->width = width;
+  add_common_keys_pre (row, l, r);
+  add_common_keys_post (row, l, r);
 }
 
 
