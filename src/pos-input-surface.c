@@ -47,6 +47,9 @@ typedef struct {
  *
  * Main surface that has all the widgets. Should not bother
  * how the OSK is driven.
+ *
+ * As toplevel widget it also implements #GActionMap so one
+ * can easily add and remove actions.
  */
 struct _PosInputSurface {
   PhoshLayerSurface        parent;
@@ -77,10 +80,17 @@ struct _PosInputSurface {
   GtkCssProvider          *css_provider;
   char                    *theme_name;
 
-  GActionMap              *action_map;
+  GSimpleActionGroup      *action_map;
 };
 
-G_DEFINE_TYPE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SURFACE)
+
+static void pos_input_surface_action_group_iface_init (GActionGroupInterface *iface);
+static void pos_input_surface_action_map_iface_init (GActionMapInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SURFACE,
+                         G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_GROUP, pos_input_surface_action_group_iface_init)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_MAP, pos_input_surface_action_map_iface_init)
+  )
 
 /* Select proper style sheet in case of high contrast */
 static void
@@ -410,6 +420,120 @@ pos_input_surface_finalize (GObject *object)
 }
 
 
+static gchar **
+pos_input_surface_list_actions (GActionGroup *group)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (group);
+
+  /* may be NULL after dispose has run */
+  if (!self->action_map)
+    return g_new0 (char *, 0 + 1);
+
+  return g_action_group_list_actions (G_ACTION_GROUP (self->action_map));
+}
+
+static gboolean
+pos_input_surface_query_action (GActionGroup        *group,
+                                const gchar         *action_name,
+                                gboolean            *enabled,
+                                const GVariantType **parameter_type,
+                                const GVariantType **state_type,
+                                GVariant           **state_hint,
+                                GVariant           **state)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (group);
+
+  if (!self->action_map)
+    return FALSE;
+
+  return g_action_group_query_action (G_ACTION_GROUP (self->action_map),
+                                      action_name, enabled, parameter_type, state_type, state_hint, state);
+}
+
+
+static void
+pos_input_surface_activate_action (GActionGroup *group,
+                                   const gchar  *action_name,
+                                   GVariant     *parameter)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (group);
+
+  if (!self->action_map)
+    return;
+
+  g_action_group_activate_action (G_ACTION_GROUP (self->action_map), action_name, parameter);
+}
+
+
+static void
+pos_input_surface_change_action_state (GActionGroup *group,
+                                       const gchar  *action_name,
+                                       GVariant     *state)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (group);
+
+  if (!self->action_map)
+    return;
+
+  g_action_group_change_action_state (G_ACTION_GROUP (self->action_map), action_name, state);
+}
+
+
+static void
+pos_input_surface_action_group_iface_init (GActionGroupInterface *iface)
+{
+  iface->list_actions = pos_input_surface_list_actions;
+  iface->query_action = pos_input_surface_query_action;
+  iface->activate_action = pos_input_surface_activate_action;
+  iface->change_action_state = pos_input_surface_change_action_state;
+}
+
+
+static GAction *
+pos_input_surface_lookup_action (GActionMap  *action_map,
+                                      const gchar *action_name)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (action_map);
+
+  if (!self->action_map)
+    return NULL;
+
+  return g_action_map_lookup_action (G_ACTION_MAP (self->action_map), action_name);
+}
+
+static void
+pos_input_surface_add_action (GActionMap *action_map,
+                                   GAction    *action)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (action_map);
+
+  if (!self->action_map)
+    return;
+
+  g_action_map_add_action (G_ACTION_MAP (self->action_map), action);
+}
+
+static void
+pos_input_surface_remove_action (GActionMap  *action_map,
+                                      const gchar *action_name)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (action_map);
+
+  if (!self->action_map)
+    return;
+
+  g_action_map_remove_action (G_ACTION_MAP (self->action_map), action_name);
+}
+
+
+static void pos_input_surface_action_map_iface_init (GActionMapInterface *iface)
+{
+  iface->lookup_action = pos_input_surface_lookup_action;
+  iface->add_action = pos_input_surface_add_action;
+  iface->remove_action = pos_input_surface_remove_action;
+}
+
+
 static void
 pos_input_surface_class_init (PosInputSurfaceClass *klass)
 {
@@ -603,8 +727,8 @@ pos_input_surface_init (PosInputSurface *self)
   GtkSettings *gtk_settings;
   const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
 
-  self->action_map = G_ACTION_MAP (g_simple_action_group_new ());
-  g_action_map_add_action_entries (self->action_map,
+  self->action_map = g_simple_action_group_new ();
+  g_action_map_add_action_entries (G_ACTION_MAP (self->action_map),
                                    entries,
                                    G_N_ELEMENTS (entries),
                                    self);
