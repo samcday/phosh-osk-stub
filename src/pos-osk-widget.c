@@ -733,6 +733,16 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
 }
 
 
+static void
+get_popup_pos (PosOskKey *key, GdkRectangle *out)
+{
+  const GdkRectangle *box = pos_osk_key_get_box (key);
+
+  out->x = box->x + (0.5 * box->width);
+  out->y = box->y + (0.5 * box->height);
+}
+
+
 static gboolean
 pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -820,16 +830,6 @@ on_symbol_selected (PosOskWidget *self, const char *symbol)
 
 
 static void
-get_popup_pos (PosOskKey *key, double x, double y, GdkRectangle *out)
-{
-  const GdkRectangle *box = pos_osk_key_get_box (key);
-
-  out->x = box->x + (0.5 * box->width);
-  out->y = box->y + (0.5 * box->height);
-}
-
-
-static void
 on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user_data)
 {
   PosOskWidget *self = POS_OSK_WIDGET (user_data);
@@ -853,7 +853,7 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
   g_clear_pointer (&self->char_popup, phosh_cp_widget_destroy);
   self->char_popup = GTK_WIDGET (pos_char_popup_new (GTK_WIDGET (self), symbols));
 
-  get_popup_pos (key, x, y, &rect);
+  get_popup_pos (key, &rect);
   gtk_popover_set_pointing_to (GTK_POPOVER (self->char_popup), &rect);
 
   g_signal_connect_swapped (self->char_popup, "selected", G_CALLBACK (on_symbol_selected), self);
