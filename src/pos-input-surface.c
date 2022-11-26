@@ -564,6 +564,9 @@ pos_input_surface_set_completion_enabled (PosInputSurface *self, gboolean enable
   if (self->completion_enabled == enable)
     return;
 
+  /* popdown popover right away */
+  gtk_popover_popdown (self->menu_popup);
+
   self->completion_enabled = enable;
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETION_ENABLED]);
@@ -690,7 +693,7 @@ static void
 on_im_active_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
 {
   gboolean active;
-  
+
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
 
@@ -728,14 +731,15 @@ pos_input_surface_constructed (GObject *object)
 
 
 static void
-pos_input_surface_dispose (GObject *object)
+pos_input_surface_destroy (GtkWidget *widget)
 {
-  PosInputSurface *self = POS_INPUT_SURFACE (object);
+  PosInputSurface *self = POS_INPUT_SURFACE (widget);
 
+  g_clear_object (&self->action_map);
   /* Remove hash table early since this also destroys the osks in the deck */
   g_clear_pointer (&self->osks, g_hash_table_destroy);
 
-  G_OBJECT_CLASS (pos_input_surface_parent_class)->dispose (object);
+  GTK_WIDGET_CLASS (pos_input_surface_parent_class)->destroy (widget);
 }
 
 
@@ -752,7 +756,6 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->completer);
   g_clear_pointer (&self->theme_name, g_free);
   g_clear_pointer (&self->osks, g_hash_table_destroy);
-  g_clear_object (&self->action_map);
 
   G_OBJECT_CLASS (pos_input_surface_parent_class)->finalize (object);
 }
@@ -907,8 +910,9 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   object_class->get_property = pos_input_surface_get_property;
   object_class->set_property = pos_input_surface_set_property;
   object_class->constructed = pos_input_surface_constructed;
-  object_class->dispose = pos_input_surface_dispose;
   object_class->finalize = pos_input_surface_finalize;
+
+  widget_class->destroy = pos_input_surface_destroy;
 
   container_class->check_resize = pos_input_surface_check_resize;
 
@@ -1131,6 +1135,7 @@ pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
   const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
+  g_autoptr (GPropertyAction) completion_action = NULL;
 
   gtk_widget_init_template (GTK_WIDGET (self));
 
@@ -1142,7 +1147,8 @@ pos_input_surface_init (PosInputSurface *self)
   gtk_widget_insert_action_group (GTK_WIDGET (self),
                                   "win",
                                   G_ACTION_GROUP (self->action_map));
-
+  completion_action = g_property_action_new ("word-completion", self, "completion-enabled");
+  g_action_map_add_action (G_ACTION_MAP (self), G_ACTION (completion_action));
 
   /* Ensure initial sync */
   self->screen_keyboard_enabled = -1;

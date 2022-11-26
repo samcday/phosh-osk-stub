@@ -68,9 +68,21 @@
           </object>
         </child>
         <child>
+          <object class="GtkHSeparator">
+            <property name="visible">True</property>
+          </object>
+        </child>
+        <child>
           <object class="GtkBox" id="menu_box_config">
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkModelButton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Word completion</property>
+                <property name="action-name">win.word-completion</property>
+              </object>
+            </child>
           </object>
         </child>
       </object>
