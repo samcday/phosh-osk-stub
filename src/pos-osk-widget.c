@@ -43,6 +43,7 @@ enum {
   PROP_0,
   PROP_LAYER,
   PROP_NAME,
+  PROP_MODE,
   PROP_LAST_PROP,
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -561,6 +562,9 @@ pos_osk_widget_get_property (GObject    *object,
     break;
   case PROP_NAME:
     g_value_set_string (value, self->layout.name);
+    break;
+  case PROP_MODE:
+    g_value_set_enum (value, self->mode);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1146,6 +1150,17 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
     g_param_spec_string ("name", "", "",
                          NULL,
                          G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosOskWidget:mode
+   *
+   * The current mode of the widget
+   */
+  props[PROP_MODE] =
+    g_param_spec_enum ("mode", "", "",
+                       POS_TYPE_OSK_WIDGET_MODE,
+                       POS_OSK_WIDGET_MODE_KEYBOARD,
+                       G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
   /**
@@ -1387,6 +1402,16 @@ pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
   if (mode == POS_OSK_WIDGET_MODE_CURSOR)
     self->current = NULL;
 
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_MODE]);
   self->last_x = self->last_y = 0.0;
   gtk_widget_queue_draw (GTK_WIDGET (self));
+}
+
+
+PosOskWidgetMode
+pos_osk_widget_get_mode (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), POS_OSK_WIDGET_MODE_KEYBOARD);
+
+  return self->mode;
 }
