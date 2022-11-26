@@ -83,9 +83,11 @@ typedef struct {
 
 /**
  * PosOskWidgetLayout:
+ * @name: The display name of the layout, e.g. `English Great Britain`, `English Great (US)`
+ * @locale: The layout's locale, e.g. `en-GB`, `en`
  *
- * Information about a keyboard layout. The keys
- * are grouped in different layers that are displayed
+ * Information about a keyboard layout as parsed from the layout
+ * file. The keys are grouped in different layers that are displayed
  * depending on modifier state.
  */
 typedef struct {
@@ -100,6 +102,8 @@ typedef struct {
 
 /**
  * PosOskWidget:
+ * @name: The name of the layout, e.g. `de`, `us`, `de+ch`
+ * @name: The display name of the layout, e.g. `German`, `English (US)`
  *
  * Renders the keyboard and reacts to keypresses by signal emissions.
  */
@@ -114,6 +118,7 @@ struct _PosOskWidget {
   PosOskWidgetMode     mode;
 
   char                *name;
+  char                *display_name;
   PosOskKey           *current;
   GtkGestureLongPress *long_press;
   GtkWidget           *char_popup;
@@ -338,7 +343,7 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *labe
 
     width = (num_keys == 5) ? 3.0 : 5.0;
     return g_object_new (POS_TYPE_OSK_KEY,
-                         "label", self->name,
+                         "label", self->display_name,
                          "symbol", symbol,
                          "symbols", symbols,
                          "width", width,
@@ -554,7 +559,7 @@ pos_osk_widget_get_property (GObject    *object,
     g_value_set_enum (value, self->layer);
     break;
   case PROP_NAME:
-    g_value_set_string (value, self->layout.name);
+    g_value_set_string (value, self->name);
     break;
   case PROP_MODE:
     g_value_set_enum (value, self->mode);
@@ -1083,6 +1088,7 @@ pos_osk_widget_finalize (GObject *object)
   pos_osk_widget_layout_free (&self->layout);
   g_clear_object (&self->long_press);
   g_clear_pointer (&self->name, g_free);
+  g_clear_pointer (&self->display_name, g_free);
 
   G_OBJECT_CLASS (pos_osk_widget_parent_class)->finalize (object);
 }
@@ -1332,6 +1338,19 @@ pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer)
 }
 
 
+/**
+ * pos_osk_widget_set_layout:
+ * @self: The osk widget
+ * @display_name: The display name. Should be used when displaying layout information
+ *    to the user. (E.g. 'English (US)')
+ * @layout: The name of the layout. E.g. `jp`, `de`
+ * @variant: The layout variant, e.g. `ch`
+ * @err: The error location
+ *
+ * Sets the widgets keyboard layout.
+ *
+ * Retruns: %TRUE on success, %FALSE otherwise.
+ */
 gboolean
 pos_osk_widget_set_layout (PosOskWidget *self,
                            const char   *display_name,
@@ -1352,15 +1371,17 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   else
     name = g_strdup (layout);
 
-  if (g_strcmp0 (self->layout.name, name) == 0)
+  if (g_strcmp0 (self->name, name) == 0)
     return TRUE;
 
   if (self->layout.name)
     pos_osk_widget_layout_free (&self->layout);
   g_free (self->name);
-  self->name = g_strdup (display_name);
+  self->name = g_steal_pointer (&name);
+  g_free (self->display_name);
+  self->display_name = g_strdup (display_name);
 
-  path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", name);
+  path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", self->name);
   data = g_resources_lookup_data (path, 0, err);
   if (data == NULL) {
     return FALSE;
@@ -1373,13 +1394,34 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   return ret;
 }
 
+/**
+ * pos_osk_widget_get_display_name:
+ * @self: The osk widget
+ *
+ * Returns: The human readable (and localized) display name
+ */
+const char *
+pos_osk_widget_get_display_name (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return self->display_name;
+}
+
+/**
+ * pos_osk_widget_get_name:
+ * @self: The osk widget
+ *
+ * Returns: The layouts unique name
+ */
 const char *
 pos_osk_widget_get_name (PosOskWidget *self)
 {
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
 
-  return self->layout.name;
+  return self->name;
 }
+
 
 void
 pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
