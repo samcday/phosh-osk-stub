@@ -90,6 +90,7 @@ typedef struct {
  */
 typedef struct {
   char                     *name;
+  char                     *locale;
   PosOskWidgetKeyboardLayer layers[4];
   guint                     n_layers;
   guint                     n_cols;
@@ -245,6 +246,7 @@ static void
 pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 {
   g_clear_pointer (&layout->name, g_free);
+  g_clear_pointer (&layout->locale, g_free);
 
   for (int l = 0; l < layout->n_layers; l++) {
     for (int r = 0; r < layout->n_rows; r++) {
@@ -515,6 +517,7 @@ parse_layout (PosOskWidget *self, const char *json, gsize size)
   g_autoptr (JsonParser) parser = NULL;
   g_autoptr (GError) err = NULL;
   const char *name;
+  const char *locale;
   JsonNode *keyboard_node;
   JsonObject *keyboard;
   JsonArray *levels;
@@ -535,8 +538,12 @@ parse_layout (PosOskWidget *self, const char *json, gsize size)
     g_critical ("Failed to parse layout without name");
     return FALSE;
   }
-
   self->layout.name = g_strdup (name);
+
+  locale = json_object_get_string_member (keyboard, "locale");
+  if (locale != NULL)
+    self->layout.locale = g_strdup (locale);
+
   levels = json_object_get_array_member (keyboard, "levels");
   if (levels == NULL) {
     g_critical ("Failed to parse layout, malformed levels");
@@ -1414,4 +1421,13 @@ pos_osk_widget_get_mode (PosOskWidget *self)
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), POS_OSK_WIDGET_MODE_KEYBOARD);
 
   return self->mode;
+}
+
+
+const char *
+pos_osk_widget_get_locale (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return self->layout.locale;
 }
