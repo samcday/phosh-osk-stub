@@ -34,7 +34,8 @@ way to get going is to do the following:
 
 ```sh
 meson . _build
-ninja -C _build
+meson build -C _build
+meson test -C _build
 ```
 
 ## Running
