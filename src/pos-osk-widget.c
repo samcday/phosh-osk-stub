@@ -25,6 +25,8 @@
 #define LAYOUT_COLS 10
 #define LAYOUT_ROWS 4
 
+#define MINIMUM_WIDTH 360
+
 #define KEY_REPEAT_DELAY 700
 #define KEY_REPEAT_INTERVAL 50
 
@@ -41,6 +43,7 @@ enum {
   PROP_0,
   PROP_LAYER,
   PROP_NAME,
+  PROP_MODE,
   PROP_LAST_PROP,
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -80,13 +83,16 @@ typedef struct {
 
 /**
  * PosOskWidgetLayout:
+ * @name: The display name of the layout, e.g. `English Great Britain`, `English Great (US)`
+ * @locale: The layout's locale, e.g. `en-GB`, `en`
  *
- * Information about a keyboard layout. The keys
- * are grouped in different layers that are displayed
+ * Information about a keyboard layout as parsed from the layout
+ * file. The keys are grouped in different layers that are displayed
  * depending on modifier state.
  */
 typedef struct {
   char                     *name;
+  char                     *locale;
   PosOskWidgetKeyboardLayer layers[4];
   guint                     n_layers;
   guint                     n_cols;
@@ -96,6 +102,8 @@ typedef struct {
 
 /**
  * PosOskWidget:
+ * @name: The name of the layout, e.g. `de`, `us`, `de+ch`
+ * @name: The display name of the layout, e.g. `German`, `English (US)`
  *
  * Renders the keyboard and reacts to keypresses by signal emissions.
  */
@@ -110,6 +118,7 @@ struct _PosOskWidget {
   PosOskWidgetMode     mode;
 
   char                *name;
+  char                *display_name;
   PosOskKey           *current;
   GtkGestureLongPress *long_press;
   GtkWidget           *char_popup;
@@ -242,6 +251,7 @@ static void
 pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 {
   g_clear_pointer (&layout->name, g_free);
+  g_clear_pointer (&layout->locale, g_free);
 
   for (int l = 0; l < layout->n_layers; l++) {
     for (int r = 0; r < layout->n_rows; r++) {
@@ -252,13 +262,13 @@ pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 }
 
 
-static PosOskKey *
-get_common_key_post (PosOskWidgetLayer l, gint row)
+static void
+add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
 
   /* TODO: we could create these only once and g_object_ref them */
-  switch (row) {
+  switch (rownum) {
   case 2:
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "symbol", "KEY_BACKSPACE",
@@ -266,6 +276,8 @@ get_common_key_post (PosOskWidgetLayer l, gint row)
                         "width", 1.5,
                         "style", "sys",
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, -1, key);
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
@@ -274,37 +286,34 @@ get_common_key_post (PosOskWidgetLayer l, gint row)
                         "width", 1.5,
                         "style", "return",
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, -1, key);
     break;
   case 0:
   case 1:
   default:
-    key = NULL;
     break;
   }
-
-  return key;
 }
 
 
-static PosOskKey *
-get_common_key_pre (PosOskWidgetLayer layer, gint row)
+static void
+add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
-  PosOskWidgetLayer l;
-  const char *icon;
 
   /* TODO: we could create these only once and g_object_ref them */
-  switch (row) {
+  switch (rownum) {
   case 2:
-    l = POS_OSK_WIDGET_LAYER_CAPS;
-    icon = "keyboard-shift-filled-symbolic";
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "use", POS_OSK_KEY_USE_TOGGLE,
-                        "icon", icon,
+                        "icon", "keyboard-shift-filled-symbolic",
                         "width", 1.5,
                         "style", "toggle",
-                        "layer", l,
+                        "layer", POS_OSK_WIDGET_LAYER_CAPS,
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, 0, key);
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
@@ -314,15 +323,14 @@ get_common_key_pre (PosOskWidgetLayer layer, gint row)
                         "layer", POS_OSK_WIDGET_LAYER_SYMBOLS,
                         "style", "toggle",
                         NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, 0, key);
     break;
   case 0:
   case 1:
   default:
-    key = NULL;
     break;
   }
-
-  return key;
 }
 
 
@@ -335,7 +343,7 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *labe
 
     width = (num_keys == 5) ? 3.0 : 5.0;
     return g_object_new (POS_TYPE_OSK_KEY,
-                         "label", self->name,
+                         "label", self->display_name,
                          "symbol", symbol,
                          "symbols", symbols,
                          "width", width,
@@ -373,13 +381,12 @@ static void
 parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidgetLayer l, guint r)
 {
   gsize num_keys;
-  PosOskKey *common_key;
-  double width = 0.0;
 
   num_keys = json_array_get_length (arow);
   row->keys = g_ptr_array_sized_new (num_keys + 2);
   g_ptr_array_set_free_func (row->keys, g_object_unref);
 
+  row->width = 0.0;
   for (int i = 0; i < num_keys; i++) {
     JsonNode *key_node;
     g_autoptr (PosOskKey) key = NULL;
@@ -399,23 +406,12 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
       continue;
     }
 
-    width += pos_osk_key_get_width (key);
+    row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, -1, g_steal_pointer (&key));
   }
 
-  common_key = get_common_key_pre (l, r);
-  if (common_key) {
-    width += pos_osk_key_get_width (common_key);
-    g_ptr_array_insert (row->keys, 0, g_steal_pointer (&common_key));
-  }
-
-  common_key = get_common_key_post (l, r);
-  if (common_key) {
-    width += pos_osk_key_get_width (common_key);
-    g_ptr_array_insert (row->keys, -1, g_steal_pointer (&common_key));
-  }
-
-  row->width = width;
+  add_common_keys_pre (row, l, r);
+  add_common_keys_post (row, l, r);
 }
 
 
@@ -512,6 +508,7 @@ parse_layout (PosOskWidget *self, const char *json, gsize size)
   g_autoptr (JsonParser) parser = NULL;
   g_autoptr (GError) err = NULL;
   const char *name;
+  const char *locale;
   JsonNode *keyboard_node;
   JsonObject *keyboard;
   JsonArray *levels;
@@ -532,8 +529,12 @@ parse_layout (PosOskWidget *self, const char *json, gsize size)
     g_critical ("Failed to parse layout without name");
     return FALSE;
   }
-
   self->layout.name = g_strdup (name);
+
+  locale = json_object_get_string_member (keyboard, "locale");
+  if (locale != NULL)
+    self->layout.locale = g_strdup (locale);
+
   levels = json_object_get_array_member (keyboard, "levels");
   if (levels == NULL) {
     g_critical ("Failed to parse layout, malformed levels");
@@ -558,7 +559,10 @@ pos_osk_widget_get_property (GObject    *object,
     g_value_set_enum (value, self->layer);
     break;
   case PROP_NAME:
-    g_value_set_string (value, self->layout.name);
+    g_value_set_string (value, self->name);
+    break;
+  case PROP_MODE:
+    g_value_set_enum (value, self->mode);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -729,6 +733,16 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
 }
 
 
+static void
+get_popup_pos (PosOskKey *key, GdkRectangle *out)
+{
+  const GdkRectangle *box = pos_osk_key_get_box (key);
+
+  out->x = box->x + (0.5 * box->width);
+  out->y = box->y + (0.5 * box->height);
+}
+
+
 static gboolean
 pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -816,16 +830,6 @@ on_symbol_selected (PosOskWidget *self, const char *symbol)
 
 
 static void
-get_popup_pos (PosOskKey *key, double x, double y, GdkRectangle *out)
-{
-  const GdkRectangle *box = pos_osk_key_get_box (key);
-
-  out->x = box->x + (0.5 * box->width);
-  out->y = box->y + (0.5 * box->height);
-}
-
-
-static void
 on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user_data)
 {
   PosOskWidget *self = POS_OSK_WIDGET (user_data);
@@ -849,7 +853,7 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
   g_clear_pointer (&self->char_popup, phosh_cp_widget_destroy);
   self->char_popup = GTK_WIDGET (pos_char_popup_new (GTK_WIDGET (self), symbols));
 
-  get_popup_pos (key, x, y, &rect);
+  get_popup_pos (key, &rect);
   gtk_popover_set_pointing_to (GTK_POPOVER (self->char_popup), &rect);
 
   g_signal_connect_swapped (self->char_popup, "selected", G_CALLBACK (on_symbol_selected), self);
@@ -1084,8 +1088,27 @@ pos_osk_widget_finalize (GObject *object)
   pos_osk_widget_layout_free (&self->layout);
   g_clear_object (&self->long_press);
   g_clear_pointer (&self->name, g_free);
+  g_clear_pointer (&self->display_name, g_free);
 
   G_OBJECT_CLASS (pos_osk_widget_parent_class)->finalize (object);
+}
+
+
+static void
+pos_osk_widget_get_preferred_height (GtkWidget       *widget,
+                                     gint            *minimum_height,
+                                     gint            *natural_height)
+{
+  *minimum_height = *natural_height = KEY_HEIGHT * LAYOUT_ROWS;
+
+}
+
+static void
+pos_osk_widget_get_preferred_width  (GtkWidget       *widget,
+                                     gint            *minimum_width,
+                                     gint            *natural_width)
+{
+  *minimum_width = *natural_width = MINIMUM_WIDTH;
 }
 
 
@@ -1103,6 +1126,9 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   widget_class->button_press_event = pos_osk_widget_button_press_event;
   widget_class->button_release_event = pos_osk_widget_button_release_event;
   widget_class->motion_notify_event = pos_osk_widget_motion_notify_event;
+  widget_class->get_preferred_height = pos_osk_widget_get_preferred_height;
+  widget_class->get_preferred_width = pos_osk_widget_get_preferred_width;
+
 
   /**
    * PosOskWidget:layer
@@ -1123,6 +1149,17 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
     g_param_spec_string ("name", "", "",
                          NULL,
                          G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosOskWidget:mode
+   *
+   * The current mode of the widget
+   */
+  props[PROP_MODE] =
+    g_param_spec_enum ("mode", "", "",
+                       POS_TYPE_OSK_WIDGET_MODE,
+                       POS_OSK_WIDGET_MODE_KEYBOARD,
+                       G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
   /**
@@ -1301,6 +1338,19 @@ pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer)
 }
 
 
+/**
+ * pos_osk_widget_set_layout:
+ * @self: The osk widget
+ * @display_name: The display name. Should be used when displaying layout information
+ *    to the user. (E.g. 'English (US)')
+ * @layout: The name of the layout. E.g. `jp`, `de`
+ * @variant: The layout variant, e.g. `ch`
+ * @err: The error location
+ *
+ * Sets the widgets keyboard layout.
+ *
+ * Retruns: %TRUE on success, %FALSE otherwise.
+ */
 gboolean
 pos_osk_widget_set_layout (PosOskWidget *self,
                            const char   *display_name,
@@ -1321,15 +1371,17 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   else
     name = g_strdup (layout);
 
-  if (g_strcmp0 (self->layout.name, name) == 0)
+  if (g_strcmp0 (self->name, name) == 0)
     return TRUE;
 
   if (self->layout.name)
     pos_osk_widget_layout_free (&self->layout);
   g_free (self->name);
-  self->name = g_strdup (display_name);
+  self->name = g_steal_pointer (&name);
+  g_free (self->display_name);
+  self->display_name = g_strdup (display_name);
 
-  path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", name);
+  path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", self->name);
   data = g_resources_lookup_data (path, 0, err);
   if (data == NULL) {
     return FALSE;
@@ -1342,13 +1394,34 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   return ret;
 }
 
+/**
+ * pos_osk_widget_get_display_name:
+ * @self: The osk widget
+ *
+ * Returns: The human readable (and localized) display name
+ */
+const char *
+pos_osk_widget_get_display_name (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return self->display_name;
+}
+
+/**
+ * pos_osk_widget_get_name:
+ * @self: The osk widget
+ *
+ * Returns: The layouts unique name
+ */
 const char *
 pos_osk_widget_get_name (PosOskWidget *self)
 {
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
 
-  return self->layout.name;
+  return self->name;
 }
+
 
 void
 pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
@@ -1364,6 +1437,25 @@ pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
   if (mode == POS_OSK_WIDGET_MODE_CURSOR)
     self->current = NULL;
 
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_MODE]);
   self->last_x = self->last_y = 0.0;
   gtk_widget_queue_draw (GTK_WIDGET (self));
+}
+
+
+PosOskWidgetMode
+pos_osk_widget_get_mode (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), POS_OSK_WIDGET_MODE_KEYBOARD);
+
+  return self->mode;
+}
+
+
+const char *
+pos_osk_widget_get_locale (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return self->layout.locale;
 }
