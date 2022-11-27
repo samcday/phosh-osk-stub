@@ -921,7 +921,6 @@ render_label (cairo_t *cr, GtkStyleContext *context, const char *label, const Gd
 {
   g_autoptr (PangoLayout) layout = pango_cairo_create_layout (cr);
   g_autoptr (PangoFontDescription) font = NULL;
-  PangoLayoutLine *line = NULL;
   PangoRectangle extents = { 0, };
   GdkRGBA color = {0};
   GtkStateFlags state;
@@ -933,15 +932,13 @@ render_label (cairo_t *cr, GtkStyleContext *context, const char *label, const Gd
   pango_layout_set_font_description (layout, font);
 
   pango_layout_set_text (layout, label, -1);
-  line = pango_layout_get_line_readonly (layout, 0);
-  if (line->resolved_dir == PANGO_DIRECTION_RTL)
-    pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
+  pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
 
   pango_layout_set_width (layout, PANGO_SCALE * box->width);
   pango_layout_get_extents (layout, NULL, &extents);
 
   cairo_move_to (cr,
-                 0.5 * (box->width - (double)extents.width / PANGO_SCALE),
+                 0.0,
                  0.5 * (box->height - (double)extents.height / PANGO_SCALE));
   gtk_style_context_get_color (context, state, &color);
 
