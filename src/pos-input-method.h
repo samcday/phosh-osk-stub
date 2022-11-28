@@ -41,8 +41,8 @@ void                           pos_input_method_send_string (PosInputMethod *sel
                                                              gboolean commit);
 void                           pos_input_method_send_preedit (PosInputMethod *self,
                                                               const char *preedit,
-                                                              guint start,
-                                                              guint end,
+                                                              guint cstart,
+                                                              guint cend,
                                                               gboolean commit);
 void                          pos_input_method_delete_surrounding_text (PosInputMethod *self,
                                                                         guint before_length,
