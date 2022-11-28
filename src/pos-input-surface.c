@@ -80,6 +80,8 @@ struct _PosInputSurface {
   GtkCssProvider          *css_provider;
   char                    *theme_name;
 
+  GtkBox                  *menu_box_layouts;
+  GtkPopover              *menu_popup;
   GSimpleActionGroup      *action_map;
 };
 
@@ -182,6 +184,90 @@ clipboard_paste_activated (GSimpleAction *action,
   pos_vk_driver_key_down (self->keyboard_driver, "KEY_PASTE");
   pos_vk_driver_key_up (self->keyboard_driver, "KEY_PASTE");
 }
+
+
+static void
+menu_add_layout (gpointer key, gpointer value, gpointer data)
+{
+  GtkWidget *button;
+  const char *name = key;
+  PosOskWidget *osk_widget = POS_OSK_WIDGET (value);
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+  const char *display_name = pos_osk_widget_get_display_name (osk_widget);
+
+  button = g_object_new (GTK_TYPE_MODEL_BUTTON,
+                         "visible", TRUE,
+                         "label", display_name,
+                         "action-name", "win.select-layout",
+                         "action-target", g_variant_new_string (name),
+                         NULL);
+  gtk_box_pack_start (self->menu_box_layouts, button, FALSE, FALSE, 0);
+}
+
+
+static void
+menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+  GdkRectangle rect = {};
+  GtkWidget *osk_widget;
+  GAction *layout_action;
+  const char *osk_name;
+
+  osk_widget = hdy_deck_get_visible_child (self->deck);
+  osk_name = pos_osk_widget_get_name (POS_OSK_WIDGET (osk_widget));
+  g_variant_get (parameter, "(ii)", &rect.x, &rect.y);
+  g_debug ("Menu popoup activated at %d %d, current: '%s'", rect.x, rect.y, osk_name);
+
+  layout_action = g_action_map_lookup_action (G_ACTION_MAP (self->action_map), "select-layout");
+  g_simple_action_set_state (G_SIMPLE_ACTION (layout_action),
+                             g_variant_new ("s", osk_name));
+
+  gtk_container_foreach (GTK_CONTAINER (self->menu_box_layouts),
+                         (GtkCallback) gtk_widget_destroy,
+                         NULL);
+
+  g_hash_table_foreach (self->osks, menu_add_layout, self);
+  menu_add_layout ((gpointer)pos_osk_widget_get_name (POS_OSK_WIDGET (self->osk_terminal)),
+                   self->osk_terminal,
+                   self);
+
+  gtk_popover_set_relative_to (self->menu_popup, osk_widget);
+  gtk_popover_set_pointing_to (self->menu_popup, &rect);
+
+  gtk_popover_popup (self->menu_popup);
+}
+
+
+static void
+select_layout_change_state (GSimpleAction *action,
+                            GVariant      *parameter,
+                            gpointer       data)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+  const char *layout = NULL;
+  GtkWidget *osk_widget;
+
+  /* popdown popover right away to avoid flicker when switching layouts */
+  gtk_popover_popdown (self->menu_popup);
+
+  g_variant_get (parameter, "&s", &layout);
+  g_debug ("Layout '%s' selected", layout);
+
+  osk_widget = g_hash_table_lookup (self->osks, layout);
+  if (osk_widget == NULL) {
+    if (g_str_equal (layout, "terminal")) {
+      osk_widget = self->osk_terminal;
+    } else {
+      g_warning ("Failed to find layout '%s'", layout);
+      return;
+    }
+  }
+
+  hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));
+  g_simple_action_set_state (action, parameter);
+}
+
 
 
 static void
@@ -554,6 +640,8 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, debug_widget);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
@@ -718,6 +806,9 @@ static GActionEntry entries[] =
 {
   { .name = "clipboard-copy", .activate = clipboard_copy_activated },
   { .name = "clipboard-paste", .activate = clipboard_paste_activated },
+  { .name = "select-layout", .parameter_type = "s", .state = "\"terminal\"",
+    .change_state = select_layout_change_state },
+  { .name = "menu", .parameter_type = "(ii)", .activate = menu_activated },
 };
 
 
@@ -726,6 +817,8 @@ pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
   const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
+
+  gtk_widget_init_template (GTK_WIDGET (self));
 
   self->action_map = g_simple_action_group_new ();
   g_action_map_add_action_entries (G_ACTION_MAP (self->action_map),
@@ -740,8 +833,6 @@ pos_input_surface_init (PosInputSurface *self)
   self->screen_keyboard_enabled = -1;
   self->surface_visible = -1;
   self->animation.progress = 1.0;
-
-  gtk_widget_init_template (GTK_WIDGET (self));
 
   self->a11y_settings = g_settings_new ("org.gnome.desktop.a11y.applications");
   g_settings_bind (self->a11y_settings, "screen-keyboard-enabled",

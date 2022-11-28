@@ -34,7 +34,8 @@ way to get going is to do the following:
 
 ```sh
 meson . _build
-ninja -C _build
+meson build -C _build
+meson test -C _build
 ```
 
 ## Running
@@ -43,10 +44,12 @@ When running from the source tree first start *[phosh][]*.
 Then start *phosh-osk-stub* using:
 
 ```sh
-_build/src/phosh-osk-stub
+_build/src/phosh-osk-stub --replace
 ```
 
-Note that there's no need to install any files outside the source tree.
+Note that there's no need to install any files outside the source tree. The
+`--replace` option *temporarily* replaces a running `phosh-osk-stub` so there's
+no need to stop a running instance.
 
 The result should look something like this:
 

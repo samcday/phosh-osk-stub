@@ -76,3 +76,7 @@ pos-char-popup button:hover {
 pos-char-popup button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
+
+#pos-menu-popup modelbutton {
+  padding: 5px 10px 5px 10px;
+}

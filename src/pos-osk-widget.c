@@ -283,7 +283,7 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "symbol", "KEY_ENTER",
                         "icon", "keyboard-enter-symbolic",
-                        "width", 1.5,
+                        "width", 2.0,
                         "style", "return",
                         NULL);
     row->width += pos_osk_key_get_width (key);
@@ -317,14 +317,24 @@ add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
-                        "label", "?123",
+                        "use", POS_OSK_KEY_USE_MENU,
+                        "icon", "layout-menu-symbolic",
+                        "width", 1.0,
+                        "style", "sys",
+                        NULL);
+    row->width += pos_osk_key_get_width (key);
+    g_ptr_array_insert (row->keys, 0, key);
+
+    key = g_object_new (POS_TYPE_OSK_KEY,
+                        "label", "123",
                         "use", POS_OSK_KEY_USE_TOGGLE,
-                        "width", 1.5,
+                        "width", 1.0,
                         "layer", POS_OSK_WIDGET_LAYER_SYMBOLS,
                         "style", "toggle",
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, 0, key);
+
     break;
   case 0:
   case 1:
@@ -341,7 +351,7 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *labe
   if (g_strcmp0 (symbol, " ") == 0) {
     double width;
 
-    width = (num_keys == 5) ? 3.0 : 5.0;
+    width = (num_keys == 5) ? 2.0 : 4.0;
     return g_object_new (POS_TYPE_OSK_KEY,
                          "label", self->display_name,
                          "symbol", symbol,
@@ -743,6 +753,22 @@ get_popup_pos (PosOskKey *key, GdkRectangle *out)
 }
 
 
+static void
+pos_osk_widget_show_menu (PosOskWidget *self, PosOskKey *key)
+{
+  GVariantBuilder builder;
+  GActionGroup *group = gtk_widget_get_action_group (GTK_WIDGET (self), "win");
+  GdkRectangle rect;
+
+  get_popup_pos (key, &rect);
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_TUPLE);
+  g_variant_builder_add_value (&builder, g_variant_new ("i", rect.x));
+  g_variant_builder_add_value (&builder, g_variant_new ("i", rect.y));
+  g_action_group_activate_action (group, "menu", g_variant_builder_end (&builder));
+  pos_osk_key_set_pressed (key, FALSE);
+}
+
+
 static gboolean
 pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -775,6 +801,10 @@ pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
     g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
     g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (key));
     switch_layer (self, key);
+    break;
+
+  case POS_OSK_KEY_USE_MENU:
+    pos_osk_widget_show_menu (self, key);
     break;
   default:
     g_assert_not_reached ();
@@ -891,7 +921,6 @@ render_label (cairo_t *cr, GtkStyleContext *context, const char *label, const Gd
 {
   g_autoptr (PangoLayout) layout = pango_cairo_create_layout (cr);
   g_autoptr (PangoFontDescription) font = NULL;
-  PangoLayoutLine *line = NULL;
   PangoRectangle extents = { 0, };
   GdkRGBA color = {0};
   GtkStateFlags state;
@@ -903,15 +932,13 @@ render_label (cairo_t *cr, GtkStyleContext *context, const char *label, const Gd
   pango_layout_set_font_description (layout, font);
 
   pango_layout_set_text (layout, label, -1);
-  line = pango_layout_get_line_readonly (layout, 0);
-  if (line->resolved_dir == PANGO_DIRECTION_RTL)
-    pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
+  pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
 
   pango_layout_set_width (layout, PANGO_SCALE * box->width);
   pango_layout_get_extents (layout, NULL, &extents);
 
   cairo_move_to (cr,
-                 0.5 * (box->width - (double)extents.width / PANGO_SCALE),
+                 0.0,
                  0.5 * (box->height - (double)extents.height / PANGO_SCALE));
   gtk_style_context_get_color (context, state, &color);
 
