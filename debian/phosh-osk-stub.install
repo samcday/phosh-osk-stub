@@ -1,2 +1,4 @@
+#!/usr/bin/dh-exec
+
 usr/bin/phosh-osk-stub
-usr/share/applications/sm.puri.OSK0.desktop
+usr/share/applications/sm.puri.OSK0.desktop => usr/share/applications/sm.puri.Phosh.Osk-Stub.desktop

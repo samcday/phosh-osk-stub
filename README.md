@@ -1,7 +1,26 @@
 # Phosh OSK Stub
 
-A tool to debug input related issues in phosh. For a real on screen keyboard
-see [squeekboard][].
+An experimental keyboard for quick prototyping and to debug input related
+issues in phosh. For a production ready on-screen keyboard see [squeekboard][].
+
+The purpose of phosh-osk-stub:
+- allow experimentation without the risk of breaking end user systems
+- be helpful when debugging input-method related issues
+- be quick and easy to (cross)compile
+- allow to move GObject bits over to squeekboard easily if desired
+  (hence provide API documentation)
+
+Features:
+- easy to swap out with squeekboard (implements phosh's [sm.puri.OSK0]() DBus
+  interface) for low risk experimentation
+- easy to temporarily replace running instance (`--replace` option)
+- no language boundaries within the codebase to lower the entrance barrier
+- use current GTK/GObject patterns (actions, bindings, …)
+- use GNOME libs/technologies wherever possible (GSettings, json-glib, …)
+- [character popover](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-de.png)
+- cursor navigation via space-bar long-press
+- debug surface with additional information
+- swipeable layout switching
 
 ## License
 
@@ -29,8 +48,8 @@ For an explicit list of dependencies check the `Build-Depends` entry in the
 
 ## Building
 
-We use the meson (and thereby Ninja) build system for phosh.  The quickest
-way to get going is to do the following:
+We use the meson (and thereby Ninja) build system for phosh-osk-stub.
+The quickest way to get going is to do the following:
 
 ```sh
 meson . _build
@@ -66,3 +85,4 @@ API documentation is at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub
 [debian/control]:https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/debian/control
 [phosh]: https://gitlab.gnome.org/World/Phosh/phosh
 [squeekboard]: https://gitlab.gnome.org/World/Phosh/squeekboard
+[sm.puri.OSK0]: https://gitlab.gnome.org/World/Phosh/phosh/-/blob/main/src/dbus/sm.puri.OSK0.xml

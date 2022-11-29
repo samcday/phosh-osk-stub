@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Guido Günther <agx@sigxcpu.org>
 Build-Depends:
  debhelper-compat (= 13),
+ dh-exec,
  json-glib-tools,
  libsystemd-dev,
  libfeedback-dev,
@@ -26,9 +27,14 @@ Architecture: any
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
-Description: OSK stub to fulfill session dependencies
- Phosh's session wants a sm.puri.OSK0. For testing this stub fulfills the
- necessary dependencies and can be used for input debugging and experiments.
+Description: An experimental on screen keyboard for Phosh
+ phosh-osk-stub implements phosh's keyboard interface for ease of
+ experimentation. The focus is on ease of change and debugging rather than
+ stability. It features character popoversa and gesture based cursor
+ navigation.
+ .
+ For production use it's recommended to use Phosh's official on screen
+ keyboard squeekboard.
 
 Package: phosh-osk-stub-doc
 Architecture: all
@@ -36,8 +42,13 @@ Section: doc
 Build-Profiles: <!nodoc>
 Depends:
  ${misc:Depends},
-Description: OSK stub to fulfill session dependencies
- Phosh's session wants a sm.puri.OSK0. For testing this stub fulfills the
- necessary dependencies and can be used for input debugging and experiments.
+Description: API documentation for Phosh's OSK stub
+ phosh-osk-stub implements phosh's keyboard interface for ease of
+ experimentation. The focus is on ease of change and debugging rather than
+ stability. It features character popoversa and gesture based cursor
+ navigation.
+ .
+ For production use it's recommended to use Phosh's official on screen
+ keyboard squeekboard.
  .
  This package contains the development documentation.

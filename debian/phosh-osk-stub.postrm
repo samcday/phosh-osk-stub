@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-if [ "$1" = "remove" ]; then
-    dpkg-divert --package phosh-osk-stub --rename --remove /usr/share/applications/sm.puri.OSK0.desktop
-fi
-
-#DEBHELPER#

@@ -1,3 +1,15 @@
+phosh-osk-stub 0.23.0~rc1
+-------------------------
+Released: November 2022
+* Add layout selection popover
+* support more keyboard layouts
+* make layout testing simpler via POS_TEST_LAYOUT env
+  var
+* make testing osk-stub easier via `--replace`
+* Use update-alternatives instead of override to manage
+  /u/s/applications/sm.puri.OSK0.desktop.
+* Style keys like backspace and esc properly
+
 phosh-osk-stub 0.22.0
 ---------------------
 Released: November 2022
@@ -20,7 +32,7 @@ No changes over 0.20.0~beta1
 phosh-osk-stub 0.20.0~beta1
 ---------------------------
 Released: July 2022
-* Add key repeat 
+* Add key repeat
 * Honor screen-keyboard-enabled gsetting
 * Intial "terminal like" keyboard (Function keys, ESC, Tab)
 * Lots of internal rework and fixes
@@ -35,7 +47,7 @@ Released: February 2022
 * Cursor movement via long press on space
 * Switches layouts via swipe
 * Animates show/hide
-* Can parse a subset of gnome-shell's keyboard layouts 
+* Can parse a subset of gnome-shell's keyboard layouts
   to avoid duplication.
 * Falls back to virtual-keyboard protocol for e.g.
   X11 apps.
