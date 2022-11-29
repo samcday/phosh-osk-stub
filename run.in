@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+ABS_BUILDDIR='@ABS_BUILDDIR@'
+ABS_SRCDIR='@ABS_SRCDIR@'
+
+export GSETTINGS_SCHEMA_DIR="${ABS_BUILDDIR}/data"
+
+if [ "${POS_GDB}" = 1 ]; then
+    echo "Running phosh-osk-stub under gdb"
+    WRAPPER="gdb --args"
+fi
+
+set -x
+exec ${WRAPPER} "${ABS_BUILDDIR}/src/phosh-osk-stub" "$@"
