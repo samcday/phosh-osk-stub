@@ -342,14 +342,14 @@ pos_debug_widget_set_input_method (PosDebugWidget *self, PosInputMethod *input_m
 
   g_set_object (&self->input_method, input_method);
   g_object_connect (self->input_method,
-                    "swapped-signal::pending-changed", on_im_pending_changed, self,
-                    "swapped-signal::done", on_im_done, self,
-                    "swapped-signal::notify::active", on_im_active_changed, self,
-                    "swapped-signal::notify::purpose", on_im_purpose_changed, self,
-                    "swapped-signal::notify::hint", on_im_hint_changed, self,
-                    "swapped-signal::notify::text-change-cause",
+                    "swapped-object-signal::pending-changed", on_im_pending_changed, self,
+                    "swapped-object-signal::done", on_im_done, self,
+                    "swapped-object-signal::notify::active", on_im_active_changed, self,
+                    "swapped-object-signal::notify::purpose", on_im_purpose_changed, self,
+                    "swapped-object-signal::notify::hint", on_im_hint_changed, self,
+                    "swapped-object-signal::notify::text-change-cause",
                     on_im_text_change_cause_changed, self,
-                    "swapped-signal::notify::surrounding-text",
+                    "swapped-object-signal::notify::surrounding-text",
                     on_im_surrounding_text_changed, self,
                     NULL);
 
