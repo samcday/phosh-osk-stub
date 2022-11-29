@@ -18,6 +18,7 @@ pkglibdir = join_paths(libdir, meson.project_name())
 systemddir = join_paths(prefix, 'lib/systemd')
 systemduserdir = join_paths(systemddir, 'user')
 presagedictdir = datadir / 'phosh' / 'osk' / 'presage'
+schemasdir = datadir / 'glib-2.0' / 'schemas'
 
 glib_ver = '2.66'
 glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
