@@ -466,11 +466,11 @@ pos_input_surface_constructed (GObject *object)
   G_OBJECT_CLASS (pos_input_surface_parent_class)->constructed (object);
 
   g_object_connect (self->input_method,
-                    "swapped-signal::notify::active", on_im_active_changed, self,
-                    "swapped-signal::notify::purpose", on_im_purpose_changed, self,
-                    "swapped-signal::notify::text-change-cause",
+                    "swapped-object-signal::notify::active", on_im_active_changed, self,
+                    "swapped-object-signal::notify::purpose", on_im_purpose_changed, self,
+                    "swapped-object-signal::notify::text-change-cause",
                     on_im_text_change_cause_changed, self,
-                    "swapped-signal::notify::surrounding-text",
+                    "swapped-object-signal::notify::surrounding-text",
                     on_im_surrounding_text_changed, self,
                     NULL);
 }
