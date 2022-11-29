@@ -465,6 +465,7 @@ pos_input_surface_constructed (GObject *object)
 
   G_OBJECT_CLASS (pos_input_surface_parent_class)->constructed (object);
 
+  g_assert (POS_IS_INPUT_METHOD (self->input_method));
   g_object_connect (self->input_method,
                     "swapped-object-signal::notify::active", on_im_active_changed, self,
                     "swapped-object-signal::notify::purpose", on_im_purpose_changed, self,
