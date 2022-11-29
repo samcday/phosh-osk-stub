@@ -1,3 +1,127 @@
+phosh-osk-stub (0.23.0~rc1) experimental; urgency=medium
+
+  * debian: Remove d/clean.  The files listed in there don't exist
+  * build: Error out on missing function declarations
+  * input-surface: Make pending labels match submitted ones
+  * osk-stub: Make _proxy non-global
+  * osk-stub: Avoid idle callback on quit.
+    We already use g_unix_signal_add () so no need to schedule
+    this even later.
+  * osk-stub: Make loop non-global
+  * osk-stub: Always use main loop.
+    All invocations already have a running main loop so use that
+    instead of exit (0).
+  * osk-stub: Use automatic cleanup for GError.
+    Rename to `err` to consistency with other error locations in this file
+  * osk-stub: Use automatic cleanup for object_path
+  * osk-stub: Use automatic cleanup for GVariant
+  * osk-stub: Don't create osk_dbus multiple times.
+    We don't want a new object when the surface gets recreated
+  * osk-dbus: Fix indentation
+  * osk-dbus: Log failure when we failt to acquire the well known name
+  * osk-dbus: Allow to specify replacement policy.
+    So far we always allowed replacement and replaced always, we might
+    not always want to do this.
+  * osk-dbus: Track whether we have the sm.puri.OSK0 dbus name.
+    This allows other parts of the osk to react.
+  * osk-stub: Only maintain input surface when we own the DBus name.
+    This allows us to easily replace the running keyboard for development
+    purposes and makes sure we get back a working one when the replacement
+    goes away.
+  * data: Allow replacement by default.
+    This makes it simple to toy with other implementations without any other
+    modificatins.
+  * ci: Update build-deps.  This way we don't have to redo the image with
+    every new build dependency.
+  * ci: Drop Byzantium build.
+    It's too cumpersome to keep it up to date, we do that downstream.
+  * osk-widget: Parse style.
+    This allows us to set style classes.
+  * style: Add 'sys' key class.
+    This is for non-character keys that are not toggles (e.g. esc, tab)
+  * osk-widget: Make backspace 'sys' styled.
+    Easier to spot this way.
+  * terminal: Use sys class
+  * osk-stub: Don't race with wayland registry on startup.
+    If we acquire the DBus name before all wayland globals are registered
+    we'd hit an assert. Avoid this by just not creating the surface on
+    startup, it will happen once all wl globals are there.
+  * dir-locals: Fix JS indentation.
+    We indent with 2 spaces by default
+  * input-methods: Fix doc strings
+  * build: Only maintain glib version in a single place
+  * layouts: Add more layouts.
+    Again taken from gnome-shell as of
+    The keyboard layouts were taken from gnome-shell as of
+    6a88c0f0be5aed836f33ed2989d33add58c01403
+  * input-surface: Move adding a layout to an extra function
+  * input-surface: Honor POS_TEST_LAYOUT env var.
+    This allows to quickly test a layout via
+        POS_TEST_LAYOUT=nl POS_DEBUG=force-show _build/src/phosh-osk-stub --replace
+    without having to change anything else.
+  * input-surface: Emit a warning when we fail to lookup layout info
+  * Use less generic name for `config.h`
+  * char-popup: Use a grid.
+    With lots of chars the single row is hard to use
+  * char-popup: Use slightly larger font and more padding.
+    This should make the buttons easier to hit.
+  * build: Bump glib dependency to 2.66.
+    Just to catch up a bit
+  * input-surface: Move debug info to separate widget.
+    Move the surface that keeps the debug information (which was
+    phosh-osk-stub's initial purpose) into a separate widget. This makes
+    pos-input-surface focus more in input and also allows us to add new
+    things to the debug surface more easily without getting into conflict
+    with e.g. the completion code.
+    We keep the input-surface's callbacks needed for completion in place.
+  * input-surface: Don't leak old_keys
+    g_hash_table_get_keys_as_array is transfer: container
+  * osk-widget: Handle height requests.
+    This allows us to align properly within the input-surface as we're
+    no longer dependent on the size of the debug output's box size
+  * osk-widget: Make the current mode a property.
+    So we can listen for changes
+  * osk-widget: Parse locale from layout as well
+  * osk-widget: Simplify adding common keys.
+    Less code and will allow us to add multiple keys
+  * osk-widget: Fix indentation
+  * osk-widget: Clearly separate name and display name.
+    The name is a unique identifier like `de` or `us` (corresponding to the
+    basename of the layout file) while the display name is s.th. like
+    `German` or `English (US)`.
+  * osk-widget: Move get_popup_pos up
+    and drop unused parameters
+  * input-surface: Implement GActionMap and GActionGroup.
+    This allows us to add actions from other places.
+  * readme: Document --replace
+  * readme: Use meson consistently.
+    This makes it e.g. simpler to pick individual tests, etc.
+  * osk-widget: Add key for popover menu
+  * input-surface: Add popover menu.
+    This allows to select the current layout
+  * osk-widget: Center symbols.
+    This helps when e.g. the text on the space bar breaks over two lines.
+  * osk-widget: Drop '?" from symbol layer toggle.
+    This makes it fit a bit better.
+  * debug-widget: Use swapped-object-signal.
+    This makes sure we disconnect from the input-method when
+    when the input-surface goes away.
+  * input-surface: Use swapped-object-signal.
+    This makes sure we disconnect from the input-method when
+    when the input-surface goes away.
+  * input-method: Fix signal docs
+  * input-surface: Make sure we have a valid input-method
+  * debian: Use update-alternatives.
+    This allows for easy selection between squeekboard and phosh-osk-stub
+    while having both packages installed.
+    Note that the user can still override the OSK completely via
+    usr/share/applications/sm.puri.OSK0.desktop.
+  * d/control: Update description a bit.
+    We're not just a stub surface anymore
+  * Update README
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 29 Nov 2022 14:13:16 +0100
+
 phosh-osk-stub (0.22.0) experimental; urgency=medium
 
   * virtual-keyboard: Set default keymap if there are no layouts.
