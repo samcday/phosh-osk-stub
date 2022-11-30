@@ -77,7 +77,7 @@
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkModelButton">
+              <object class="GtkModelButton" id="word_completion_btn">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Word completion</property>
                 <property name="action-name">win.word-completion</property>

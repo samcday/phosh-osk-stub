@@ -92,6 +92,7 @@ struct _PosInputSurface {
   GtkPopover              *menu_popup;
   GSimpleActionGroup      *action_map;
 
+  GtkWidget               *word_completion_btn;
   PosCompleter            *completer;
   GtkWidget               *completion_bar;
   gboolean                 completion_enabled;
@@ -364,6 +365,9 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
   menu_add_layout ((gpointer)pos_osk_widget_get_name (POS_OSK_WIDGET (self->osk_terminal)),
                    self->osk_terminal,
                    self);
+
+  gtk_widget_set_visible (self->word_completion_btn,
+                          !(self->completion_mode == PHOSH_OSK_COMPLETION_MODE_NONE));
 
   gtk_popover_set_relative_to (self->menu_popup, osk_widget);
   gtk_popover_set_pointing_to (self->menu_popup, &rect);
@@ -951,6 +955,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, word_completion_btn);
   gtk_widget_class_bind_template_callback (widget_class, on_completion_selected);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
