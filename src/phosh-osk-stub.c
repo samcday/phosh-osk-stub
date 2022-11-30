@@ -58,10 +58,12 @@ typedef struct _PhoshOskStub {
   GDBusProxy          *session_proxy;
   PosOskDbus          *osk_dbus;
 
+  struct wl_display                       *display;
   struct zwlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager;
   struct zwp_input_method_manager_v2      *input_method_manager;
   struct zwlr_layer_shell_v1              *layer_shell;
   struct zphoc_device_state_v1            *phoc_device_state;
+  struct wl_registry                      *registry;
   struct wl_seat                          *seat;
   struct zwp_virtual_keyboard_manager_v1  *virtual_keyboard_manager;
   struct zwlr_data_control_manager_v1     *wlr_data_control_manager;
@@ -71,8 +73,6 @@ typedef struct _PhoshOskStub {
 G_DECLARE_FINAL_TYPE (PhoshOskStub, phosh_osk_stub, PHOSH, OSK_STUB, GObject)
 G_DEFINE_TYPE (PhoshOskStub, phosh_osk_stub, G_TYPE_OBJECT)
 
-static struct wl_display *_display;
-static struct wl_registry *_registry;
 
 static PosActivationFilter *_activation_filter;
 static PosHwTracker *_hw_tracker;
@@ -420,7 +420,7 @@ registry_handle_global (void               *data,
   } else if (strcmp (interface, wl_seat_interface.name) == 0) {
     self->seat = wl_registry_bind (registry, name, &wl_seat_interface, version);
   } else if (!strcmp (interface, zwlr_layer_shell_v1_interface.name)) {
-    self->layer_shell = wl_registry_bind (_registry, name, &zwlr_layer_shell_v1_interface, 1);
+    self->layer_shell = wl_registry_bind (registry, name, &zwlr_layer_shell_v1_interface, 1);
   } else if (!strcmp (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
     self->foreign_toplevel_manager = wl_registry_bind (registry, name,
                                                        &zwlr_foreign_toplevel_manager_v1_interface,
@@ -476,14 +476,14 @@ phosh_osk_stub_setup_input_method (PhoshOskStub *self, PosOskDbus *osk_dbus)
 
   gdk_set_allowed_backends ("wayland");
   gdk_display = gdk_display_get_default ();
-  _display = gdk_wayland_display_get_wl_display (gdk_display);
-  if (_display == NULL) {
+  self->display = gdk_wayland_display_get_wl_display (gdk_display);
+  if (self->display == NULL) {
     g_critical ("Failed to get display: %m\n");
     return FALSE;
   }
 
-  _registry = wl_display_get_registry (_display);
-  wl_registry_add_listener (_registry, &registry_listener, self);
+  self->registry = wl_display_get_registry (self->display);
+  wl_registry_add_listener (self->registry, &registry_listener, self);
   return TRUE;
 }
 
