@@ -19,6 +19,8 @@ Features:
 - use GNOME libs/technologies wherever possible (GSettings, json-glib, …)
 - [character popover](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-de.png)
 - cursor navigation via space-bar long-press
+- experimental [word completion](https://social.librem.one/@agx/109428599061094716)
+  based on the presage library
 - debug surface with additional information
 - swipeable layout switching
 
@@ -83,13 +85,18 @@ presage libarary. For this to work you need:
 - A model file in /usr/share/phosh/osk/presage/. Likely your distribution
   already ships one with the presarge libary. You can simply simplink there.
   See `debian/phosh-osk-stub.links`. Models for more languages can be found
-  in [phosh-osk-data]().
+  in [phosh-osk-data][].
 - An appplication that used recent GTK3 (>= 3.24.35). GTK4 apps work
   somewhat as well but there's currenly an issues with cursor
   movement.
+- Completion enabled in settings:
 
-Completion can then be enabled/disabled via the language popover.
+        gsettings set sm.puri.phosh.osk completion-mode "['manual','hint']"
 
+Completion can then be enabled/disabled via the language popover. To permanently
+disable it use:
+
+        gsettings reset sm.puri.phosh.osk completion-mode
 
 ## Development Documentation
 
