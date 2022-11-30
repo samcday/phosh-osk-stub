@@ -103,7 +103,7 @@ quit_cb (gpointer user_data)
 
 
 static void
-respond_to_end_session (GDBusProxy *proxy, gboolean shutdown)
+respond_to_end_session (GDBusProxy *proxy)
 {
   /* we must answer with "EndSessionResponse" */
   g_dbus_proxy_call (proxy, "EndSessionResponse",
@@ -124,10 +124,10 @@ client_proxy_signal_cb (GDBusProxy *proxy,
 
   if (g_strcmp0 (signal_name, "QueryEndSession") == 0) {
     g_debug ("Got QueryEndSession signal");
-    respond_to_end_session (proxy, FALSE);
+    respond_to_end_session (proxy);
   } else if (g_strcmp0 (signal_name, "EndSession") == 0) {
     g_debug ("Got EndSession signal");
-    respond_to_end_session (proxy, TRUE);
+    respond_to_end_session (proxy);
   } else if (g_strcmp0 (signal_name, "Stop") == 0) {
     g_debug ("Got Stop signal");
     quit_cb (loop);
