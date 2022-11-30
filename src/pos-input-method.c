@@ -219,7 +219,7 @@ static void
 handle_unavailable (void                       *data,
                     struct zwp_input_method_v2 *zwp_input_method_v2)
 {
-  g_debug ("%s", __func__);
+  g_warning ("Input method unavailable");
 }
 
 
