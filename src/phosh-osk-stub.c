@@ -523,6 +523,13 @@ phosh_osk_stub_init (PhoshOskStub *self)
 }
 
 
+static void
+phosh_osk_stub_run (PhoshOskStub *self)
+{
+  g_main_loop_run (self->loop);
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -568,7 +575,7 @@ main (int argc, char *argv[])
   if (!setup_input_method (_osk_dbus))
     return EXIT_FAILURE;
 
-  g_main_loop_run (osk_stub->loop);
+  phosh_osk_stub_run (osk_stub);
 
   if (_input_surface)
     dispose_input_surface (_input_surface);
