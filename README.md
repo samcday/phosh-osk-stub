@@ -76,6 +76,21 @@ The result should look something like this:
 ![character popover](screenshots/pos-de.png)
 ![inscript/malayalam](screenshots/pos-wide-in+mal.png)
 
+## Word Completion
+phosh-osk-stub has experimental support for word completion based on the
+presage libarary. For this to work you need:
+
+- A model file in /usr/share/phosh/osk/presage/. Likely your distribution
+  already ships one with the presarge libary. You can simply simplink there.
+  See `debian/phosh-osk-stub.links`. Models for more languages can be found
+  in [phosh-osk-data]().
+- An appplication that used recent GTK3 (>= 3.24.35). GTK4 apps work
+  somewhat as well but there's currenly an issues with cursor
+  movement.
+
+Completion can then be enabled/disabled via the language popover.
+
+
 ## Development Documentation
 
 API documentation is at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub
@@ -86,3 +101,4 @@ API documentation is at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub
 [phosh]: https://gitlab.gnome.org/World/Phosh/phosh
 [squeekboard]: https://gitlab.gnome.org/World/Phosh/squeekboard
 [sm.puri.OSK0]: https://gitlab.gnome.org/World/Phosh/phosh/-/blob/main/src/dbus/sm.puri.OSK0.xml
+[phosh-osk-data]: https://gitlab.gnome.org/guidog/phosh-osk-data/
