@@ -10,3 +10,5 @@
 #mesondefine GETTEXT_PACKAGE
 
 #mesondefine LOCALEDIR
+
+#mesondefine PRESAGE_DICT_DIR

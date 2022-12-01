@@ -19,5 +19,6 @@ gboolean pos_input_surface_get_visible     (PosInputSurface *self);
 gboolean pos_input_surface_get_im_active   (PosInputSurface *self);
 gboolean pos_input_surface_get_active      (PosInputSurface *self);
 gboolean pos_input_surface_get_screen_keyboard_enabled (PosInputSurface *self);
+gboolean pos_input_surface_is_completer_active (PosInputSurface *self);
 
 G_END_DECLS

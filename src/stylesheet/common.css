@@ -48,7 +48,7 @@ pos-key.return.pressed {
 
 pos-char-popup {
   font-family: cantarell, sans-serif;
-  
+
   color: @theme_fg_color;
   background-color: @theme_bg_color;
 }
@@ -75,6 +75,15 @@ pos-char-popup button:hover {
 
 pos-char-popup button:active {
   background: shade(@pos_key_bg_color, 0.8);
+}
+
+
+pos-completion-bar button {
+  color: @pos_fg_color;
+  background: @pos_bg_color;
+  padding-left: 10px;
+  padding-right: 10px;
+  border: none;
 }
 
 #pos-menu-popup modelbutton {

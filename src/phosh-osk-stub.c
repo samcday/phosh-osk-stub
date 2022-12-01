@@ -10,6 +10,7 @@
 
 #include "pos-config.h"
 #include "pos.h"
+#include "completers/pos-completer-presage.h"
 
 #include "input-method-unstable-v2-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
@@ -35,10 +36,12 @@
 /**
  * PosDebugFlags:
  * @POS_DEBUG_FLAG_FORCE_SHOW: Ignore the `screen-keyboard-enabled` GSetting and always enable the OSK
+ * @POS_DEBUG_FLAG_FORCE_COMPLETEION: Force text completion to on
  */
 typedef enum _PosDebugFlags {
   POS_DEBUG_FLAG_NONE = 0,
   POS_DEBUG_FLAG_FORCE_SHOW    = 1 << 0,
+  POS_DEBUG_FLAG_FORCE_COMPLETEION = 1 << 1,
 } PosDebugFlags;
 
 
@@ -244,6 +247,9 @@ create_input_surface (struct wl_seat                         *seat,
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
+  g_autoptr (PosCompleter) completer = NULL;
+  g_autoptr (GError) err = NULL;
+  gboolean force_completion;
 
   g_assert (seat);
   g_assert (virtual_keyboard_manager);
@@ -253,10 +259,16 @@ create_input_surface (struct wl_seat                         *seat,
 
   virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
+  completer = pos_completer_presage_new (&err);
+  if (completer == NULL) {
+    g_critical ("Failed to init completer: %s", err->message);
+  }
 
   im = pos_input_method_new (im_manager, seat);
 
+  force_completion = !!(_debug_flags & POS_DEBUG_FLAG_FORCE_COMPLETEION);
   _input_surface = g_object_new (POS_TYPE_INPUT_SURFACE,
+                                 /* layer-surface */
                                  "layer-shell", layer_shell,
                                  "height", INPUT_SURFACE_HEIGHT,
                                  "anchor", ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
@@ -266,8 +278,11 @@ create_input_surface (struct wl_seat                         *seat,
                                  "kbd-interactivity", FALSE,
                                  "exclusive-zone", INPUT_SURFACE_HEIGHT,
                                  "namespace", "osk",
+                                 /* pos-input-surface */
                                  "input-method", im,
                                  "keyboard-driver", vk_driver,
+                                 "completer", completer,
+                                 "completion-enabled", force_completion,
                                  NULL);
 
   g_object_bind_property (_input_surface,
@@ -394,6 +409,8 @@ static GDebugKey debug_keys[] =
 {
   { .key = "force-show",
     .value = POS_DEBUG_FLAG_FORCE_SHOW,},
+  { .key = "force-completion",
+    .value = POS_DEBUG_FLAG_FORCE_COMPLETEION,},
 };
 
 static PosDebugFlags

@@ -12,6 +12,8 @@
 
 #include "pos-debug-widget.h"
 #include "pos-input-method.h"
+#include "pos-completer.h"
+#include "pos-completion-bar.h"
 #include "pos-input-surface.h"
 #include "pos-osk-widget.h"
 #include "pos-vk-driver.h"
@@ -29,9 +31,12 @@
 enum {
   PROP_0,
   PROP_INPUT_METHOD,
+  PROP_COMPLETER,
   PROP_SCREEN_KEYBOARD_ENABLED,
   PROP_KEYBOARD_DRIVER,
   PROP_SURFACE_VISIBLE,
+  PROP_COMPLETER_ACTIVE,
+  PROP_COMPLETION_ENABLED,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -56,6 +61,7 @@ struct _PosInputSurface {
 
   gboolean                 surface_visible;
   PosInputSurfaceAnimation animation;
+  int                      height;
 
   /* GNOME settings */
   gboolean                 screen_keyboard_enabled;
@@ -83,6 +89,10 @@ struct _PosInputSurface {
   GtkBox                  *menu_box_layouts;
   GtkPopover              *menu_popup;
   GSimpleActionGroup      *action_map;
+
+  PosCompleter            *completer;
+  GtkWidget               *completion_bar;
+  gboolean                 completion_enabled;
 };
 
 
@@ -93,6 +103,88 @@ G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SU
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_GROUP, pos_input_surface_action_group_iface_init)
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_MAP, pos_input_surface_action_map_iface_init)
   )
+
+
+/* This is a bit more strict than is_completer_active so it can be used
+   with active completer but also takes the OSK's mode into account */
+static gboolean
+pos_input_surface_is_completion_mode (PosInputSurface *self)
+{
+  GtkWidget *osk_widget;
+
+  if (pos_input_surface_is_completer_active(self) == FALSE)
+    return FALSE;
+
+  /* no completion in cursor mode */
+  osk_widget = hdy_deck_get_visible_child (self->deck);
+  return pos_osk_widget_get_mode (POS_OSK_WIDGET (osk_widget)) == POS_OSK_WIDGET_MODE_KEYBOARD;
+}
+
+
+static void
+on_completion_selected (PosInputSurface *self, const char *completion)
+{
+  g_autofree gchar *send = NULL;
+
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  g_return_if_fail (completion != NULL);
+
+  g_debug ("completion: %s", completion);
+  send = g_strdup_printf ("%s ", completion);
+
+  pos_input_method_send_string (self->input_method, send, TRUE);
+
+  if (pos_input_surface_is_completer_active (self))
+    pos_completer_set_preedit (self->completer, NULL);
+}
+
+
+static void
+on_completer_preedit_changed (PosInputSurface *self)
+{
+  const char *preedit = NULL;
+  int pos;
+
+  /* Only update preedit when in cursor mode as this updates preedit too */
+  if (pos_input_surface_is_completion_mode (self) == FALSE)
+    return;
+
+  preedit = pos_completer_get_preedit (self->completer);
+  pos = preedit ? strlen (preedit) : 0;
+
+  pos_input_method_send_preedit (self->input_method, preedit, pos, pos, TRUE);
+}
+
+
+static void
+on_completer_completions_changed (PosInputSurface *self)
+{
+  pos_completion_bar_set_completions (POS_COMPLETION_BAR (self->completion_bar),
+                                      pos_completer_get_completions (self->completer));
+}
+
+
+static void
+on_completer_commit_string (PosInputSurface *self, const char *text)
+{
+  g_debug ("%s: %s", __func__, text);
+  pos_input_method_send_string (self->input_method, text, TRUE);
+}
+
+
+static void
+on_completer_update (PosInputSurface *self, const char *preedit, guint before, guint after)
+{
+  guint pos = strlen (preedit);
+
+  /* In cursor mode we reset preedit, make sure to break the cycle */
+  if (pos_input_surface_is_completion_mode (self) == FALSE)
+    return;
+
+  pos_input_method_delete_surrounding_text (self->input_method, before, after, FALSE);
+  pos_input_method_send_preedit (self->input_method, preedit, pos, pos, TRUE);
+}
+
 
 /* Select proper style sheet in case of high contrast */
 static void
@@ -147,18 +239,56 @@ on_osk_key_down (PosInputSurface *self, const char *symbol, GtkWidget *osk_widge
 static void
 on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_widget)
 {
+  gboolean handled;
+
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
   g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
 
   g_debug ("Key: '%s' symbol", symbol);
 
-  if (g_str_has_prefix (symbol, "KEY_") ||
-      !pos_input_method_get_active (self->input_method)) {
+  /* virtual-keyboard, no input method */
+  if (!pos_input_method_get_active (self->input_method)) {
+    pos_vk_driver_key_down (self->keyboard_driver, symbol);
+    pos_vk_driver_key_up (self->keyboard_driver, symbol);
+    return;
+  }
+
+  if (pos_input_surface_is_completion_mode (self)) {
+    handled = pos_completer_feed_symbol (self->completer, symbol);
+    if (handled)
+      return;
+  }
+
+  if (g_str_has_prefix (symbol, "KEY_")) {
     pos_vk_driver_key_down (self->keyboard_driver, symbol);
     pos_vk_driver_key_up (self->keyboard_driver, symbol);
   } else {
     pos_input_method_send_string (self->input_method, symbol, TRUE);
   }
+
+  if (pos_input_surface_is_completer_active (self))
+    pos_completer_set_preedit (self->completer, NULL);
+}
+
+
+static void
+on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_widget)
+{
+  g_autofree char *preedit = NULL;
+
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
+
+  /* We only want to clear preedit when entering cursor mode */
+  if (pos_input_surface_is_completion_mode (self) == TRUE)
+    return;
+
+  preedit = g_strdup (pos_completer_get_preedit (self->completer));
+
+  g_debug ("%s: Submitting %s", __func__, preedit);
+  pos_completer_set_preedit (self->completer, NULL);
+  pos_input_method_send_preedit (self->input_method, "", 0, 0, FALSE);
+  pos_input_method_send_string (self->input_method, preedit, TRUE);
 }
 
 
@@ -269,6 +399,26 @@ select_layout_change_state (GSimpleAction *action,
 }
 
 
+static void
+switch_language (PosInputSurface *self, const char *locale)
+{
+  gboolean success;
+  g_autoptr (GError) err = NULL;
+
+  if (self->completer == NULL)
+    return;
+
+  g_debug ("Switching language, locale: '%s'", locale);
+  success = pos_completer_set_language (self->completer, locale, &err);
+  if (success == FALSE) {
+    g_warning ("Failed to set language: %s, switching to '%s' instead",
+               err->message, POS_COMPLETER_DEFAULT_LANG);
+    pos_completer_set_language (self->completer, POS_COMPLETER_DEFAULT_LANG, NULL);
+  }
+
+  pos_completion_bar_set_completions (POS_COMPLETION_BAR (self->completion_bar), NULL);
+}
+
 
 static void
 on_visible_child_changed (PosInputSurface *self)
@@ -283,6 +433,8 @@ on_visible_child_changed (PosInputSurface *self)
   osk = POS_OSK_WIDGET (child);
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_display_name (osk));
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
+
+  switch_language (self, pos_osk_widget_get_locale (osk));
 }
 
 static void
@@ -368,10 +520,57 @@ animate_cb (GtkWidget     *widget,
 }
 
 
+static void
+pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
+{
+  if (self->completer == completer)
+    return;
+
+  if (self->completer)
+    g_signal_handlers_disconnect_by_data (self->completer, self);
+
+  g_set_object (&self->completer, completer);
+
+  if (self->completer != NULL) {
+    g_debug ("Adding completer '%s'", G_OBJECT_CLASS_NAME (G_OBJECT_GET_CLASS (self->completer)));
+    g_object_connect (self->completer,
+                      "swapped-signal::notify::completions",
+                      G_CALLBACK (on_completer_completions_changed), self,
+                      "swapped-signal::notify::preedit",
+                      G_CALLBACK (on_completer_preedit_changed), self,
+                      "swapped-signal::commit-string",
+                      G_CALLBACK (on_completer_commit_string), self,
+                      "swapped-signal::update",
+                      G_CALLBACK (on_completer_update), self,
+                      NULL);
+  } else {
+    g_debug ("Removing completer");
+  }
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER]);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
+}
+
+
 static double
 reverse_ease_out_cubic (double t)
 {
   return cbrt (t - 1) + 1;
+}
+
+
+static void
+pos_input_surface_set_completion_enabled (PosInputSurface *self, gboolean enable)
+{
+  if (self->completion_enabled == enable)
+    return;
+
+  /* popdown popover right away */
+  gtk_popover_popdown (self->menu_popup);
+
+  self->completion_enabled = enable;
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETION_ENABLED]);
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 }
 
 
@@ -388,6 +587,9 @@ pos_input_surface_set_property (GObject      *object,
     self->input_method = g_value_dup_object (value);
     pos_debug_widget_set_input_method (self->debug_widget, self->input_method);
     break;
+  case PROP_COMPLETER:
+    pos_input_surface_set_completer (self, g_value_get_object (value));
+    break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     pos_screen_keyboard_set_enabled (self, g_value_get_boolean (value));
     break;
@@ -396,6 +598,9 @@ pos_input_surface_set_property (GObject      *object,
     break;
   case PROP_SURFACE_VISIBLE:
     pos_input_surface_set_visible (self, g_value_get_boolean (value));
+    break;
+  case PROP_COMPLETION_ENABLED:
+    pos_input_surface_set_completion_enabled (self, g_value_get_boolean (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -413,11 +618,20 @@ pos_input_surface_get_property (GObject    *object,
   PosInputSurface *self = POS_INPUT_SURFACE (object);
 
   switch (property_id) {
+  case PROP_COMPLETER:
+    g_value_set_object (value, self->completer);
+    break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     g_value_set_boolean (value, pos_input_surface_get_screen_keyboard_enabled (self));
     break;
   case PROP_SURFACE_VISIBLE:
     g_value_set_boolean (value, pos_input_surface_get_visible (self));
+    break;
+  case PROP_COMPLETER_ACTIVE:
+    g_value_set_boolean (value, pos_input_surface_is_completer_active (self));
+    break;
+  case PROP_COMPLETION_ENABLED:
+    g_value_set_boolean (value, self->completion_enabled);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -431,6 +645,9 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
 {
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
+
+  /* We only have completer active on `normal` input purpose */
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 }
 
 
@@ -439,22 +656,58 @@ on_im_text_change_cause_changed (PosInputSurface *self, GParamSpec *pspec, PosIn
 {
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
+
+  if (!pos_input_surface_is_completer_active (self))
+    return;
+
+  if (pos_input_method_get_text_change_cause (im) != POS_INPUT_METHOD_TEXT_CHANGE_CAUSE_IM)
+    pos_completer_set_preedit (self->completer, NULL);
 }
 
 
 static void
 on_im_surrounding_text_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
 {
+  const char *text;
+  guint anchor, cursor;
+  g_autofree char *before = NULL;
+  g_autofree char *after = NULL;
+
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
+
+  text = pos_input_method_get_surrounding_text (im, &anchor, &cursor);
+  if (!pos_input_surface_is_completer_active (self))
+    return;
+
+  before = g_strndup (text, cursor);
+
+  if (text)
+    after = g_strdup (&(text[cursor]));
+
+  pos_completer_set_surrounding_text (POS_COMPLETER (self->completer), before, after);
 }
 
 
 static void
 on_im_active_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
 {
+  gboolean active;
+
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
+
+  active = pos_input_method_get_active (im);
+
+  if (active) {
+    /* TODO: Reset buffered commit_string, delete_surrounding_text */
+    if (pos_input_surface_is_completer_active (self)) {
+      pos_completer_set_preedit (self->completer, NULL);
+    }
+  }
+
+  /* Completer can only be active with input method, not vk */
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 }
 
 
@@ -478,14 +731,15 @@ pos_input_surface_constructed (GObject *object)
 
 
 static void
-pos_input_surface_dispose (GObject *object)
+pos_input_surface_destroy (GtkWidget *widget)
 {
-  PosInputSurface *self = POS_INPUT_SURFACE (object);
+  PosInputSurface *self = POS_INPUT_SURFACE (widget);
 
+  g_clear_object (&self->action_map);
   /* Remove hash table early since this also destroys the osks in the deck */
   g_clear_pointer (&self->osks, g_hash_table_destroy);
 
-  G_OBJECT_CLASS (pos_input_surface_parent_class)->dispose (object);
+  GTK_WIDGET_CLASS (pos_input_surface_parent_class)->destroy (widget);
 }
 
 
@@ -499,9 +753,9 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->input_settings);
   g_clear_object (&self->xkbinfo);
   g_clear_object (&self->css_provider);
+  g_clear_object (&self->completer);
   g_clear_pointer (&self->theme_name, g_free);
   g_clear_pointer (&self->osks, g_hash_table_destroy);
-  g_clear_object (&self->action_map);
 
   G_OBJECT_CLASS (pos_input_surface_parent_class)->finalize (object);
 }
@@ -622,30 +876,63 @@ static void pos_input_surface_action_map_iface_init (GActionMapInterface *iface)
 
 
 static void
+pos_input_surface_check_resize (GtkContainer *container)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (container);
+  GtkRequisition min, nat;
+  int height;
+
+  g_return_if_fail (GTK_IS_CONTAINER (container));
+
+  gtk_widget_get_preferred_size (GTK_WIDGET (self), &min, &nat);
+  g_object_get (self, "height", &height, NULL);
+
+  if (gtk_widget_get_mapped (GTK_WIDGET (self)) && min.height != self->height) {
+    phosh_layer_surface_set_size (PHOSH_LAYER_SURFACE (self), -1, min.height);
+    /* Don't interfere with animation */
+    if (self->animation.progress >= 1.0) {
+      phosh_layer_surface_set_exclusive_zone (PHOSH_LAYER_SURFACE (self), min.height);
+    }
+  }
+
+  GTK_CONTAINER_CLASS (pos_input_surface_parent_class)->check_resize (container);
+}
+
+
+
+static void
 pos_input_surface_class_init (PosInputSurfaceClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+  GtkContainerClass *container_class = GTK_CONTAINER_CLASS (klass);
 
   object_class->get_property = pos_input_surface_get_property;
   object_class->set_property = pos_input_surface_set_property;
   object_class->constructed = pos_input_surface_constructed;
-  object_class->dispose = pos_input_surface_dispose;
   object_class->finalize = pos_input_surface_finalize;
 
+  widget_class->destroy = pos_input_surface_destroy;
+
+  container_class->check_resize = pos_input_surface_check_resize;
+
+  g_type_ensure (POS_TYPE_COMPLETION_BAR);
   g_type_ensure (POS_TYPE_OSK_WIDGET);
   g_type_ensure (POS_TYPE_DEBUG_WIDGET);
 
   gtk_widget_class_set_template_from_resource (widget_class,
                                                "/sm/puri/phosh/osk-stub/ui/input-surface.ui");
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, completion_bar);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, debug_widget);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
+  gtk_widget_class_bind_template_callback (widget_class, on_completion_selected);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
+  gtk_widget_class_bind_template_callback (widget_class, on_osk_mode_changed);
 
   /**
    * PosInputSurface:input-method:
@@ -657,6 +944,16 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
                          POS_TYPE_INPUT_METHOD,
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosInputSurface:completer:
+   *
+   * A completer implementing the #PosCompleter interface.
+   */
+  props[PROP_COMPLETER] =
+    g_param_spec_object ("completer", "", "",
+                         POS_TYPE_COMPLETER,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   /**
    * PosInputSurface:enable
    *
@@ -674,6 +971,25 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
    */
   props[PROP_SURFACE_VISIBLE] =
     g_param_spec_boolean ("surface-visible", "", "", FALSE,
+                          G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosInputSurface:completer-active
+   *
+   * %TRUE if the there is a completer set and active
+   */
+  props[PROP_COMPLETER_ACTIVE] =
+    g_param_spec_boolean ("completer-active", "", "", FALSE,
+                          G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * PosInputSurface:completion-enabled
+   *
+   * %TRUE if the user enabled completion. That does imply that completion is actually active
+   * as this also depends on an input-method being present, a completer configured, etc. This
+   * setting merely reflects the users intent.
+   */
+  props[PROP_COMPLETION_ENABLED] =
+    g_param_spec_boolean ("completion-enabled", "", "", FALSE,
                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   props[PROP_KEYBOARD_DRIVER] =
@@ -714,6 +1030,7 @@ insert_osk (PosInputSurface *self,
   g_object_connect (osk_widget,
                     "swapped-signal::key-down", G_CALLBACK (on_osk_key_down), self,
                     "swapped-signal::key-symbol", G_CALLBACK (on_osk_key_symbol), self,
+                    "swapped-signal::notify::mode", G_CALLBACK (on_osk_mode_changed), self,
                     NULL);
 
   hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);
@@ -818,6 +1135,7 @@ pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
   const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
+  g_autoptr (GPropertyAction) completion_action = NULL;
 
   gtk_widget_init_template (GTK_WIDGET (self));
 
@@ -829,6 +1147,8 @@ pos_input_surface_init (PosInputSurface *self)
   gtk_widget_insert_action_group (GTK_WIDGET (self),
                                   "win",
                                   G_ACTION_GROUP (self->action_map));
+  completion_action = g_property_action_new ("word-completion", self, "completion-enabled");
+  g_action_map_add_action (G_ACTION_MAP (self), G_ACTION (completion_action));
 
   /* Ensure initial sync */
   self->screen_keyboard_enabled = -1;
@@ -871,7 +1191,7 @@ pos_input_surface_get_active (PosInputSurface *self)
 {
   g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
 
-  return pos_input_method_get_active (self->input_method);
+  return pos_input_method_get_active (self->input_method) && self->completer;
 }
 
 
@@ -910,4 +1230,22 @@ pos_input_surface_get_screen_keyboard_enabled (PosInputSurface *self)
   g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
 
   return self->screen_keyboard_enabled;
+}
+
+gboolean
+pos_input_surface_is_completer_active (PosInputSurface *self)
+{
+  g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
+
+  if (self->completer == NULL)
+    return FALSE;
+
+  if (pos_input_method_get_active (self->input_method) == FALSE)
+    return FALSE;
+
+  if (self->completion_enabled == FALSE)
+    return FALSE;
+
+  /* We only complete input purpose `normal` */
+  return (pos_input_method_get_purpose (self->input_method) == POS_INPUT_METHOD_PURPOSE_NORMAL);
 }

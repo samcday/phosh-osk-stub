@@ -17,6 +17,7 @@ pkgdatadir = join_paths(datadir, meson.project_name())
 pkglibdir = join_paths(libdir, meson.project_name())
 systemddir = join_paths(prefix, 'lib/systemd')
 systemduserdir = join_paths(systemddir, 'user')
+presagedictdir = datadir / 'phosh' / 'osk' / 'presage'
 
 glib_ver = '2.66'
 glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
@@ -110,10 +111,14 @@ wayland_client_dep = dependency('wayland-client', version: '>=1.14')
 wayland_protos_dep = dependency('wayland-protocols', version: '>=1.12')
 xkbcommon_dep = dependency('xkbcommon')
 
+# For completion engines
+presage_dep = cc.find_library('presage')
+
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
+config_h.set_quoted('PRESAGE_DICT_DIR', presagedictdir)
 
 configure_file(
   input: 'pos-config.h.in',
@@ -125,5 +130,6 @@ subdir('data')
 subdir('po')
 subdir('protocol')
 subdir('src')
+subdir('tests')
 subdir('doc')
 

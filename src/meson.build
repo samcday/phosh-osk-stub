@@ -32,6 +32,10 @@ libpos_sources = files(
   'pos.h',
   'pos-char-popup.h',
   'pos-char-popup.c',
+  'pos-completer.h',
+  'pos-completer.c',
+  'pos-completion-bar.h',
+  'pos-completion-bar.c',
   'pos-debug-widget.h',
   'pos-debug-widget.c',
   'pos-enums.h',
@@ -69,8 +73,10 @@ phosh_contrib_sources = files(
   'contrib/util.c',
 )
 
-pos_inc = ['.', 'contrib/' ]
+pos_inc = include_directories([ '.', 'contrib/' ])
 pos_includes = [pos_inc, root_inc, dbus_inc, proto_inc]
+
+subdir('completers')
 
 pos_lib = static_library(
   'pos',
@@ -85,7 +91,10 @@ libpos_dep = declare_dependency(
   sources: libpos_generated_sources,
   include_directories: pos_includes,
   link_with: pos_lib,
-  dependencies: libpos_deps)
+  dependencies: [libpos_deps,
+		 libpos_completer_fzf_dep,
+		 libpos_completer_presage_dep,
+		])
 
 executable('phosh-osk-stub',
 	   'phosh-osk-stub.c',
