@@ -112,3 +112,22 @@ pos-shortcuts-bar button:hover {
 pos-shortcuts-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
+
+pos-emoji-picker button.action {
+  color: @pos_key_fg_color;
+  background: @pos_key_bg_color;
+  border-radius: 6px;
+  margin: 0px;
+  padding: 6px;
+  background: shade(@pos_key_bg_color, 0.75);
+}
+
+pos-emoji-picker button.action:active {
+  background: shade(@pos_key_bg_color, 0.6);
+}
+
+pos-emoji-picker scrollbar {
+  background-color: transparent;
+  border: none;
+  transition: none;
+}
