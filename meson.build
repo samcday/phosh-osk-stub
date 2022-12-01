@@ -18,6 +18,7 @@ pkglibdir = join_paths(libdir, meson.project_name())
 systemddir = join_paths(prefix, 'lib/systemd')
 systemduserdir = join_paths(systemddir, 'user')
 presagedictdir = datadir / 'phosh' / 'osk' / 'presage'
+schemasdir = datadir / 'glib-2.0' / 'schemas'
 
 glib_ver = '2.66'
 glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
@@ -125,6 +126,14 @@ configure_file(
   output: 'pos-config.h',
   configuration: config_h,
 )
+
+run_data = configuration_data()
+run_data.set('ABS_BUILDDIR', meson.current_build_dir())
+run_data.set('ABS_SRCDIR', meson.current_source_dir())
+configure_file(
+  input: 'run.in',
+  output: 'run',
+  configuration: run_data)
 
 subdir('data')
 subdir('po')

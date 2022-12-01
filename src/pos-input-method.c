@@ -99,6 +99,8 @@ handle_activate (void                       *data,
   self->pending->active = TRUE;
   g_clear_pointer (&self->pending->surrounding_text, g_free);
   self->pending->text_change_cause = POS_INPUT_METHOD_TEXT_CHANGE_CAUSE_IM;
+  self->pending->purpose = POS_INPUT_METHOD_PURPOSE_NORMAL;
+  self->pending->hint = POS_INPUT_METHOD_HINT_NONE;
 
   g_signal_emit (self, signals[PENDING_CHANGED], 0, self->pending);
 }

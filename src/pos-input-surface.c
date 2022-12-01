@@ -10,6 +10,7 @@
 
 #include "pos-config.h"
 
+#include "phosh-osk-enums.h"
 #include "pos-debug-widget.h"
 #include "pos-input-method.h"
 #include "pos-completer.h"
@@ -67,6 +68,7 @@ struct _PosInputSurface {
   gboolean                 screen_keyboard_enabled;
   GSettings               *a11y_settings;
   GSettings               *input_settings;
+  GSettings               *osk_settings;
   GnomeXkbInfo            *xkbinfo;
 
   /* wayland input-method */
@@ -90,9 +92,11 @@ struct _PosInputSurface {
   GtkPopover              *menu_popup;
   GSimpleActionGroup      *action_map;
 
+  GtkWidget               *word_completion_btn;
   PosCompleter            *completer;
   GtkWidget               *completion_bar;
   gboolean                 completion_enabled;
+  PhoshOskCompletionModeFlags completion_mode;
 };
 
 
@@ -361,6 +365,9 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
   menu_add_layout ((gpointer)pos_osk_widget_get_name (POS_OSK_WIDGET (self->osk_terminal)),
                    self->osk_terminal,
                    self);
+
+  gtk_widget_set_visible (self->word_completion_btn,
+                          !(self->completion_mode == PHOSH_OSK_COMPLETION_MODE_NONE));
 
   gtk_popover_set_relative_to (self->menu_popup, osk_widget);
   gtk_popover_set_pointing_to (self->menu_popup, &rect);
@@ -666,6 +673,24 @@ on_im_text_change_cause_changed (PosInputSurface *self, GParamSpec *pspec, PosIn
 
 
 static void
+on_im_hint_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
+{
+  gboolean enable;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_INPUT_METHOD (im));
+
+  g_debug ("Hint changed: 0x%.2x", pos_input_method_get_hint (im));
+  if ((self->completion_mode & PHOSH_OSK_COMPLETION_MODE_HINT) == 0)
+    return;
+
+  enable = !!(pos_input_method_get_hint (im) & POS_INPUT_METHOD_HINT_COMPLETION);
+
+  pos_input_surface_set_completion_enabled (self, enable);
+}
+
+
+static void
 on_im_surrounding_text_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
 {
   const char *text;
@@ -722,6 +747,7 @@ pos_input_surface_constructed (GObject *object)
   g_object_connect (self->input_method,
                     "swapped-object-signal::notify::active", on_im_active_changed, self,
                     "swapped-object-signal::notify::purpose", on_im_purpose_changed, self,
+                    "swapped-object-signal::notify::hint", on_im_hint_changed, self,
                     "swapped-object-signal::notify::text-change-cause",
                     on_im_text_change_cause_changed, self,
                     "swapped-object-signal::notify::surrounding-text",
@@ -751,6 +777,7 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
   g_clear_object (&self->input_settings);
+  g_clear_object (&self->osk_settings);
   g_clear_object (&self->xkbinfo);
   g_clear_object (&self->css_provider);
   g_clear_object (&self->completer);
@@ -928,6 +955,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, word_completion_btn);
   gtk_widget_class_bind_template_callback (widget_class, on_completion_selected);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
@@ -1120,6 +1148,37 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 }
 
 
+static void
+on_completion_mode_changed (PosInputSurface *self, const char *key, GSettings *settings)
+{
+  PhoshOskCompletionModeFlags mode;
+
+  mode = g_settings_get_flags (settings, "completion-mode");
+
+  if (mode == self->completion_mode)
+    return;
+
+  self->completion_mode = mode;
+
+  /* In manual mode we don't interfere with the user's choice */
+  if (self->completion_mode & PHOSH_OSK_COMPLETION_MODE_MANUAL)
+    return;
+
+  /* In hint mode catch up with the input method */
+  if ((self->completion_mode & PHOSH_OSK_COMPLETION_MODE_HINT)) {
+    gboolean enable;
+
+    enable = pos_input_method_get_hint (self->input_method) & POS_INPUT_METHOD_HINT_COMPLETION;
+    pos_input_surface_set_completion_enabled (self, enable);
+    return;
+  }
+
+  /* no completion wanted */
+  pos_input_surface_set_completion_enabled (self, FALSE);
+  return;
+}
+
+
 static GActionEntry entries[] =
 {
   { .name = "clipboard-copy", .activate = clipboard_copy_activated },
@@ -1162,6 +1221,11 @@ pos_input_surface_init (PosInputSurface *self)
   self->osks = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify)gtk_widget_destroy);
   self->xkbinfo = gnome_xkb_info_new ();
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
+  self->osk_settings = g_settings_new ("sm.puri.phosh.osk");
+  g_signal_connect_swapped (self->osk_settings, "changed::completion-mode",
+                            G_CALLBACK (on_completion_mode_changed),
+                            self);
+  on_completion_mode_changed (self, NULL, self->osk_settings);
 
   if (test_layout) {
     insert_layout (self, "xkb", test_layout);
