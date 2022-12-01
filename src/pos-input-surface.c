@@ -194,6 +194,9 @@ pos_input_surface_is_completion_mode (PosInputSurface *self)
 
   /* no completion in cursor mode */
   osk_widget = hdy_deck_get_visible_child (self->deck);
+  if (POS_IS_OSK_WIDGET (osk_widget) == FALSE)
+    return FALSE;
+
   return pos_osk_widget_get_mode (POS_OSK_WIDGET (osk_widget)) == POS_OSK_WIDGET_MODE_KEYBOARD;
 }
 
@@ -396,8 +399,7 @@ clipboard_paste_activated (GSimpleAction *action,
   pos_vk_driver_key_up (self->keyboard_driver, "KEY_PASTE");
 }
 
-
-
+/* Emoji picker */
 
 static void
 on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji_picker)
@@ -411,11 +413,13 @@ on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji
   pos_input_surface_notify_key_press (self);
 }
 
+
 static void
 on_emoji_picker_done (PosInputSurface *self)
 {
   hdy_deck_set_visible_child (self->deck, self->last_layout);
 }
+
 
 static void
 on_emoji_picker_delete_last (PosInputSurface *self)
@@ -424,6 +428,7 @@ on_emoji_picker_delete_last (PosInputSurface *self)
   on_osk_key_symbol (self, "KEY_BACKSPACE", NULL);
 }
 
+/* menu button */
 
 static void
 menu_add_layout (gpointer key, gpointer value, gpointer data)
