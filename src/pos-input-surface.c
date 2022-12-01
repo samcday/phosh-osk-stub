@@ -258,6 +258,22 @@ on_completer_update (PosInputSurface *self, const char *preedit, guint before, g
 }
 
 
+static void
+pos_input_surface_submit_current_preedit (PosInputSurface *self)
+{
+  g_autofree char *preedit = NULL;
+
+  if (pos_input_surface_is_completer_active (self) == FALSE)
+    return;
+
+  preedit = g_strdup (pos_completer_get_preedit (self->completer));
+  g_debug ("%s: Submitting %s", __func__, preedit);
+  pos_completer_set_preedit (self->completer, NULL);
+  pos_input_method_send_preedit (self->input_method, "", 0, 0, FALSE);
+  pos_input_method_send_string (self->input_method, preedit, TRUE);
+}
+
+
 /* Select proper style sheet in case of high contrast */
 static void
 on_gtk_theme_name_changed (PosInputSurface *self, GParamSpec *pspec, GtkSettings *settings)
@@ -343,8 +359,6 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
 static void
 on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_widget)
 {
-  g_autofree char *preedit = NULL;
-
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
   g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
 
@@ -352,12 +366,7 @@ on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_wi
   if (pos_input_surface_is_completion_mode (self) == TRUE)
     return;
 
-  preedit = g_strdup (pos_completer_get_preedit (self->completer));
-
-  g_debug ("%s: Submitting %s", __func__, preedit);
-  pos_completer_set_preedit (self->completer, NULL);
-  pos_input_method_send_preedit (self->input_method, "", 0, 0, FALSE);
-  pos_input_method_send_string (self->input_method, preedit, TRUE);
+  pos_input_surface_submit_current_preedit (self);
 }
 
 
