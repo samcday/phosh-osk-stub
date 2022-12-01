@@ -12,6 +12,7 @@
 
 #include "phosh-osk-enums.h"
 #include "pos-debug-widget.h"
+#include "pos-emoji-picker.h"
 #include "pos-input-method.h"
 #include "pos-completer.h"
 #include "pos-completion-bar.h"
@@ -29,6 +30,8 @@
 
 #define GNOME_DESKTOP_USE_UNSTABLE_API
 #include <libgnome-desktop/gnome-xkb-info.h>
+
+#include <glib/gi18n-lib.h>
 
 enum {
   PROP_0,
@@ -79,6 +82,8 @@ struct _PosInputSurface {
   GHashTable              *osks;
   HdyDeck                 *deck;
   GtkWidget               *osk_terminal;
+  GtkWidget               *emoji_picker;
+  GtkWidget               *last_layout;
   PosShortcutsBar         *shortcuts_bar;
 
   /* The debug surface */
@@ -315,8 +320,6 @@ on_osk_key_down (PosInputSurface *self, const char *symbol, GtkWidget *osk_widge
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
   g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
 
-  g_debug ("Key: '%s' down", symbol);
-
   pos_input_surface_notify_key_press (self);
 }
 
@@ -327,7 +330,7 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
   gboolean handled;
 
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
-  g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
+  g_return_if_fail (osk_widget == NULL || POS_IS_OSK_WIDGET (osk_widget));
 
   g_debug ("Key: '%s' symbol", symbol);
 
@@ -394,6 +397,34 @@ clipboard_paste_activated (GSimpleAction *action,
 }
 
 
+
+
+static void
+on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji_picker)
+{
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_EMOJI_PICKER (emoji_picker));
+
+  pos_input_surface_submit_current_preedit (self);
+  pos_input_method_send_string (self->input_method, emoji, TRUE);
+
+  pos_input_surface_notify_key_press (self);
+}
+
+static void
+on_emoji_picker_done (PosInputSurface *self)
+{
+  hdy_deck_set_visible_child (self->deck, self->last_layout);
+}
+
+static void
+on_emoji_picker_delete_last (PosInputSurface *self)
+{
+  g_warning ("%s", __func__);
+  on_osk_key_symbol (self, "KEY_BACKSPACE", NULL);
+}
+
+
 static void
 menu_add_layout (gpointer key, gpointer value, gpointer data)
 {
@@ -408,6 +439,21 @@ menu_add_layout (gpointer key, gpointer value, gpointer data)
                          "label", display_name,
                          "action-name", "win.select-layout",
                          "action-target", g_variant_new_string (name),
+                         NULL);
+  gtk_box_pack_start (self->menu_box_layouts, button, FALSE, FALSE, 0);
+}
+
+
+static void
+menu_add_emoji_picker (PosInputSurface *self)
+{
+  GtkWidget *button;
+
+  button = g_object_new (GTK_TYPE_MODEL_BUTTON,
+                         "visible", TRUE,
+                         "label", _("Emoji"),
+                         "action-name", "win.select-layout",
+                         "action-target", g_variant_new_string ("emoji"),
                          NULL);
   gtk_box_pack_start (self->menu_box_layouts, button, FALSE, FALSE, 0);
 }
@@ -439,6 +485,7 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
   menu_add_layout ((gpointer)pos_osk_widget_get_name (POS_OSK_WIDGET (self->osk_terminal)),
                    self->osk_terminal,
                    self);
+  menu_add_emoji_picker (self);
 
   gtk_widget_set_visible (self->word_completion_btn,
                           self->completer &&
@@ -470,6 +517,8 @@ select_layout_change_state (GSimpleAction *action,
   if (osk_widget == NULL) {
     if (g_str_equal (layout, "terminal")) {
       osk_widget = self->osk_terminal;
+    } else if (g_str_equal (layout, "emoji")) {
+      osk_widget = self->emoji_picker;
     } else {
       g_warning ("Failed to find layout '%s'", layout);
       return;
@@ -518,6 +567,9 @@ on_visible_child_changed (PosInputSurface *self)
   osk = POS_OSK_WIDGET (child);
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_display_name (osk));
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
+
+  /* Remember last lahout */
+  self->last_layout = GTK_WIDGET (osk);
 
   switch_language (self, pos_osk_widget_get_locale (osk));
 
@@ -1026,6 +1078,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 
   g_type_ensure (POS_TYPE_COMPLETION_BAR);
   g_type_ensure (POS_TYPE_DEBUG_WIDGET);
+  g_type_ensure (POS_TYPE_EMOJI_PICKER);
   g_type_ensure (POS_TYPE_OSK_WIDGET);
   g_type_ensure (POS_TYPE_SHORTCUTS_BAR);
 
@@ -1034,12 +1087,16 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, completion_bar);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, debug_widget);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, emoji_picker);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, shortcuts_bar);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, word_completion_btn);
   gtk_widget_class_bind_template_callback (widget_class, on_completion_selected);
+  gtk_widget_class_bind_template_callback (widget_class, on_emoji_picked);
+  gtk_widget_class_bind_template_callback (widget_class, on_emoji_picker_done);
+  gtk_widget_class_bind_template_callback (widget_class, on_emoji_picker_delete_last);
   gtk_widget_class_bind_template_callback (widget_class, on_num_shortcuts_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
@@ -1149,6 +1206,9 @@ insert_osk (PosInputSurface *self,
   hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);
   g_hash_table_insert (self->osks, g_strdup (name), osk_widget);
 
+  if (self->last_layout == NULL)
+    self->last_layout = GTK_WIDGET (osk_widget);
+
   return osk_widget;
 }
 
@@ -1202,6 +1262,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   old = g_strdupv (old_keys);
   new = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 
+  self->last_layout = NULL;
   while (g_variant_iter_next (&iter, "(&s&s)", &type, &id)) {
     PosOskWidget *osk_widget;
 
@@ -1217,7 +1278,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   }
 
   if (old) {
-    /* Drop remove layouts */
+    /* Drop removed layouts */
     for (int i = 0; old[i]; i++) {
       if (!g_hash_table_contains (new, old[i])) {
         g_debug ("Removing layout %s", old[i]);

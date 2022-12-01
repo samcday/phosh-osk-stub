@@ -47,6 +47,15 @@
                 </child>
 
                 <child>
+                  <object class="PosEmojiPicker" id="emoji_picker">
+                    <property name="visible">True</property>
+                    <signal name="delete-last" handler="on_emoji_picker_delete_last" object="PosInputSurface" swapped="yes"/>
+                    <signal name="done" handler="on_emoji_picker_done" object="PosInputSurface" swapped="yes"/>
+                    <signal name="emoji-picked" handler="on_emoji_picked" object="PosInputSurface" swapped="yes"/>
+                  </object>
+                </child>
+
+                <child>
                   <object class="PosDebugWidget" id="debug_widget">
                     <property name="visible">True</property>
                   </object>
