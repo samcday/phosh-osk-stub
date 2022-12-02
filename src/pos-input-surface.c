@@ -109,6 +109,18 @@ G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SU
   )
 
 
+static void
+pos_input_surface_notify_key_press (PosInputSurface *self)
+{
+  g_autoptr (LfbEvent) event = NULL;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+
+  event = lfb_event_new ("button-pressed");
+  lfb_event_trigger_feedback_async (event, NULL, NULL, NULL);
+}
+
+
 /* This is a bit more strict than is_completer_active so it can be used
    with active completer but also takes the OSK's mode into account */
 static gboolean
@@ -233,8 +245,7 @@ on_osk_key_down (PosInputSurface *self, const char *symbol, GtkWidget *osk_widge
 
   g_debug ("Key: '%s' down", symbol);
 
-  event = lfb_event_new ("button-pressed");
-  lfb_event_trigger_feedback_async (event, NULL, NULL, NULL);
+  pos_input_surface_notify_key_press (self);
 }
 
 
