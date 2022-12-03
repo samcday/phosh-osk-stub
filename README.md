@@ -65,7 +65,7 @@ When running from the source tree first start *[phosh][]*.
 Then start *phosh-osk-stub* using:
 
 ```sh
-_build/src/phosh-osk-stub --replace
+_build/run --replace
 ```
 
 Note that there's no need to install any files outside the source tree. The
