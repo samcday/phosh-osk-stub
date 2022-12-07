@@ -302,6 +302,7 @@ static void
 add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
+  const char *label;
 
   /* TODO: we could create these only once and g_object_ref them */
   switch (rownum) {
@@ -326,8 +327,9 @@ add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, 0, key);
 
+    label = (layer == POS_OSK_WIDGET_LAYER_SYMBOLS) ? "ABC" : "123";
     key = g_object_new (POS_TYPE_OSK_KEY,
-                        "label", "123",
+                        "label", label,
                         "use", POS_OSK_KEY_USE_TOGGLE,
                         "width", 1.0,
                         "layer", POS_OSK_WIDGET_LAYER_SYMBOLS,
