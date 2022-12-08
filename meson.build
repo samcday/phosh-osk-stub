@@ -135,6 +135,19 @@ configure_file(
   output: 'run',
   configuration: run_data)
 
+summary = [
+  '',
+  '--------------------',
+  'phosh-osk-stub @0@'.format(meson.project_version()),
+  '',
+  '  Default OSK: @0@'.format(get_option('default_osk')),
+  'Documentation: @0@'.format(get_option('gtk_doc')),
+  '------------------',
+]
+
+message('\n'.join(summary))
+
+
 subdir('data')
 subdir('po')
 subdir('protocol')
