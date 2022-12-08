@@ -88,15 +88,20 @@ struct _PosInputSurface {
   GtkCssProvider          *css_provider;
   char                    *theme_name;
 
+  /* menu popover */
   GtkBox                  *menu_box_layouts;
   GtkPopover              *menu_popup;
   GSimpleActionGroup      *action_map;
 
+  /* word completion */
   GtkWidget               *word_completion_btn;
   PosCompleter            *completer;
   GtkWidget               *completion_bar;
   gboolean                 completion_enabled;
   PhoshOskCompletionModeFlags completion_mode;
+
+  /* emission hook for clicks */
+  gulong                   clicked_id;
 };
 
 
@@ -107,6 +112,31 @@ G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SU
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_GROUP, pos_input_surface_action_group_iface_init)
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_MAP, pos_input_surface_action_map_iface_init)
   )
+
+
+static void
+pos_input_surface_notify_key_press (PosInputSurface *self)
+{
+  g_autoptr (LfbEvent) event = NULL;
+
+  g_assert (POS_IS_INPUT_SURFACE (self));
+
+  event = lfb_event_new ("button-pressed");
+  lfb_event_trigger_feedback_async (event, NULL, NULL, NULL);
+}
+
+
+static gboolean
+on_click_hook (GSignalInvocationHint *ihint,
+               guint                  n_param_values,
+               const GValue          *param_values,
+               gpointer               user_data)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (user_data);
+
+  pos_input_surface_notify_key_press (self);
+  return TRUE;
+}
 
 
 /* This is a bit more strict than is_completer_active so it can be used
@@ -228,15 +258,12 @@ on_gtk_theme_name_changed (PosInputSurface *self, GParamSpec *pspec, GtkSettings
 static void
 on_osk_key_down (PosInputSurface *self, const char *symbol, GtkWidget *osk_widget)
 {
-  g_autoptr (LfbEvent) event = NULL;
-
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
   g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
 
   g_debug ("Key: '%s' down", symbol);
 
-  event = lfb_event_new ("button-pressed");
-  lfb_event_trigger_feedback_async (event, NULL, NULL, NULL);
+  pos_input_surface_notify_key_press (self);
 }
 
 
@@ -774,6 +801,9 @@ pos_input_surface_finalize (GObject *object)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (object);
 
+  g_signal_remove_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), self->clicked_id);
+  self->clicked_id = 0;
+
   g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
   g_clear_object (&self->input_settings);
@@ -1247,6 +1277,9 @@ pos_input_surface_init (PosInputSurface *self)
   on_gtk_theme_name_changed (self, NULL, gtk_settings);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal), "Terminal", "terminal", NULL, NULL);
+
+  self->clicked_id = g_signal_add_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), 0,
+                                                 on_click_hook, self, NULL);
 }
 
 
