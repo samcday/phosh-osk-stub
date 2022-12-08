@@ -228,8 +228,6 @@ on_gtk_theme_name_changed (PosInputSurface *self, GParamSpec *pspec, GtkSettings
 static void
 on_osk_key_down (PosInputSurface *self, const char *symbol, GtkWidget *osk_widget)
 {
-  g_autoptr (LfbEvent) event = NULL;
-
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
   g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
 
