@@ -8,7 +8,6 @@
         <property name="visible">True</property>
         <property name="maximum_size">720</property>
 
-        <!-- TODO: reindent once working -->
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
@@ -20,33 +19,33 @@
               </object>
             </child>
 
-        <child>
-          <object class="HdyDeck" id="deck">
-            <property name="visible">True</property>
-            <property name="vexpand">True</property>
-            <property name="valign">end</property>
-            <property name="can-swipe-back">True</property>
-            <property name="can-swipe-forward">True</property>
-            <signal name="notify::visible-child" handler="on_visible_child_changed" object="PosInputSurface" swapped="yes"/>
-
             <child>
-              <!-- The terminal layout -->
-              <object class="PosOskWidget" id="osk_terminal">
+              <object class="HdyDeck" id="deck">
                 <property name="visible">True</property>
-                <signal name="key-down" handler="on_osk_key_down" object="PosInputSurface" swapped="yes"/>
-                <signal name="key-symbol" handler="on_osk_key_symbol" object="PosInputSurface" swapped="yes"/>
-                <signal name="notify::mode" handler="on_osk_mode_changed" object="PosInputSurface" swapped="yes"/>
+                <property name="vexpand">True</property>
+                <property name="valign">end</property>
+                <property name="can-swipe-back">True</property>
+                <property name="can-swipe-forward">True</property>
+                <signal name="notify::visible-child" handler="on_visible_child_changed" object="PosInputSurface" swapped="yes"/>
+
+                <child>
+                  <!-- The terminal layout -->
+                  <object class="PosOskWidget" id="osk_terminal">
+                    <property name="visible">True</property>
+                    <signal name="key-down" handler="on_osk_key_down" object="PosInputSurface" swapped="yes"/>
+                    <signal name="key-symbol" handler="on_osk_key_symbol" object="PosInputSurface" swapped="yes"/>
+                    <signal name="notify::mode" handler="on_osk_mode_changed" object="PosInputSurface" swapped="yes"/>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="PosDebugWidget" id="debug_widget">
+                    <property name="visible">True</property>
+                  </object>
+                </child>
+
               </object>
             </child>
-
-            <child>
-              <object class="PosDebugWidget" id="debug_widget">
-                <property name="visible">True</property>
-              </object>
-            </child>
-
-          </object>
-        </child>
 
           </object>
         </child>
