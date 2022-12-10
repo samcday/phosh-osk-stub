@@ -1206,7 +1206,6 @@ on_completion_mode_changed (PosInputSurface *self, const char *key, GSettings *s
 
   /* no completion wanted */
   pos_input_surface_set_completion_enabled (self, FALSE);
-  return;
 }
 
 
