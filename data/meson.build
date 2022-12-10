@@ -1,25 +1,25 @@
-desktop_files = {
-  'sm.puri.OSK0.desktop': true,
-}
+desktop_file = 'sm.puri.OSK0.desktop'
+target = 'sm.puri.OSK0.desktop'
+
+if get_option('default_osk') == false
+  target = 'sm.puri.Phosh.OskStub.desktop'
+endif
 
 desktopconf = configuration_data()
 desktopconf.set('bindir', bindir)
 
-foreach desktop_file, install : desktop_files
-  i18n.merge_file(
-    input: configure_file(
-      input: desktop_file + '.in.in',
-      output: desktop_file + '.in',
-      configuration: desktopconf
-    ),
-    output: desktop_file,
-    po_dir: '../po',
-    install: true,
-    install_dir: desktopdir,
-    type: 'desktop'
-  )
-endforeach
-
+i18n.merge_file(
+  input: configure_file(
+    input: desktop_file + '.in.in',
+    output: desktop_file + '.in',
+    configuration: desktopconf
+  ),
+  output: target,
+  po_dir: '../po',
+  install: true,
+  install_dir: desktopdir,
+  type: 'desktop'
+)
 #generate XML enum definitions for GSettings schema
 schema_enum_headers = files(
   '../src/phosh-osk-enums.h',
