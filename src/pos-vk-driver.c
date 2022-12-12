@@ -255,7 +255,6 @@ pos_vk_driver_key_down (PosVkDriver *self, const char *key)
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE);
 
   pos_virtual_keyboard_press (self->virtual_keyboard, keycode->keycode);
-
 }
 
 void
