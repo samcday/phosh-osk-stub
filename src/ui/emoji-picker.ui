@@ -175,6 +175,7 @@
           <object class="GtkBox">
             <property name="visible">1</property>
             <property name="halign">center</property>
+            <property name="name">pos-emoji-switcher</property>
             <child>
               <object class="GtkButton">
                 <property name="visible">1</property>

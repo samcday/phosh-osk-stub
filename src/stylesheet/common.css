@@ -113,12 +113,36 @@ pos-shortcuts-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
+#pos-emoji-switcher {
+  padding:4px;
+}
+
+#pos-emoji-switcher .view {
+  background: transparent;
+}
+
+#pos-emoji-switcher .emoji-section {
+  box-shadow: none;
+}
+
+#pos-emoji-switcher .view button {
+  border-radius: 99px;
+  padding:0;
+  border: none;
+  text-shadow:none;
+}
+
+#pos-emoji-switcher .view button:checked {
+  background-color: alpha(@pos_key_bg_color, 0.5);
+}
+
 pos-emoji-picker button.action {
   color: @pos_key_fg_color;
-  background: @pos_key_bg_color;
   border-radius: 6px;
-  margin: 0px;
   padding: 6px;
+  border: none;
+  box-shadow: none;
+  text-shadow:none;
   background: shade(@pos_key_bg_color, 0.75);
 }
 
