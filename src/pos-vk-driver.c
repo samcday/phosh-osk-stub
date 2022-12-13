@@ -25,7 +25,7 @@ static GParamSpec *props[PROP_LAST_PROP];
  * PosVkDriver:
  *
  * Processes input events and drives a virtual keyboard
- * using the wayland virtual keyboard protocol with them.
+ * using the wayland virtual keyboard protocol.
  */
 struct _PosVkDriver {
   GObject             parent;
@@ -255,7 +255,6 @@ pos_vk_driver_key_down (PosVkDriver *self, const char *key)
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE);
 
   pos_virtual_keyboard_press (self->virtual_keyboard, keycode->keycode);
-
 }
 
 void

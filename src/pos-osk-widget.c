@@ -120,6 +120,7 @@ struct _PosOskWidget {
   char                *name;
   char                *display_name;
   PosOskKey           *current;
+  PosOskKey           *space;
   GtkGestureLongPress *long_press;
   GtkWidget           *char_popup;
   guint                repeat_id;
@@ -871,6 +872,8 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
 
   if (g_strcmp0 (pos_osk_key_get_symbol (key), POS_OSK_SYMBOL_SPACE) == 0) {
     key_repeat_cancel (self);
+    /* Remember the key we want to untoggle when mode ends */
+    self->space = key;
     pos_osk_widget_set_mode (self, POS_OSK_WIDGET_MODE_CURSOR);
     return;
   }
@@ -1461,8 +1464,12 @@ pos_osk_widget_set_mode (PosOskWidget *self, PosOskWidgetMode mode)
   g_debug ("Switching to mode: %d", mode);
   self->mode = mode;
 
-  if (mode == POS_OSK_WIDGET_MODE_CURSOR)
+  if (mode == POS_OSK_WIDGET_MODE_CURSOR) {
     self->current = NULL;
+  } else if (self->space) {
+    pos_osk_widget_set_key_pressed (self, self->space, FALSE);
+    self->space = NULL;
+  }
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_MODE]);
   self->last_x = self->last_y = 0.0;

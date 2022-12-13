@@ -77,13 +77,16 @@ pos-char-popup button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
-
 pos-completion-bar button {
   color: @pos_fg_color;
   background: @pos_bg_color;
   padding-left: 10px;
   padding-right: 10px;
   border: none;
+}
+
+pos-completion-bar button:active {
+  background: shade(@pos_key_bg_color, 0.8);
 }
 
 #pos-menu-popup modelbutton {

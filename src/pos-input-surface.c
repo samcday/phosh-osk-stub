@@ -394,6 +394,7 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
                    self);
 
   gtk_widget_set_visible (self->word_completion_btn,
+                          self->completer &&
                           !(self->completion_mode == PHOSH_OSK_COMPLETION_MODE_NONE));
 
   gtk_popover_set_relative_to (self->menu_popup, osk_widget);
@@ -1205,7 +1206,6 @@ on_completion_mode_changed (PosInputSurface *self, const char *key, GSettings *s
 
   /* no completion wanted */
   pos_input_surface_set_completion_enabled (self, FALSE);
-  return;
 }
 
 
