@@ -25,12 +25,15 @@ static GParamSpec *props[PROP_LAST_PROP];
  * PosVkDriver:
  *
  * Processes input events and drives a virtual keyboard
- * using the wayland virtual keyboard protocol.
+ * using the wayland virtual keyboard protocol. The input
+ * events can either be based on kernel input event codes
+ * or GDK keycodes.
  */
 struct _PosVkDriver {
   GObject             parent;
 
   GHashTable         *keycodes;
+  GHashTable         *gdk_keycodes;
   PosVirtualKeyboard *virtual_keyboard;
 };
 G_DEFINE_TYPE (PosVkDriver, pos_vk_driver, G_TYPE_OBJECT)
@@ -165,6 +168,89 @@ static const PosKeycode keycodes_us[] = {
   { "KEY_PASTE", KEY_V, POS_KEYCODE_MODIFIER_CTRL },
 };
 
+
+typedef struct {
+  guint gdk_keycode;
+  guint keycode;
+} PosGdkKeycode;
+
+static const PosGdkKeycode keycodes_gdk_us[] = {
+  { GDK_KEY_Escape, KEY_ESC },
+  { GDK_KEY_F1, KEY_F1 },
+  { GDK_KEY_F2, KEY_F2 },
+  { GDK_KEY_F3, KEY_F3 },
+  { GDK_KEY_F4, KEY_F4 },
+  { GDK_KEY_F5, KEY_F5 },
+  { GDK_KEY_F6, KEY_F6 },
+  { GDK_KEY_F7, KEY_F7 },
+  { GDK_KEY_F8, KEY_F8 },
+  { GDK_KEY_F9, KEY_F9 },
+  { GDK_KEY_F10, KEY_F10 },
+  { GDK_KEY_F11, KEY_F11 },
+  { GDK_KEY_F12, KEY_F12 },
+
+  { GDK_KEY_grave, KEY_GRAVE },
+  { GDK_KEY_0, KEY_0 },
+  { GDK_KEY_1, KEY_1 },
+  { GDK_KEY_2, KEY_2 },
+  { GDK_KEY_3, KEY_3 },
+  { GDK_KEY_4, KEY_4 },
+  { GDK_KEY_5, KEY_5 },
+  { GDK_KEY_6, KEY_6 },
+  { GDK_KEY_7, KEY_7 },
+  { GDK_KEY_8, KEY_8 },
+  { GDK_KEY_9, KEY_9 },
+  { GDK_KEY_minus, KEY_MINUS },
+  { GDK_KEY_equal, KEY_EQUAL },
+  { GDK_KEY_BackSpace, KEY_BACKSPACE },
+
+  { GDK_KEY_Tab, KEY_TAB },
+  { GDK_KEY_q, KEY_Q },
+  { GDK_KEY_w, KEY_W },
+  { GDK_KEY_e, KEY_E },
+  { GDK_KEY_r, KEY_R },
+  { GDK_KEY_t, KEY_T },
+  { GDK_KEY_y, KEY_Y },
+  { GDK_KEY_u, KEY_U },
+  { GDK_KEY_i, KEY_I },
+  { GDK_KEY_o, KEY_O },
+  { GDK_KEY_p, KEY_P },
+  { GDK_KEY_bracketleft, KEY_LEFTBRACE },
+  { GDK_KEY_bracketright, KEY_RIGHTBRACE },
+  { GDK_KEY_backslash, KEY_BACKSLASH },
+
+  { GDK_KEY_a, KEY_A },
+  { GDK_KEY_s, KEY_S },
+  { GDK_KEY_d, KEY_D },
+  { GDK_KEY_f, KEY_F },
+  { GDK_KEY_g, KEY_G },
+  { GDK_KEY_h, KEY_H },
+  { GDK_KEY_j, KEY_J },
+  { GDK_KEY_k, KEY_K },
+  { GDK_KEY_l, KEY_L },
+  { GDK_KEY_semicolon, KEY_SEMICOLON },
+  { GDK_KEY_apostrophe, KEY_APOSTROPHE },
+  { GDK_KEY_Return, KEY_ENTER },
+
+  { GDK_KEY_z, KEY_Z },
+  { GDK_KEY_x, KEY_X },
+  { GDK_KEY_c, KEY_C },
+  { GDK_KEY_v, KEY_V },
+  { GDK_KEY_b, KEY_B },
+  { GDK_KEY_n, KEY_N },
+  { GDK_KEY_m, KEY_M },
+  { GDK_KEY_comma, KEY_COMMA },
+  { GDK_KEY_period, KEY_DOT },
+  { GDK_KEY_slash, KEY_SLASH },
+
+  { GDK_KEY_space, KEY_SPACE },
+  { GDK_KEY_Left, KEY_LEFT },
+  { GDK_KEY_Right, KEY_RIGHT },
+  { GDK_KEY_Up, KEY_UP },
+  { GDK_KEY_Down, KEY_DOWN },
+};
+
+
 static void
 pos_vk_driver_set_property (GObject      *object,
                             guint         property_id,
@@ -216,9 +302,13 @@ static void
 pos_vk_driver_init (PosVkDriver *self)
 {
   self->keycodes = g_hash_table_new (g_str_hash, g_str_equal);
-
   for (int i = 0; i < G_N_ELEMENTS (keycodes_us); i++)
     g_hash_table_insert (self->keycodes, keycodes_us[i].key,  (gpointer)&keycodes_us[i]);
+
+  self->gdk_keycodes = g_hash_table_new (g_direct_hash, g_direct_equal);
+  for (int i = 0; i < G_N_ELEMENTS (keycodes_gdk_us); i++)
+    g_hash_table_insert (self->gdk_keycodes, GUINT_TO_POINTER (keycodes_gdk_us[i].gdk_keycode),
+                         GUINT_TO_POINTER (keycodes_gdk_us[i].keycode));
 }
 
 
@@ -249,6 +339,7 @@ pos_vk_driver_key_down (PosVkDriver *self, const char *key)
   if (keycode->modifiers & POS_KEYCODE_MODIFIER_CTRL)
     modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
 
+  /* FIXME: preserve current modifiers */
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
                                       modifiers,
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
@@ -268,6 +359,50 @@ pos_vk_driver_key_up (PosVkDriver *self, const char *key)
   g_return_if_fail (keycode);
 
   pos_virtual_keyboard_release (self->virtual_keyboard, keycode->keycode);
+  pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
+                                      POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
+                                      POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
+                                      POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE);
+}
+
+/**
+ * pos_vk_driver_key_press_gdk:
+ * @self: The virtual keyboard driver
+ * @gdk_keycode: The keycode as used by GDKeventkey
+ * @modifiers: The modifiers as used by GDK
+ *
+ * Given a GDK keycode and modifier simulate a press of that key.
+ * We only handle the US layout. Improvements are welcome.
+ */
+void
+pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierType modifiers)
+{
+  PosVirtualKeyboardModifierFlags flags = POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE;
+  guint key;
+
+  g_return_if_fail (POS_IS_VK_DRIVER (self));
+
+  if (modifiers & GDK_SHIFT_MASK)
+    flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT;
+  if (modifiers & GDK_CONTROL_MASK)
+    flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
+  if (modifiers & GDK_META_MASK)
+    flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALT;
+  if (modifiers & GDK_SUPER_MASK)
+    flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SUPER;
+
+  key = GPOINTER_TO_UINT (g_hash_table_lookup (self->gdk_keycodes, GUINT_TO_POINTER (gdk_keycode)));
+  g_return_if_fail (key);
+
+  /* FIXME: preserve current modifiers */
+  pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
+                                      flags,
+                                      POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
+                                      POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE);
+
+  pos_virtual_keyboard_press (self->virtual_keyboard, key);
+  pos_virtual_keyboard_release (self->virtual_keyboard, key);
+
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
