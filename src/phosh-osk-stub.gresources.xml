@@ -5,6 +5,7 @@
     <file preprocess="xml-stripblanks">ui/completion-bar.ui</file>
     <file preprocess="xml-stripblanks">ui/debug-widget.ui</file>
     <file preprocess="xml-stripblanks">ui/input-surface.ui</file>
+    <file preprocess="xml-stripblanks">ui/shortcuts-bar.ui</file>
     <file alias="keymap.txt">../data/keymap.txt</file>
     <file compressed="true">stylesheet/adwaita-dark.css</file>
     <file compressed="true">stylesheet/adwaita-hc-light.css</file>
