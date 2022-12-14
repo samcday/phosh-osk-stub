@@ -6,3 +6,7 @@ option('gtk_doc',
 option('default_osk',
        type: 'boolean', value: true,
        description: 'Whether to install as default OSK for phosh')
+
+option('man',
+       type: 'boolean', value : false,
+       description : 'generate man pages (requires rst2man)')
