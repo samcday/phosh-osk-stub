@@ -142,6 +142,7 @@ summary = [
   '',
   '  Default OSK: @0@'.format(get_option('default_osk')),
   'Documentation: @0@'.format(get_option('gtk_doc')),
+  '     Manpages: @0@'.format(get_option('man')),
   '------------------',
 ]
 

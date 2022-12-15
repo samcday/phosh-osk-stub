@@ -78,29 +78,30 @@ The result should look something like this:
 ![character popover](screenshots/pos-de.png)
 ![inscript/malayalam](screenshots/pos-wide-in+mal.png)
 
-## Word Completion
-phosh-osk-stub has experimental support for word completion based on the
+WORD COMPLETION
+^^^^^^^^^^^^^^^
+``phosh-osk-stub`` has experimental support for word completion based on the
 presage libarary. For this to work you need:
 
-- A model file in /usr/share/phosh/osk/presage/. Likely your distribution
+- A model file in `/usr/share/phosh/osk/presage/`. Likely your distribution
   already ships one with the presarge libary. You can simply simplink there.
   See `debian/phosh-osk-stub.links`. Models for more languages can be found
   in [phosh-osk-data][].
 - An appplication that used recent GTK3 (>= 3.24.35). GTK4 apps work
   somewhat as well but there's currenly an issues with cursor
   movement.
-- Completion enabled in settings:
+- For configuration see the [manpage][].
 
-        gsettings set sm.puri.phosh.osk completion-mode "['manual','hint']"
+## Documentation
 
-Completion can then be enabled/disabled via the language popover. To permanently
-disable it use:
+### Development Documentation
 
-        gsettings reset sm.puri.phosh.osk completion-mode
+The API documentation is available at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub .
 
-## Development Documentation
+### End User Documentation
 
-API documentation is at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub
+For end user documentation see the [manpage](./doc/phosh-osk-stub.rst) (or
+in the installed system via `man phosh-osk-stub`.
 
 [main]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/tree/main
 [.gitlab-ci.yml]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/.gitlab-ci.yml
@@ -109,3 +110,4 @@ API documentation is at https://guidog.pages.gitlab.gnome.org/phosh-osk-stub
 [squeekboard]: https://gitlab.gnome.org/World/Phosh/squeekboard
 [sm.puri.OSK0]: https://gitlab.gnome.org/World/Phosh/phosh/-/blob/main/src/dbus/sm.puri.OSK0.xml
 [phosh-osk-data]: https://gitlab.gnome.org/guidog/phosh-osk-data/
+[manpage]: ./docs/phosh-osk-stub.rst
