@@ -1,5 +1,5 @@
 project('phosh-osk-stub', 'c',
-          version: '0.23.0.rc1',
+          version: '0.23.0.rc2',
           license: 'GPLv3+',
     meson_version: '>= 0.54.0',
   default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
