@@ -10,4 +10,14 @@
       </description>
     </key>
   </schema>
+
+  <schema id='sm.puri.phosh.osk.Terminal'
+          path='/sm/puri/phosh/osk/terminal/'>
+    <key name='shortcuts' type='as'>
+      <default>[]</default>
+      <summary>Shotcuts for terminal layout</summary>
+      <description/>
+    </key>
+  </schema>
+
 </schemalist>

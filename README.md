@@ -54,10 +54,12 @@ We use the meson (and thereby Ninja) build system for phosh-osk-stub.
 The quickest way to get going is to do the following:
 
 ```sh
-meson . _build
+meson setup -Dgtk_doc=false _build
 meson build -C _build
 meson test -C _build
 ```
+
+We're disabling the doc build above as it reduces build time a lot.
 
 ## Running
 ### Running from the source tree

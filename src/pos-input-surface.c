@@ -17,6 +17,7 @@
 #include "pos-completion-bar.h"
 #include "pos-input-surface.h"
 #include "pos-osk-widget.h"
+#include "pos-shortcuts-bar.h"
 #include "pos-vk-driver.h"
 #include "pos-virtual-keyboard.h"
 #include "pos-vk-driver.h"
@@ -78,6 +79,7 @@ struct _PosInputSurface {
   GHashTable              *osks;
   HdyDeck                 *deck;
   GtkWidget               *osk_terminal;
+  PosShortcutsBar         *shortcuts_bar;
 
   /* The debug surface */
   PosDebugWidget          *debug_widget;
@@ -112,6 +114,42 @@ G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SU
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_GROUP, pos_input_surface_action_group_iface_init)
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_MAP, pos_input_surface_action_map_iface_init)
   )
+
+
+static void
+on_shortcut_activated (PosInputSurface *self, PosShortcut *shortcut, PosShortcutsBar *bar)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  g_return_if_fail (POS_IS_SHORTCUTS_BAR (bar));
+
+  pos_vk_driver_key_press_gdk (self->keyboard_driver,
+                               pos_shortcut_get_key (shortcut),
+                               pos_shortcut_get_modifiers (shortcut));
+}
+
+
+static void
+pos_input_surface_toggle_shortcuts_bar (PosInputSurface *self)
+{
+  GtkWidget *child;
+  gboolean shortcuts_visible = FALSE;
+
+  child = hdy_deck_get_visible_child (self->deck);
+
+  /* shortcuts bar is only for terminal and when we have shortcuts defined */
+  if (child == self->osk_terminal)
+    shortcuts_visible = !!pos_shortcuts_bar_get_num_shortcuts (self->shortcuts_bar);
+
+  gtk_widget_set_visible (GTK_WIDGET (self->shortcuts_bar), shortcuts_visible);
+}
+
+
+static void
+on_num_shortcuts_changed (PosInputSurface *self)
+{
+  pos_input_surface_toggle_shortcuts_bar (self);
+}
+
 
 
 static void
@@ -462,6 +500,9 @@ on_visible_child_changed (PosInputSurface *self)
   PosOskWidget *osk;
 
   child = hdy_deck_get_visible_child (self->deck);
+
+  pos_input_surface_toggle_shortcuts_bar (self);
+
   if (!POS_IS_OSK_WIDGET (child))
     return;
 
@@ -975,8 +1016,9 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   container_class->check_resize = pos_input_surface_check_resize;
 
   g_type_ensure (POS_TYPE_COMPLETION_BAR);
-  g_type_ensure (POS_TYPE_OSK_WIDGET);
   g_type_ensure (POS_TYPE_DEBUG_WIDGET);
+  g_type_ensure (POS_TYPE_OSK_WIDGET);
+  g_type_ensure (POS_TYPE_SHORTCUTS_BAR);
 
   gtk_widget_class_set_template_from_resource (widget_class,
                                                "/sm/puri/phosh/osk-stub/ui/input-surface.ui");
@@ -986,12 +1028,15 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, shortcuts_bar);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, word_completion_btn);
   gtk_widget_class_bind_template_callback (widget_class, on_completion_selected);
-  gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
+  gtk_widget_class_bind_template_callback (widget_class, on_num_shortcuts_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_mode_changed);
+  gtk_widget_class_bind_template_callback (widget_class, on_shortcut_activated);
+  gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
 
   /**
    * PosInputSurface:input-method:

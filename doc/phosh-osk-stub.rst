@@ -89,6 +89,15 @@ enabled configured via the `gsettings` command:
   # Reset to default (off)
   gsettings reset sm.puri.phosh.osk completion-mode
 
+TERMINAL SHORTCUTS
+^^^^^^^^^^^^^^^^^^
+``phosh-osk-stub`` can provide a row of keyboard shortcuts on the
+terminal layout. These are configured via the ``shortcuts`` GSetting
+
+::
+
+  gsettings set sm.puri.phosh.osk.Terminal shortcuts "['<ctrl>a', '<ctrl>e', '<ctrl>r']"
+
 
 ENVIRONMENT VARIABLES
 ---------------------

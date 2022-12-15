@@ -51,6 +51,8 @@ libpos_sources = files(
   'pos-osk-key.c',
   'pos-osk-widget.h',
   'pos-osk-widget.c',
+  'pos-shortcuts-bar.h',
+  'pos-shortcuts-bar.c',
   'pos-vk-driver.h',
   'pos-vk-driver.c',
   'pos-virtual-keyboard.h',
