@@ -930,8 +930,7 @@ pos_input_surface_action_group_iface_init (GActionGroupInterface *iface)
 
 
 static GAction *
-pos_input_surface_lookup_action (GActionMap  *action_map,
-                                      const gchar *action_name)
+pos_input_surface_lookup_action (GActionMap  *action_map, const gchar *action_name)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -942,8 +941,7 @@ pos_input_surface_lookup_action (GActionMap  *action_map,
 }
 
 static void
-pos_input_surface_add_action (GActionMap *action_map,
-                                   GAction    *action)
+pos_input_surface_add_action (GActionMap *action_map, GAction *action)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -954,8 +952,7 @@ pos_input_surface_add_action (GActionMap *action_map,
 }
 
 static void
-pos_input_surface_remove_action (GActionMap  *action_map,
-                                      const gchar *action_name)
+pos_input_surface_remove_action (GActionMap *action_map, const gchar *action_name)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
