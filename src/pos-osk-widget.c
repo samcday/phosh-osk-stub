@@ -452,7 +452,7 @@ parse_rows (PosOskWidget *self, PosOskWidgetKeyboardLayer *layer, JsonArray *row
   }
   layer->width = max_width;
 
-  /* We now the max width, now we can calc offsets */
+  /* We know the max width, now we can calculate offsets */
   for (int r = 0; r < num_rows; r++) {
     PosOskWidgetRow *row = pos_osk_widget_get_layer_row (self, l, r);
 

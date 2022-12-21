@@ -511,6 +511,9 @@ on_visible_child_changed (PosInputSurface *self)
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
 
   switch_language (self, pos_osk_widget_get_locale (osk));
+
+  /* Recheck completion bar visibility */
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 }
 
 static void
@@ -930,8 +933,7 @@ pos_input_surface_action_group_iface_init (GActionGroupInterface *iface)
 
 
 static GAction *
-pos_input_surface_lookup_action (GActionMap  *action_map,
-                                      const gchar *action_name)
+pos_input_surface_lookup_action (GActionMap  *action_map, const gchar *action_name)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -942,8 +944,7 @@ pos_input_surface_lookup_action (GActionMap  *action_map,
 }
 
 static void
-pos_input_surface_add_action (GActionMap *action_map,
-                                   GAction    *action)
+pos_input_surface_add_action (GActionMap *action_map, GAction *action)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -954,8 +955,7 @@ pos_input_surface_add_action (GActionMap *action_map,
 }
 
 static void
-pos_input_surface_remove_action (GActionMap  *action_map,
-                                      const gchar *action_name)
+pos_input_surface_remove_action (GActionMap *action_map, const gchar *action_name)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -1377,6 +1377,8 @@ pos_input_surface_get_screen_keyboard_enabled (PosInputSurface *self)
 gboolean
 pos_input_surface_is_completer_active (PosInputSurface *self)
 {
+  GtkWidget *child;
+
   g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
 
   if (self->completer == NULL)
@@ -1386,6 +1388,11 @@ pos_input_surface_is_completer_active (PosInputSurface *self)
     return FALSE;
 
   if (self->completion_enabled == FALSE)
+    return FALSE;
+
+  /* Completion should only be used on "regular" layouts */
+  child = hdy_deck_get_visible_child (self->deck);
+  if (POS_IS_OSK_WIDGET (child) == FALSE || child == self->osk_terminal)
     return FALSE;
 
   /* We only complete input purpose `normal` */
