@@ -98,6 +98,7 @@ terminal layout. These are configured via the ``shortcuts`` GSetting
 
   gsettings set sm.puri.phosh.osk.Terminal shortcuts "['<ctrl>a', '<ctrl>e', '<ctrl>r']"
 
+For valid values see documentation of `gtk_accelerator_parse()`: https://docs.gtk.org/gtk3/func.accelerator_parse.html
 
 ENVIRONMENT VARIABLES
 ---------------------
