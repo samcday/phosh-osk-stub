@@ -1,3 +1,16 @@
+phosh-osk-stub 0.23.0~rc2
+-------------------------
+Released: December 2022
+* Add shortcuts bar to terminal layout
+  (see manpage on how to enable it)
+* Add experimental presage based completion support
+  (see manpage on how to enable it and README for requirements)
+* Make feedback consistent (trigger on all button presses)
+* Allow to use separate desktop file name to ease integration
+  for distributions
+* Add a manpage
+* Several bug fixes
+
 phosh-osk-stub 0.23.0~rc1
 -------------------------
 Released: November 2022

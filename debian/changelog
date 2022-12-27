@@ -1,3 +1,138 @@
+phosh-osk-stub (0.23.0~rc2) experimental; urgency=medium
+
+  * input-method: Use g_warning when we can't become the input method.
+    This makes it easier to debug why the keyboard might not pop up.
+  * d/control: Add breaks on older gtk3.
+    We need a very recent version for completion to work due to Carlos fixes
+    around 92813e52cde864139f3b740992e8c267a7a6bd1d.
+  * input-surface: Adjust size based on size request.
+    This makes us resize based on the presence of the completion bar
+    and will later help resizing when we have fewer rows.
+  * Add completer interface.
+    Completers will implement this so we can have
+    different completers.
+  * Add completion bar widget.
+    This holds the completions. We currently hardcode the minimal height.
+  * input-surface: Allow to set completer.
+    This allows to set a completer that gets fed via the input-method (when
+    active). Possible completions are displayed above the osk widgets.
+  * completers: Add presage based completer.
+    It doesn't override the presage config atm so config e.g. language via
+    ~/.presage/presage.xml
+  * completers: Add a fzf based example completer.
+    This completer uses `fzf` and the systems wordlist to complete the
+    current preedit. The worldlist location is fixed. On Debian the default
+    word list can be changed via
+      select-default-wordlist
+    The main purpose is to demo a simple completer.
+  * osk-stub: Instantiate presage based completer
+  * input-surface: Allow to turn completion on/off.
+    We default to off and let the user turn it on when needed
+    for the moment. This ensures we can easily recover in case
+    of problems.
+  * input-surface: Submit preedit on cursor moves.
+    This allows e.g. for in word editing
+  * completer: Add error quark.
+    This allows to return more detailed errors.
+  * completer-presage: Switch completion language.
+    Switch language when OSK layout changes. We currently only use the
+    "language" bits and don't use different corpi for e.g. de_DE, de_AT or
+    de_CH. We'll change that once the first copi for situations like this
+    show up.
+  * osk-stub: Allow to force completion on.
+    Helps for development
+  * input-surface: Allow to toggle completion via menu.
+    We do so by using a GPropertyAction that binds the `win.word-completion`
+    action to the `completion-enabled` property.
+    Since GPropertyAction holds a ref on the object (PosInputSurface) we
+    need to connect to the `destroy` signal in order to break the reference
+    cycle when calling `gtk_wiget_destroy` on PosInputSurface. Otherwise the
+    input surface would never get disposed since the action_map holds a
+    reference on the GPropertyAction which in turn holds a reference on the
+    input surface.
+    Since we don't want to have `destroy` and `dispose` we move the cleanup
+    of the hash map there too.
+    With GTK4 we can move to `gtk_widget_class_install_property_action` to
+    get rid of this.
+  * build: Use separate path for completion data.
+    This will allow to share it more easily between OSKs
+    without tripping up other completers.
+  * d/control: Recommend phosh-osk-data-eu.
+    Since we have the presage completer enabled (not the fzf one) recommend
+    data usefull for that.
+  * README: Document completion requirements
+  * input-method: Reset hint on activate.
+    Needs to happen according to protocol. This fixes the problem where
+    opportunistic completion stays active when switching apps although.
+  * build: Add run script.
+    This keeps it simple to run phosh-osk-stub, even when the schema
+    isn't installed.
+  * Add enums and schema for completion mode
+  * input-surface: Opportunistically enable compltion.
+    When the input-method hints us to enable completion do so, otherwise
+    turn it off but respect the users prefs.
+  * debian: Install schema files
+  * input-surface: Disable completion button when compltion mode is 'none'
+  * README: Document gsetting and feature
+  * README: Update how to start osk-stub.
+    As we have custom schema now we wrap it in the run script as
+    otherwise osk-stub won't start.
+  * build: Use gnome.post_install()
+    Makes it a bit nicer to install to /usr/share/local/
+  * input-surface: Remove unused variable
+  * input-surface: Move feedbackd notification to separate function
+  * input-surface: Emit feedback on all gtk button presses.
+    Otherwise we e.g. don't have feedback when selecting entries
+    in the menu or when picking a word completion
+  * build: Allow to avoid sm.puri.OSK0.desktop.
+    For testing it's convenient to just use phosh's expected filename for
+    the OSK. For distros it causes file conflicts
+    so allow to use a osk-stub specific desktop filename.
+  * input-surface: Don't allow to enable completeion without completer.
+    Hide "Enable word completion" button if the completer failed to
+    initialize (e.g. because there' no dictionary).
+  * completion-bar: Highlight button on press
+  * vk-driver: Fix doc string
+  * osk-widget: Don't forget to untoggle space in cursor mode.
+    When using long press on space to move the cursor make sure we
+    reset space to normal state afterwards.
+  * input-surface: Remove superfluous return
+  * input-surface: Reindent.
+    Now that most bits landed, reindent the ui file.
+  * virtual-keyboard: Update modifier settings.
+    Based on looking what wl_keyboard sends
+  * vk-driver: Remove spurious empty line
+  * Add a manpage.
+    This allows us to have documentation on the system and keeps the
+    README size under control
+  * debian: Install manpage
+  * vk-driver: Allow to submit button presses based on GDK keycodes.
+    We can even drop the kernel input-code based bits based on that
+    later on.
+  * Add a shortcuts-bar widget.
+    It reads the shortcuts from gsettings and emits signals when pressed.
+    Using GTKs acclerators for that has the upside that we can also easily
+    add widgets to configure shortcuts to a settings app.
+  * input-surface: Wire up shortcuts bar
+  * docs: Mention shortcuts configuration
+  * README: Update meson invocation
+    `meson setup` is preferred nowadays and while at that ignore the doc
+    built to reduce required dependencies and speed up the build even more.
+  * osk-widget: Fix typo
+  * input-surface: Indentation fixes
+  * data: Disable completion by default.
+    Fixes: bb4703adc495fe6b82d605df40dd7adaf8ca590b
+  * input-surface: Hide completion bar more aggressively.
+    We only want it with "regular" language layouts
+  * completion-bar: Use all horizontal space.
+    This makes completion easier to hit and ensures unchanging
+    suggestions stays in place.
+  * input-surface: Hide separator when completion option is invisible.
+    This avoids having the separator at the bottom of the popover when
+    completion isn't enabled at all.
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 15 Dec 2022 15:59:21 +0100
+
 phosh-osk-stub (0.23.0~rc1) experimental; urgency=medium
 
   * debian: Remove d/clean.  The files listed in there don't exist
