@@ -1,4 +1,4 @@
 Name: Phosh-OSK
 Link: /usr/share/applications/sm.puri.OSK0.desktop
-Alternative: /usr/share/applications/sm.puri.Phosh.OskStub.desktop
+Alternative: /usr/share/phosh-osk-stub/sm.puri.Phosh.OskStub.desktop
 Priority: 30
