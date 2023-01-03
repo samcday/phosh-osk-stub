@@ -67,4 +67,4 @@ if get_option('man')
     )
   endforeach
 endif
-p
+
