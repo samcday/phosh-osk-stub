@@ -645,8 +645,10 @@ switch_layer (PosOskWidget *self, PosOskKey *key)
   }
 
   if (new_layer >= self->layout.n_layers) {
-    g_warning ("Inexistent layer '%s' (%d)",
-               g_enum_to_string (POS_TYPE_OSK_WIDGET_LAYER, self->layer), self->layer);
+    g_autofree char *layer_name = g_enum_to_string (POS_TYPE_OSK_WIDGET_LAYER,
+                                                    self->layer);
+
+    g_warning ("Inexistent layer '%s' (%d)", layer_name, self->layer);
     new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
   }
 
