@@ -44,6 +44,15 @@
 #define POS_INPUT_SURFACE_IS_LANG_LAYOUT(widget) \
   (POS_IS_OSK_WIDGET ((widget)) && GTK_WIDGET ((widget)) != self->osk_terminal)
 
+/**
+ * POS_INPUT_SURFACE_IS_TERMINAL_LAYOUT:
+ * @layout: The layout to check
+ *
+ * Is this widget a terminal layout?
+ */
+#define POS_INPUT_SURFACE_IS_TERMINAL_LAYOUT(widget) \
+  (POS_IS_OSK_WIDGET ((widget)) && GTK_WIDGET ((widget)) == self->osk_terminal)
+
 enum {
   PROP_0,
   PROP_INPUT_METHOD,
@@ -158,7 +167,7 @@ pos_input_surface_toggle_shortcuts_bar (PosInputSurface *self)
   child = hdy_deck_get_visible_child (self->deck);
 
   /* shortcuts bar is only for terminal and when we have shortcuts defined */
-  if (child == self->osk_terminal)
+  if (POS_INPUT_SURFACE_IS_TERMINAL_LAYOUT (child))
     shortcuts_visible = !!pos_shortcuts_bar_get_num_shortcuts (self->shortcuts_bar);
 
   gtk_widget_set_visible (GTK_WIDGET (self->shortcuts_bar), shortcuts_visible);
