@@ -1316,7 +1316,7 @@ on_completion_mode_changed (PosInputSurface *self, const char *key, GSettings *s
     return;
 
   /* In hint mode catch up with the input method */
-  if ((self->completion_mode & PHOSH_OSK_COMPLETION_MODE_HINT)) {
+  if ((self->completion_mode & PHOSH_OSK_COMPLETION_MODE_HINT) && self->input_method) {
     gboolean enable;
 
     enable = pos_input_method_get_hint (self->input_method) & POS_INPUT_METHOD_HINT_COMPLETION;
