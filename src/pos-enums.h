@@ -15,7 +15,7 @@ G_BEGIN_DECLS
  * @POS_OSK_WIDGET_LAYER_NORMAL: lower case letters
  * @POS_OSK_WIDGET_LAYER_CAPS: capital letters
  * @POS_OSK_WIDGET_LAYER_SYMBOLS: additional symbols / numbers
- * @POS_OSK_WIDGET_LAYER_EMOJI: emjis
+ * @POS_OSK_WIDGET_LAYER_EMOJI: emojis
  *
  * The currently displayed keyboard layer.
  */
