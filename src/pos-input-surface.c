@@ -573,7 +573,7 @@ on_visible_child_changed (PosInputSurface *self)
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_display_name (osk));
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
 
-  /* Remember last lahout */
+  /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
   switch_language (self, pos_osk_widget_get_locale (osk));
