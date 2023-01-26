@@ -17,7 +17,8 @@ Features:
 - no language boundaries within the codebase to lower the entrance barrier
 - use current GTK/GObject patterns (actions, bindings, …)
 - use GNOME libs/technologies wherever possible (GSettings, json-glib, …)
-- [character popover](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-de.png)
+- [character popover](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-popover.png)
+- [emoji layout](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-emoji.png)
 - cursor navigation via space-bar long-press
 - experimental [word completion](https://social.librem.one/@agx/109428599061094716)
   based on the presage library
@@ -76,8 +77,8 @@ no need to stop a running instance.
 
 The result should look something like this:
 
-![debug surface](screenshots/pos-dbg.png)
-![character popover](screenshots/pos-de.png)
+![character popover](screenshots/pos-popover.png)
+![emoji layout](screenshots/pos-emoji.png)
 ![inscript/malayalam](screenshots/pos-wide-in+mal.png)
 
 ## Word completion
