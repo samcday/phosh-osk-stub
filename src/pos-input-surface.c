@@ -424,7 +424,7 @@ on_emoji_picker_done (PosInputSurface *self)
 static void
 on_emoji_picker_delete_last (PosInputSurface *self)
 {
-  g_warning ("%s", __func__);
+  g_debug ("%s", __func__);
   on_osk_key_symbol (self, "KEY_BACKSPACE", NULL);
 }
 
