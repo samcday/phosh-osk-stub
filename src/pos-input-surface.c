@@ -35,6 +35,15 @@
 
 #include <glib/gi18n-lib.h>
 
+/**
+ * POS_INPUT_SURFACE_IS_LANG_LAYOUT:
+ * @layout: The layout to check
+ *
+ * Is this widget a "regular" language layout (not emoji, not terminal, …)?
+ */
+#define POS_INPUT_SURFACE_IS_LANG_LAYOUT(widget) \
+  (POS_IS_OSK_WIDGET ((widget)) && GTK_WIDGET ((widget)) != self->osk_terminal)
+
 enum {
   PROP_0,
   PROP_INPUT_METHOD,
@@ -1840,7 +1849,7 @@ pos_input_surface_is_completer_active (PosInputSurface *self)
     return FALSE;
 
   /* Completion should only be used on "regular" layouts */
-  if (POS_IS_OSK_WIDGET (child) == FALSE || child == self->osk_terminal)
+  if (!POS_INPUT_SURFACE_IS_LANG_LAYOUT (child))
     return FALSE;
 
   /* We only complete input purpose `normal` */
