@@ -235,6 +235,9 @@ pos_osk_widget_get_row (PosOskWidget *self, guint row)
 static guint
 pos_osk_widget_row_get_num_keys (PosOskWidgetRow *row)
 {
+  if (row->keys == NULL)
+    return 0;
+
   return row->keys->len;
 }
 
@@ -642,7 +645,8 @@ switch_layer (PosOskWidget *self, PosOskKey *key)
   }
 
   if (new_layer >= self->layout.n_layers) {
-    g_warning ("Inexistent layer %d", self->layer);
+    g_warning ("Inexistent layer '%s' (%d)",
+               g_enum_to_string (POS_TYPE_OSK_WIDGET_LAYER, self->layer), self->layer);
     new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
   }
 
