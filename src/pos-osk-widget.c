@@ -235,6 +235,9 @@ pos_osk_widget_get_row (PosOskWidget *self, guint row)
 static guint
 pos_osk_widget_row_get_num_keys (PosOskWidgetRow *row)
 {
+  if (row->keys == NULL)
+    return 0;
+
   return row->keys->len;
 }
 
