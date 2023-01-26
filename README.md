@@ -80,17 +80,16 @@ The result should look something like this:
 ![character popover](screenshots/pos-de.png)
 ![inscript/malayalam](screenshots/pos-wide-in+mal.png)
 
-WORD COMPLETION
-^^^^^^^^^^^^^^^
+## Word completion
 ``phosh-osk-stub`` has experimental support for word completion based on the
-presage libarary. For this to work you need:
+presage library. For this to work you need:
 
 - A model file in `/usr/share/phosh/osk/presage/`. Likely your distribution
-  already ships one with the presarge libary. You can simply simplink there.
+  already ships one with the presarge library. You can simply symlink there.
   See `debian/phosh-osk-stub.links`. Models for more languages can be found
   in [phosh-osk-data][].
-- An appplication that used recent GTK3 (>= 3.24.35). GTK4 apps work
-  somewhat as well but there's currenly an issues with cursor
+- An application that used recent GTK3 (>= 3.24.35). GTK4 apps work
+  somewhat as well but there's currently an issues with cursor
   movement.
 - For configuration see the [manpage][].
 
