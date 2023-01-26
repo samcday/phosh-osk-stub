@@ -788,11 +788,49 @@ pos_input_surface_get_property (GObject    *object,
 static void
 on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
 {
+  GtkWidget *osk_widget = NULL;
+  PosOskWidgetLayer layer = POS_OSK_WIDGET_LAYER_NORMAL;
+
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
 
   /* We only have completer active on `normal` input purpose */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
+
+  switch (pos_input_method_get_purpose (im)) {
+  case POS_INPUT_METHOD_PURPOSE_ALPHA:
+  case POS_INPUT_METHOD_PURPOSE_EMAIL:
+  case POS_INPUT_METHOD_PURPOSE_NAME:
+  case POS_INPUT_METHOD_PURPOSE_NORMAL:
+  case POS_INPUT_METHOD_PURPOSE_PASSWORD:
+  case POS_INPUT_METHOD_PURPOSE_URL:
+    layer = POS_OSK_WIDGET_LAYER_NORMAL;
+    break;
+  case POS_INPUT_METHOD_PURPOSE_DATE:
+  case POS_INPUT_METHOD_PURPOSE_DATETIME:
+  case POS_INPUT_METHOD_PURPOSE_DIGITS:
+  case POS_INPUT_METHOD_PURPOSE_NUMBER:
+  case POS_INPUT_METHOD_PURPOSE_PHONE:
+  case POS_INPUT_METHOD_PURPOSE_PIN:
+  case POS_INPUT_METHOD_PURPOSE_TIME:
+    layer = POS_OSK_WIDGET_LAYER_SYMBOLS;
+    break;
+  case POS_INPUT_METHOD_PURPOSE_TERMINAL:
+    osk_widget = self->osk_terminal;
+    break;
+  default:
+    g_return_if_reached ();
+  }
+
+  if (osk_widget == NULL) {
+    osk_widget = hdy_deck_get_visible_child (self->deck);
+    /* Debug surface and emoji don't have layers */
+    if (POS_IS_OSK_WIDGET (osk_widget) == FALSE)
+      osk_widget = self->last_layout;
+  }
+  hdy_deck_set_visible_child (self->deck, osk_widget);
+
+  pos_osk_widget_set_layer (POS_OSK_WIDGET (osk_widget), layer);
 }
 
 
