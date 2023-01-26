@@ -731,12 +731,13 @@ on_visible_child_changed (PosInputSurface *self)
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_display_name (osk));
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
 
-  /* Remember last layout */
-  self->last_layout = GTK_WIDGET (osk);
-
   set_keymap (self);
-  if (osk != POS_OSK_WIDGET (self->osk_terminal))
+
+  /* Remember last layout */
+  if (POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk)) {
     pos_input_surface_switch_completion (self, osk);
+    self->last_layout = GTK_WIDGET (osk);
+  }
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -996,6 +997,7 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
 {
   GtkWidget *osk_widget = NULL;
   PosOskWidgetLayer layer = POS_OSK_WIDGET_LAYER_NORMAL;
+  PosInputMethodPurpose purpose;
 
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
@@ -1003,7 +1005,8 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
   /* We only have completer active on `normal` input purpose */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 
-  switch (pos_input_method_get_purpose (im)) {
+  purpose = pos_input_method_get_purpose (im);
+  switch (purpose) {
   case POS_INPUT_METHOD_PURPOSE_ALPHA:
   case POS_INPUT_METHOD_PURPOSE_EMAIL:
   case POS_INPUT_METHOD_PURPOSE_NAME:
@@ -1030,10 +1033,13 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
 
   if (osk_widget == NULL) {
     osk_widget = hdy_deck_get_visible_child (self->deck);
-    /* Debug surface and emoji don't have layers */
-    if (POS_IS_OSK_WIDGET (osk_widget) == FALSE)
+    /* If no "special" layout, Switch back to the last language layer */
+    if (!POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk_widget))
       osk_widget = self->last_layout;
   }
+  g_debug ("Layout: %s, purpose: %d",
+           pos_osk_widget_get_name (POS_OSK_WIDGET (osk_widget)),
+           purpose);
   hdy_deck_set_visible_child (self->deck, osk_widget);
 
   pos_osk_widget_set_layer (POS_OSK_WIDGET (osk_widget), layer);
@@ -1533,7 +1539,7 @@ insert_osk (PosInputSurface   *self,
   hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);
   g_hash_table_insert (self->osks, g_strdup (name), osk_widget);
 
-  if (self->last_layout == NULL)
+  if (self->last_layout == NULL && POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk_widget))
     self->last_layout = GTK_WIDGET (osk_widget);
 
   return osk_widget;
