@@ -688,6 +688,7 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       "swapped-signal::update",
                       G_CALLBACK (on_completer_update), self,
                       NULL);
+    switch_language (self, pos_osk_widget_get_locale (POS_OSK_WIDGET (self->last_layout)));
   } else {
     g_debug ("Removing completer");
   }
