@@ -978,6 +978,7 @@ render_hint (cairo_t *cr, GtkStyleContext *context, const char *hint, const GdkR
   int hint_margin = 1;
   float hint_scale = 0.75;
 
+  gtk_style_context_set_state (context, state);
   cairo_save (cr);
 
   gtk_style_context_get (context, state, "font", &font, NULL);
@@ -1008,6 +1009,7 @@ render_hint (cairo_t *cr, GtkStyleContext *context, const char *hint, const GdkR
   pango_cairo_show_layout (cr, layout);
 
   cairo_restore (cr);
+  gtk_style_context_set_state (context, GTK_STATE_FLAG_NORMAL);
 }
 
 
