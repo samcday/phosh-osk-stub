@@ -304,23 +304,25 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
 
 
 static void
-add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
+add_common_keys_pre (PosOskWidget *self, PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
   const char *label;
 
-  /* TODO: we could create these only once and g_object_ref them */
   switch (rownum) {
   case 2:
-    key = g_object_new (POS_TYPE_OSK_KEY,
-                        "use", POS_OSK_KEY_USE_TOGGLE,
-                        "icon", "keyboard-shift-filled-symbolic",
-                        "width", 1.5,
-                        "style", "toggle",
-                        "layer", POS_OSK_WIDGET_LAYER_CAPS,
-                        NULL);
-    row->width += pos_osk_key_get_width (key);
-    g_ptr_array_insert (row->keys, 0, key);
+    /* Only add a shift key to the normal layer if we have a caps layer */
+    if (layer != POS_OSK_WIDGET_LAYER_NORMAL || self->layout.layers[POS_OSK_WIDGET_LAYER_CAPS].width > 0.0) {
+      key = g_object_new (POS_TYPE_OSK_KEY,
+                          "use", POS_OSK_KEY_USE_TOGGLE,
+                          "icon", "keyboard-shift-filled-symbolic",
+                          "width", 1.5,
+                          "style", "toggle",
+                          "layer", POS_OSK_WIDGET_LAYER_CAPS,
+                          NULL);
+      row->width += pos_osk_key_get_width (key);
+      g_ptr_array_insert (row->keys, 0, key);
+    }
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
@@ -342,7 +344,6 @@ add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, 0, key);
-
     break;
   case 0:
   case 1:
@@ -428,7 +429,7 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
     g_ptr_array_insert (row->keys, -1, g_steal_pointer (&key));
   }
 
-  add_common_keys_pre (row, l, r);
+  add_common_keys_pre (self, row, l, r);
   add_common_keys_post (row, l, r);
 }
 
