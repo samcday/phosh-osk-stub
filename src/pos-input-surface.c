@@ -17,6 +17,7 @@
 #include "pos-completer.h"
 #include "pos-completion-bar.h"
 #include "pos-input-surface.h"
+#include "pos-main.h"
 #include "pos-osk-widget.h"
 #include "pos-shortcuts-bar.h"
 #include "pos-vk-driver.h"
@@ -1119,6 +1120,9 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   widget_class->destroy = pos_input_surface_destroy;
 
   container_class->check_resize = pos_input_surface_check_resize;
+
+  /* Make sure resources are available when building gir */
+  pos_init ();
 
   g_type_ensure (POS_TYPE_COMPLETION_BAR);
   g_type_ensure (POS_TYPE_DEBUG_WIDGET);
