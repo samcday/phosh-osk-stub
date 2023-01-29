@@ -12,6 +12,11 @@ layouts = files(
   'ee.json',
   'es.json',
   'fi.json',
+  'fr.json',
+  'ge.json',
+  'gr.json',
+  'hr.json',
+  'il.json',
   'in+bolnagri.json',
   'in+mal.json',
   'it.json',
@@ -24,11 +29,17 @@ layouts = files(
   'pl.json',
   'pt.json',
   'ro.json',
+  'rs.json',
   'ru.json',
   'se.json',
+  'si.json',
+  'sk.json',
+  'tr.json',
   'ua.json',
+  'uk.json',
   'us.json',
   'vn.json',
+  'za.json',
   # custom lauouts
   'terminal.json',
 )
@@ -40,3 +51,4 @@ if json_glib_utils.found()
   endforeach		 
 endif
 
+p
