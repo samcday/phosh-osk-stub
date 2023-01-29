@@ -482,7 +482,7 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
   self->layout.n_rows = LAYOUT_ROWS;
 
   len = json_array_get_length (layers);
-  for (int l = 0; l < len; l++) {
+  for (int l = len-1; l >= 0; l--) {
     PosOskWidgetKeyboardLayer *layer;
     PosOskWidgetLayer ltype;
     JsonObject *alayer;
