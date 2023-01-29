@@ -388,6 +388,8 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
     flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
   if (modifiers & GDK_META_MASK)
     flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALT;
+  if (modifiers & GDK_MOD1_MASK)
+    flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALT;
   if (modifiers & GDK_SUPER_MASK)
     flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SUPER;
 
