@@ -135,26 +135,27 @@ configure_file(
   output: 'run',
   configuration: run_data)
 
-summary = [
-  '',
-  '--------------------',
-  'phosh-osk-stub @0@'.format(meson.project_version()),
-  '',
-  '  Default OSK: @0@'.format(get_option('default_osk')),
-  'Documentation: @0@'.format(get_option('gtk_doc')),
-  '     Manpages: @0@'.format(get_option('man')),
-  '------------------',
-]
-
-message('\n'.join(summary))
-
-
 subdir('data')
 subdir('po')
 subdir('protocol')
 subdir('src')
 subdir('tests')
 subdir('doc')
+
+summary({
+   'Documentation': get_option('gtk_doc'),
+   'Manpages': get_option('man'),
+  },
+  bool_yn: true,
+  section: 'Build',
+)
+
+summary({
+   'Use as default OSK': get_option('default_osk'),
+  },
+  bool_yn: true,
+  section: 'Run',
+)
 
 # gnome.post_install() is available since meson 0.59.0
 # Distributions use their own tooling (e.g. postinst, triggers, etc)
