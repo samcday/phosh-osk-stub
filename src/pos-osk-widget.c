@@ -482,15 +482,15 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
   len = json_array_get_length (layers);
   for (int l = 0; l < len; l++) {
     PosOskWidgetKeyboardLayer *layer;
+    PosOskWidgetLayer ltype;
     JsonObject *alayer;
+    const char *name;
 
-    layer = pos_osk_widget_get_keyboard_layer (self, l);
     if (l > POS_OSK_WIDGET_LAST_LAYER) {
       g_warning ("Skipping layer %d", l);
       continue;
     }
 
-    /* TODO: honor layer name to support 3 layer layouts better */
     alayer = json_array_get_object_element (layers, l);
     if (alayer == NULL) {
       g_warning ("Failed to get layer %d", l);
@@ -505,7 +505,23 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
       continue;
     }
 
-    parse_rows (self, layer, rows, l);
+    name = json_object_get_string_member (alayer, "level");
+    if (g_strcmp0 (name, "")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_NORMAL;
+    } else if (g_strcmp0 (name, "shift")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_CAPS;
+    } else if (g_strcmp0 (name, "opt")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_SYMBOLS;
+    } else if (g_strcmp0 (name, "opt+shift")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_SYMBOLS2;
+    } else {
+      g_warning ("Unknown layer '%s' at %d", name, l);
+      ret = FALSE;
+      continue;
+    }
+
+    layer = pos_osk_widget_get_keyboard_layer (self, ltype);
+    parse_rows (self, layer, rows, ltype);
     width = MAX (layer->width, width);
   }
 
