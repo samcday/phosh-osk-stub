@@ -1,10 +1,9 @@
 if get_option('tests')
 
-test_env = [
-  'G_DEBUG=gc-friendly,fatal-warnings',
-  'MALLOC_CHECK_=2',
-  'NO_AT_BRIDGE=1',
-]
+test_env = environment()
+test_env.set('G_DEBUG', 'gc-friendly,fatal-warnings')
+test_env.set('MALLOC_CHECK_','2')
+test_env.set('NO_AT_BRIDGE','1')
 
 grab_word_test_sources = [
   'test-grab-word.c',
