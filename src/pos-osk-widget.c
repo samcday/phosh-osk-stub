@@ -259,8 +259,10 @@ pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 
   for (int l = 0; l < layout->n_layers; l++) {
     for (int r = 0; r < layout->n_rows; r++) {
-      g_ptr_array_free (layout->layers[l].rows[r].keys, TRUE);
-      layout->layers[l].rows[r].keys = NULL;
+      if (layout->layers[l].rows[r].keys) {
+        g_ptr_array_free (layout->layers[l].rows[r].keys, TRUE);
+        layout->layers[l].rows[r].keys = NULL;
+      }
     }
   }
 }
