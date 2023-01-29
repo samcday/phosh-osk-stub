@@ -93,7 +93,7 @@ typedef struct {
 typedef struct {
   char                     *name;
   char                     *locale;
-  PosOskWidgetKeyboardLayer layers[4];
+  PosOskWidgetKeyboardLayer layers[POS_OSK_WIDGET_LAST_LAYER + 1];
   guint                     n_layers;
   guint                     n_cols;
   guint                     n_rows;
