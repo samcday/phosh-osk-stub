@@ -1,3 +1,5 @@
+if get_option('tests')
+
 test_env = [
   'G_DEBUG=gc-friendly,fatal-warnings',
   'MALLOC_CHECK_=2',
@@ -15,3 +17,4 @@ grab_word_test = executable('test-grab-word',
 )
 test ('grab-word', grab_word_test, env: test_env)
 
+endif
