@@ -16,9 +16,6 @@
 
 #include <glib/gi18n.h>
 
-static gboolean pos_initialized;
-
-
 static void
 pos_init_types (void)
 {
@@ -26,27 +23,31 @@ pos_init_types (void)
   g_type_ensure (POS_TYPE_VK_DRIVER);
 }
 
-
+/**
+ * pos_init:
+ *
+ * Initialize the library. This ensures the available types and loads
+ * the resources.
+ */
 void
 pos_init (void)
 {
-  if (pos_initialized)
-    return;
+  static gsize initialized = FALSE;
 
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  if (g_once_init_enter (&initialized)) {
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 
-  /*
-   * libpos is meant as static library so register resources explicitly.
-   * otherwise they get dropped during static linking
-   */
-  pos_register_resource ();
+    /*
+     * libpos is meant as static library so register resources explicitly.
+     * otherwise they get dropped during static linking
+     */
+    pos_register_resource ();
 
-  pos_init_types ();
-
-  pos_initialized = TRUE;
+    pos_init_types ();
+    g_once_init_leave (&initialized, TRUE);
+  }
 }
-
 
 /**
  * pos_uninit:
