@@ -17,7 +17,8 @@ Features:
 - no language boundaries within the codebase to lower the entrance barrier
 - use current GTK/GObject patterns (actions, bindings, …)
 - use GNOME libs/technologies wherever possible (GSettings, json-glib, …)
-- [character popover](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-de.png)
+- [character popover](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-popover.png)
+- [emoji layout](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-emoji.png)
 - cursor navigation via space-bar long-press
 - experimental [word completion](https://social.librem.one/@agx/109428599061094716)
   based on the presage library
@@ -76,21 +77,20 @@ no need to stop a running instance.
 
 The result should look something like this:
 
-![debug surface](screenshots/pos-dbg.png)
-![character popover](screenshots/pos-de.png)
+![character popover](screenshots/pos-popover.png)
+![emoji layout](screenshots/pos-emoji.png)
 ![inscript/malayalam](screenshots/pos-wide-in+mal.png)
 
-WORD COMPLETION
-^^^^^^^^^^^^^^^
+## Word completion
 ``phosh-osk-stub`` has experimental support for word completion based on the
-presage libarary. For this to work you need:
+presage library. For this to work you need:
 
 - A model file in `/usr/share/phosh/osk/presage/`. Likely your distribution
-  already ships one with the presarge libary. You can simply simplink there.
+  already ships one with the presarge library. You can simply symlink there.
   See `debian/phosh-osk-stub.links`. Models for more languages can be found
   in [phosh-osk-data][].
-- An appplication that used recent GTK3 (>= 3.24.35). GTK4 apps work
-  somewhat as well but there's currenly an issues with cursor
+- An application that used recent GTK3 (>= 3.24.35). GTK4 apps work
+  somewhat as well but there's currently an issues with cursor
   movement.
 - For configuration see the [manpage][].
 

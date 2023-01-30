@@ -1,3 +1,77 @@
+phosh-osk-stub (0.24.0) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * build: Drop trailing character
+  * packaging: Move desktop file to private dir.
+    This avoids listing it twice e.g. in mobile-setting's feedback
+    pane.
+  * osk-widget: Use layer sensitive label on symbol-layer key.
+    Use "123" when not on the symbols layer, otherwise "ABC". This
+    will make it consistent to what we use in the emoji widget.
+  * input-surface: Add helper to submit current preedit.
+    This is needed in several places e.g. when switching modes.
+  * Add emoji data.
+    Taken from GTK as of commit
+    1a4e368c7e5995b342db0be74f56c1eced74a0e6
+  * Add emoji-picker.
+    This is based on GTK's emoji picker. Besides
+    smaller fixes and dropping unneeded bits:
+    - switch to horizontal scrolling
+    - wrap section in a scrolled window
+    - add back and delete buttons
+  * input-surface: Wire up emoji picker
+  * input-surface: Submit preedit before inserting emoji.
+    In completion mode we don't want to complete on emojies
+    but rather submit the current text and append the emoji.
+  * oskw-widget: Allow for empty rows.
+    This avoids a crash in e.g. the arabic layout which lacks
+  * osk-widget: Improve warning.
+    Print out the "missing" layer name
+  * Update Layer surface from phosh.
+    This syncs up to
+    811c55204d2be4f4714d66fe3863bdc8d7552bed
+    to fix the potential problems like
+    https://gitlab.gnome.org/World/Phosh/squeekboard/-/issues/285
+  * osk-widget: Add a hint that there's a popover.
+    We display the first symbol in a slightly dimed color.
+  * vk-driver: Unreak <alt> in shortcuts in the terminal's shortcut bar
+  * input-surface: Don't try to adjust completion without an input method
+  * input-surface: Switch widget and layer according to input purpose.
+  * input-surface: Make sure to update language after setting completer.
+    Otherwise we might be completing for the wrong language
+  * manpage: Mention phosh manpage
+  * build: Use summary()
+  * main: Use g_init_once()
+  * input-surface: Initialize resources.  This avoids lots of scary warnings
+    when building the documentation.
+  * README: Update screenshots
+  * ci: Run tests in xvfb. We test widgets now
+  * build: Allow to disable building the tests
+  * tests: Use environment() to set test enviroment.
+    A bit easier to read as we have key / value pairs.
+  * layouts: Add more layouts.
+    Again taken from gnome-shell as of
+    The keyboard layouts were taken from gnome-shell as of
+    6a88c0f0be5aed836f33ed2989d33add58c01403
+  * osk-widget: Don't hardcode max layers in several locations.
+    Get the array size from the enum.
+  * osk-widget: Take layer name into account when parsing layers
+    ara and il have only three layers and we want to match to the correct
+    ones as otherwise we'll have symbols on the caps layer.
+  * input-layer: Don't assume we have all layers.
+    Otherwise we can't switch to symbols2.
+  * osk-widget: Allow for empty layers on cleanup
+    g_ptr_array_free() doesn't handle NULL well so guard against that.
+  * osk-widget: Don't add a shift key if there's no caps layer.
+    This is true in e.g. arabic and hebrew layouts.
+  * tests: Load all layout into an osk-widget.
+    This makes sure all osk-widgets can be instantiated.
+
+  [ Sam Hewitt ]
+  * emoji-picker: Improve styling
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 23 Jan 2023 19:08:20 +0100
+
 phosh-osk-stub (0.23.0~rc2) experimental; urgency=medium
 
   * input-method: Use g_warning when we can't become the input method.

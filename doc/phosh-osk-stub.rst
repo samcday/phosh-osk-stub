@@ -32,7 +32,7 @@ OPTIONS
 
 ``--allow-replacement``
    (Temporarily) Give up the `sm.puri.OSK0` DBus name if another OSK
-   requests it. This also deregisters the wayland input-method-v1 so another
+   requests it. This also unregisters the Wayland input-method-v1 so another
    OSK can act as input method.
    If the name becomes available again it is grabbed again and phosh-osk-stub
    registers itself as input method again.
@@ -65,7 +65,7 @@ WORD COMPLETION
 ^^^^^^^^^^^^^^^
 
 ``phosh-osk-stub`` has *experimental* support for word completion based on the
-`presage` libarary. It has several modes of operation represented by flags that
+`presage` library. It has several modes of operation represented by flags that
 can be combined:
 
 - `off`: no completion
@@ -73,7 +73,7 @@ can be combined:
 - `hint`: enables and disables completion based on the text input's `completion`
   hint.
 
-Valid settins are `off`, `manual`, `hint` and `manual+hint`. These can be
+Valid settings are `off`, `manual`, `hint` and `manual+hint`. These can be
 enabled configured via the `gsettings` command:
 
 ::
@@ -118,4 +118,4 @@ ENVIRONMENT VARIABLES
 See also
 --------
 
-``squeekboard(1)`` ``text2ngram(1)`` ``gsettings(1)``
+``phosh(1)`` ``squeekboard(1)`` ``text2ngram(1)`` ``gsettings(1)``
