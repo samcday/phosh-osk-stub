@@ -93,7 +93,7 @@ typedef struct {
 typedef struct {
   char                     *name;
   char                     *locale;
-  PosOskWidgetKeyboardLayer layers[4];
+  PosOskWidgetKeyboardLayer layers[POS_OSK_WIDGET_LAST_LAYER + 1];
   guint                     n_layers;
   guint                     n_cols;
   guint                     n_rows;
@@ -259,8 +259,10 @@ pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 
   for (int l = 0; l < layout->n_layers; l++) {
     for (int r = 0; r < layout->n_rows; r++) {
-      g_ptr_array_free (layout->layers[l].rows[r].keys, TRUE);
-      layout->layers[l].rows[r].keys = NULL;
+      if (layout->layers[l].rows[r].keys) {
+        g_ptr_array_free (layout->layers[l].rows[r].keys, TRUE);
+        layout->layers[l].rows[r].keys = NULL;
+      }
     }
   }
 }
@@ -302,23 +304,25 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
 
 
 static void
-add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
+add_common_keys_pre (PosOskWidget *self, PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
 {
   PosOskKey *key;
   const char *label;
 
-  /* TODO: we could create these only once and g_object_ref them */
   switch (rownum) {
   case 2:
-    key = g_object_new (POS_TYPE_OSK_KEY,
-                        "use", POS_OSK_KEY_USE_TOGGLE,
-                        "icon", "keyboard-shift-filled-symbolic",
-                        "width", 1.5,
-                        "style", "toggle",
-                        "layer", POS_OSK_WIDGET_LAYER_CAPS,
-                        NULL);
-    row->width += pos_osk_key_get_width (key);
-    g_ptr_array_insert (row->keys, 0, key);
+    /* Only add a shift key to the normal layer if we have a caps layer */
+    if (layer != POS_OSK_WIDGET_LAYER_NORMAL || self->layout.layers[POS_OSK_WIDGET_LAYER_CAPS].width > 0.0) {
+      key = g_object_new (POS_TYPE_OSK_KEY,
+                          "use", POS_OSK_KEY_USE_TOGGLE,
+                          "icon", "keyboard-shift-filled-symbolic",
+                          "width", 1.5,
+                          "style", "toggle",
+                          "layer", POS_OSK_WIDGET_LAYER_CAPS,
+                          NULL);
+      row->width += pos_osk_key_get_width (key);
+      g_ptr_array_insert (row->keys, 0, key);
+    }
     break;
   case 3:
     key = g_object_new (POS_TYPE_OSK_KEY,
@@ -340,7 +344,6 @@ add_common_keys_pre (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, 0, key);
-
     break;
   case 0:
   case 1:
@@ -426,7 +429,7 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
     g_ptr_array_insert (row->keys, -1, g_steal_pointer (&key));
   }
 
-  add_common_keys_pre (row, l, r);
+  add_common_keys_pre (self, row, l, r);
   add_common_keys_post (row, l, r);
 }
 
@@ -480,17 +483,17 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
   self->layout.n_rows = LAYOUT_ROWS;
 
   len = json_array_get_length (layers);
-  for (int l = 0; l < len; l++) {
+  for (int l = len-1; l >= 0; l--) {
     PosOskWidgetKeyboardLayer *layer;
+    PosOskWidgetLayer ltype;
     JsonObject *alayer;
+    const char *name;
 
-    layer = pos_osk_widget_get_keyboard_layer (self, l);
     if (l > POS_OSK_WIDGET_LAST_LAYER) {
       g_warning ("Skipping layer %d", l);
       continue;
     }
 
-    /* TODO: honor layer name to support 3 layer layouts better */
     alayer = json_array_get_object_element (layers, l);
     if (alayer == NULL) {
       g_warning ("Failed to get layer %d", l);
@@ -505,7 +508,23 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
       continue;
     }
 
-    parse_rows (self, layer, rows, l);
+    name = json_object_get_string_member (alayer, "level");
+    if (g_strcmp0 (name, "")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_NORMAL;
+    } else if (g_strcmp0 (name, "shift")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_CAPS;
+    } else if (g_strcmp0 (name, "opt")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_SYMBOLS;
+    } else if (g_strcmp0 (name, "opt+shift")  == 0) {
+      ltype = POS_OSK_WIDGET_LAYER_SYMBOLS2;
+    } else {
+      g_warning ("Unknown layer '%s' at %d", name, l);
+      ret = FALSE;
+      continue;
+    }
+
+    layer = pos_osk_widget_get_keyboard_layer (self, ltype);
+    parse_rows (self, layer, rows, ltype);
     width = MAX (layer->width, width);
   }
 
@@ -641,14 +660,6 @@ switch_layer (PosOskWidget *self, PosOskKey *key)
     }
     /* Reset caps layer on every (non toggle) key press */
   } else if (new_layer == POS_OSK_WIDGET_LAYER_CAPS) {
-    new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
-  }
-
-  if (new_layer >= self->layout.n_layers) {
-    g_autofree char *layer_name = g_enum_to_string (POS_TYPE_OSK_WIDGET_LAYER,
-                                                    self->layer);
-
-    g_warning ("Inexistent layer '%s' (%d)", layer_name, self->layer);
     new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
   }
 

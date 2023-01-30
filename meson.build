@@ -143,6 +143,7 @@ subdir('tests')
 subdir('doc')
 
 summary({
+   'Tests': get_option('tests'),
    'Documentation': get_option('gtk_doc'),
    'Manpages': get_option('man'),
   },

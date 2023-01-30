@@ -4,7 +4,6 @@ include:
 stages:
  - build
  - test+docs
- - package
  - deploy
 
 default:
@@ -24,7 +23,7 @@ default:
 variables:
   # For ci-fairy
   FDO_UPSTREAM_REPO: guidog/phosh-osk-stub
-  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20220824
+  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20230129
   XVFB_RUN: xvfb-run -a -s -noreset
   COMMON_BUILD_OPTS: --werror
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
@@ -49,7 +48,7 @@ variables:
 
 .test_step: &test_step
   script:
-    - meson test --print-errorlogs -C _build
+    - ${XVFB_RUN} meson test --print-errorlogs -C _build
 
 # Sanity checks of MR settings and commit logs
 sanity:
