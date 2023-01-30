@@ -25,7 +25,7 @@ variables:
   FDO_UPSTREAM_REPO: guidog/phosh-osk-stub
   DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.20230129
   XVFB_RUN: xvfb-run -a -s -noreset
-  COMMON_BUILD_OPTS: --werror
+  COMMON_BUILD_OPTS: --werror -Db_coverage=true
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
                     gtk+3.0-dev libhandy1-dev meson musl-dev ninja json-glib-dev
                     elogind-dev wayland-dev wayland-protocols ttf-dejavu presage-dev
@@ -49,6 +49,7 @@ variables:
 .test_step: &test_step
   script:
     - ${XVFB_RUN} meson test --print-errorlogs -C _build
+    - ninja  -C _build coverage-html
 
 # Sanity checks of MR settings and commit logs
 sanity:
@@ -89,6 +90,11 @@ test:native-debian-bookworm:
     - build:native-debian-bookworm
   <<: *bookworm_vars
   <<: *test_step
+  coverage: '/^lines:\s+([\d.]+\%)\s+/'
+  artifacts:
+    when: always
+    reports:
+      junit: _build/meson-logs/testlog.junit.xml
   except:
     variables:
       - $PKG_ONLY == "1"
