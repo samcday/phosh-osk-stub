@@ -7,7 +7,7 @@ Released: January 2023
 * Improve support for languages without a "caps" layer
   like Arabic and Hebrew.
 * Add layouts for fr, ge, gr, hr, il, rs, si, sk, tr and za
-* Honor protocol implementation in wlroots 0.16.0
+* Honor stricter protocol implementation in wlroots 0.16.0
 * Contributors:
 	Guido Günther
 	Sam Hewitt
