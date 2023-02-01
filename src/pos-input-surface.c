@@ -1443,6 +1443,9 @@ pos_input_surface_init (PosInputSurface *self)
 
   self->clicked_id = g_signal_add_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), 0,
                                                  on_click_hook, self, NULL);
+
+  /* Disable swipe gestures to change layouts by default */
+  pos_input_surface_set_layout_swipe (self, FALSE);
 }
 
 
@@ -1515,4 +1518,36 @@ pos_input_surface_is_completer_active (PosInputSurface *self)
 
   /* We only complete input purpose `normal` */
   return (pos_input_method_get_purpose (self->input_method) == POS_INPUT_METHOD_PURPOSE_NORMAL);
+}
+
+/**
+ * pos_input_surface_set_layout_swipe:
+ * @self: The input surface
+ * @enable: Passing %TRUE will enable layout change via swipe gestures.
+ *
+ * Controls whether layout changes are possible using swipe gestures.
+ */
+void
+pos_input_surface_set_layout_swipe (PosInputSurface *self, gboolean enable)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+
+  hdy_deck_set_can_swipe_forward (self->deck, enable);
+  hdy_deck_set_can_swipe_back (self->deck, enable);
+}
+
+/**
+ * pos_input_surface_get_layout_swipe:
+ * @self: The input surface
+ *
+ * Whether layouts can be changed using a swipe gesture.
+ *
+ * Returns %TRUE is layout swiping is enabled, otherwise %FALSE.
+ */
+gboolean
+pos_input_surface_get_layout_swipe (PosInputSurface *self)
+{
+  g_return_val_if_fail (POS_IS_INPUT_SURFACE (self), FALSE);
+
+  return hdy_deck_get_can_swipe_forward (self->deck);
 }
