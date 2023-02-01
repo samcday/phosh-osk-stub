@@ -1421,7 +1421,7 @@ pos_input_surface_init (PosInputSurface *self)
   on_completion_mode_changed (self, NULL, self->osk_settings);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
-                             "Terminal",
+                             _("Terminal"),
                              "terminal",
                              NULL,
                              NULL);
