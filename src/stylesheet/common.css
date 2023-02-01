@@ -100,8 +100,8 @@ pos-completion-bar button:active {
 pos-shortcuts-bar button {
   color: @pos_fg_color;
   background: shade(@pos_key_bg_color, 0.75);
-  padding-left: 3px;
-  padding-right: 3px;
+  padding-left: 12px;
+  padding-right: 12px;
   border: none;
   border-radius: 6px;
   margin: 2px 2px 2px 0px;;

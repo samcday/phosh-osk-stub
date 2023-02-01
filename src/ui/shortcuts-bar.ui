@@ -16,7 +16,6 @@
             <property name="visible">True</property>
             <property name="orientation">vertical</property>
             <property name="hexpand">True</property>
-            <property name="homogeneous">True</property>
             <property name="activate-on-single-click">True</property>
             <property name="selection-mode">none</property>
             <property name="halign">center</property>
