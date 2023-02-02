@@ -117,6 +117,12 @@ pos-shortcuts-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
+pos-shortcuts-barscrollbar {
+  background-color: transparent;
+  border: none;
+  transition: none;
+}
+
 #pos-emoji-switcher {
   padding:4px;
 }
