@@ -122,7 +122,6 @@ config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 config_h.set_quoted('PRESAGE_DICT_DIR', presagedictdir)
 
 configure_file(
-  input: 'pos-config.h.in',
   output: 'pos-config.h',
   configuration: config_h,
 )
