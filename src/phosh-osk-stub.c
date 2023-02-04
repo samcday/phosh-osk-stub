@@ -39,9 +39,10 @@
  * @POS_DEBUG_FLAG_FORCE_COMPLETEION: Force text completion to on
  */
 typedef enum _PosDebugFlags {
-  POS_DEBUG_FLAG_NONE = 0,
-  POS_DEBUG_FLAG_FORCE_SHOW    = 1 << 0,
+  POS_DEBUG_FLAG_NONE              = 0,
+  POS_DEBUG_FLAG_FORCE_SHOW        = 1 << 0,
   POS_DEBUG_FLAG_FORCE_COMPLETEION = 1 << 1,
+  POS_DEBUG_FLAG_DEBUG_SURFACE     = 1 << 2,
 } PosDebugFlags;
 
 
@@ -305,6 +306,9 @@ create_input_surface (struct wl_seat                         *seat,
                       G_CALLBACK (on_screen_keyboard_enabled_changed), NULL);
   }
 
+  if (_debug_flags & POS_DEBUG_FLAG_DEBUG_SURFACE)
+    pos_input_surface_set_layout_swipe (_input_surface, TRUE);
+
   gtk_window_present (GTK_WINDOW (_input_surface));
 
   g_object_weak_ref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
@@ -411,6 +415,8 @@ static GDebugKey debug_keys[] =
     .value = POS_DEBUG_FLAG_FORCE_SHOW,},
   { .key = "force-completion",
     .value = POS_DEBUG_FLAG_FORCE_COMPLETEION,},
+  { .key = "debug-surface",
+    .value = POS_DEBUG_FLAG_DEBUG_SURFACE,},
 };
 
 static PosDebugFlags
