@@ -114,12 +114,14 @@ xkbcommon_dep = dependency('xkbcommon')
 
 # For completion engines
 presage_dep = cc.find_library('presage')
+fzf = find_program('fzf', required: false)
 
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 config_h.set_quoted('PRESAGE_DICT_DIR', presagedictdir)
+config_h.set('POS_HAVE_FZF', fzf.found())
 
 configure_file(
   output: 'pos-config.h',
@@ -148,6 +150,14 @@ summary({
   },
   bool_yn: true,
   section: 'Build',
+)
+
+summary({
+    'Presage': presage_dep.found(),
+    'Fzf': fzf.found(),
+  },
+  bool_yn: true,
+  section: 'Completers',
 )
 
 summary({
