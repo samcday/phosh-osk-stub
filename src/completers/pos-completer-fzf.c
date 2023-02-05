@@ -20,6 +20,8 @@
 #include <signal.h>
 
 #define MAX_COMPLETIONS 3
+#define WORD_LIST       "/usr/share/dict/words"
+#define PROG_FZF        "fzf"
 
 enum {
   PROP_0,
@@ -55,9 +57,13 @@ struct _PosCompleterFzf {
 
 
 static void pos_completer_fzf_interface_init (PosCompleterInterface *iface);
+static void pos_completer_fzf_initable_interface_init (GInitableIface *iface);
+
 G_DEFINE_TYPE_WITH_CODE (PosCompleterFzf, pos_completer_fzf, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (POS_TYPE_COMPLETER,
-                                                pos_completer_fzf_interface_init))
+                                                pos_completer_fzf_interface_init)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE,
+                                                pos_completer_fzf_initable_interface_init))
 
 typedef struct {
   GPid                  fzf_pid;
@@ -280,6 +286,30 @@ on_fzf_read_done (GObject *source_object, GAsyncResult *res, gpointer user_data)
 
 
 static gboolean
+pos_completer_fzf_initable_init (GInitable    *initable,
+                                 GCancellable *cancelable,
+                                 GError      **error)
+{
+  if (g_file_test (WORD_LIST, G_FILE_TEST_EXISTS) == FALSE) {
+    g_set_error_literal (error,
+                         G_IO_ERROR,
+                         G_IO_ERROR_NOT_FOUND,
+                         "Wordlist " WORD_LIST " does not exist");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+
+static void
+pos_completer_fzf_initable_interface_init (GInitableIface *iface)
+{
+  iface->init = pos_completer_fzf_initable_init;
+}
+
+
+static gboolean
 pos_completer_fzf_feed_symbol (PosCompleter *iface, const char *symbol)
 {
   PosCompleterFzf *self = POS_COMPLETER_FZF (iface);
@@ -314,7 +344,7 @@ pos_completer_fzf_feed_symbol (PosCompleter *iface, const char *symbol)
   /* TODO: This is obviously just an experiment. wordlists can be changed
    * via select-default-wordlist
    */
-  cmd = g_strdup_printf ("cat /usr/share/dict/words | fzf -f '%s' -0 | head -%d",
+  cmd = g_strdup_printf ("cat " WORD_LIST " | " PROG_FZF " -f '%s' -0 | head -%d",
                          self->preedit->str, MAX_COMPLETIONS);
 
   g_ptr_array_add (fzf_argv, "/bin/sh");
@@ -379,11 +409,12 @@ pos_completer_fzf_init (PosCompleterFzf *self)
 
 /**
  * pos_completer_fzf_new:
+ * err: An error location
  *
  * Returns:(transfer full): A new completer
  */
 PosCompleter *
-pos_completer_fzf_new (void)
+pos_completer_fzf_new (GError **err)
 {
-  return POS_COMPLETER (g_object_new (POS_TYPE_COMPLETER_FZF, NULL));
+  return POS_COMPLETER (g_initable_new (POS_TYPE_COMPLETER_FZF, NULL, err, NULL));
 }

@@ -16,6 +16,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PosCompleterFzf, pos_completer_fzf, POS, COMPLETER_FZF, GObject)
 
-PosCompleter *pos_completer_fzf_new (void);
+PosCompleter *pos_completer_fzf_new (GError **error);
 
 G_END_DECLS
