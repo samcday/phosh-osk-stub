@@ -24,7 +24,6 @@ libpos_completer_presage_lib = static_library(
 libpos_completer_presage_dep = declare_dependency(
   include_directories: libpos_completer_includes,
   link_with: libpos_completer_presage_lib,
-  dependencies: libpos_deps,
 )
 
 if fzf.found()
@@ -50,8 +49,26 @@ if fzf.found()
   libpos_completer_fzf_dep = declare_dependency(
     include_directories: libpos_completer_includes,
     link_with: libpos_completer_fzf_lib,
-    dependencies: libpos_deps,
   )
 else
+  libpos_completer_fzf_sources = []
+  libpos_completer_fzf_lib = []
   libpos_completer_fzf_dep = declare_dependency()
 endif
+
+libpos_completers_sources = [
+  libpos_completer_fzf_sources,
+  libpos_completer_presage_sources,
+]
+
+libpos_completer_libs = [
+  libpos_completer_fzf_lib,
+  libpos_completer_presage_lib,
+]
+
+libpos_completers_dep = declare_dependency(
+  dependencies: [
+    libpos_completer_fzf_dep,
+    libpos_completer_presage_dep,
+  ]
+)

@@ -98,8 +98,7 @@ libpos_dep = declare_dependency(
   include_directories: pos_includes,
   link_with: pos_lib,
   dependencies: [libpos_deps,
-		 libpos_completer_fzf_dep,
-		 libpos_completer_presage_dep,
+		 libpos_completers_dep,
 		])
 
 executable('phosh-osk-stub',
@@ -111,10 +110,12 @@ executable('phosh-osk-stub',
 if get_option('gtk_doc')
   pos_gir_extra_args = [
     '--quiet',
-   ]
+  ]
 
-  pos_gir = gnome.generate_gir(pos_lib,
-                 sources: libpos_sources,
+  pos_gir = gnome.generate_gir([pos_lib,
+                                libpos_completer_libs,
+                               ],
+                 sources: [libpos_sources, libpos_completers_sources],
                nsversion: '0',
                namespace: 'Pos',
          export_packages: 'pos-0',
@@ -123,6 +124,6 @@ if get_option('gtk_doc')
                 includes: ['Gio-2.0', 'Gtk-3.0', 'Handy-1'],
                  install: false,
               extra_args: pos_gir_extra_args,
-            dependencies: libpos_dep,
+            dependencies: [libpos_dep, libpos_completers_dep],
    )
 endif
