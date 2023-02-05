@@ -229,7 +229,6 @@ on_fzf_exited (GPid pid, int status, gpointer user_data)
     return;
   }
 
-  //g_clear_pointer (&self->completions, g_strfreev);
   if (data->fzf_response->len) {
     g_auto (GStrv) completions = g_strsplit (data->fzf_response->str, "\n", -1);
     pos_completer_fzf_set_completions (POS_COMPLETER (data->completer), completions);
