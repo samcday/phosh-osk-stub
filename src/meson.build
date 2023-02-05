@@ -34,6 +34,8 @@ libpos_sources = files(
   'pos-char-popup.c',
   'pos-completer.h',
   'pos-completer.c',
+  'pos-completer-manager.h',
+  'pos-completer-manager.c',
   'pos-completion-bar.h',
   'pos-completion-bar.c',
   'pos-debug-widget.h',
