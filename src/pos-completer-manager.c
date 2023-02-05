@@ -10,6 +10,9 @@
 
 #include "pos-completer-manager.h"
 #include "completers/pos-completer-presage.h"
+#ifdef POS_HAVE_FZF
+# include "completers/pos-completer-fzf.h"
+#endif
 
 /**
  * PosCompleterManager:
@@ -94,10 +97,27 @@ static void
 pos_completer_manager_init (PosCompleterManager *self)
 {
   g_autoptr (GError) err = NULL;
+  const char *name = g_getenv ("POS_TEST_COMPLETER");
 
-  self->default_ = pos_completer_presage_new (&err);
-  if (self->default_ == NULL) {
-    g_critical ("Failed to init presage completer: %s", err->message);
+  name = name ?: "presage";
+  if (g_strcmp0 (name, "presage") == 0)
+    self->default_ = pos_completer_presage_new (&err);
+#ifdef POS_HAVE_FZF
+  else if (g_strcmp0 (name, "fzf") == 0)
+    self->default_ = pos_completer_fzf_new (&err);
+#endif
+  /* Other optional completer go here */
+
+  if (self->default_ != NULL)
+    return;
+
+  g_critical ("Failed to init '%s' completer: %s", name,
+              err ? err->message : "Completer does not exist");
+
+  /* Fall back to presage */
+  if (g_strcmp0 (name, "presage") != 0) {
+    g_clear_error (&err);
+    self->default_ = pos_completer_presage_new (&err);
   }
 }
 
