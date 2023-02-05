@@ -15,6 +15,7 @@
 #include "pos-emoji-picker.h"
 #include "pos-input-method.h"
 #include "pos-completer.h"
+#include "pos-completer-manager.h"
 #include "pos-completion-bar.h"
 #include "pos-input-surface.h"
 #include "pos-main.h"
@@ -38,6 +39,7 @@ enum {
   PROP_0,
   PROP_INPUT_METHOD,
   PROP_COMPLETER,
+  PROP_COMPLETER_MANAGER,
   PROP_SCREEN_KEYBOARD_ENABLED,
   PROP_KEYBOARD_DRIVER,
   PROP_SURFACE_VISIBLE,
@@ -104,6 +106,7 @@ struct _PosInputSurface {
   /* word completion */
   GtkWidget               *word_completion_btn;
   PosCompleter            *completer;
+  PosCompleterManager     *completer_manager;
   GtkWidget               *completion_bar;
   gboolean                 completion_enabled;
   PhoshOskCompletionModeFlags completion_mode;
@@ -698,6 +701,23 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
 }
 
 
+static void
+pos_input_surface_set_completer_manager (PosInputSurface     *self,
+                                         PosCompleterManager *completer_manager)
+{
+  PosCompleter *default_completer;
+
+  if (self->completer_manager == completer_manager)
+    return;
+
+  g_set_object (&self->completer_manager, completer_manager);
+
+  /* Update the current completer */
+  default_completer = pos_completer_manager_get_default_completer (self->completer_manager);
+  pos_input_surface_set_completer (self, default_completer);
+}
+
+
 static double
 reverse_ease_out_cubic (double t)
 {
@@ -734,8 +754,8 @@ pos_input_surface_set_property (GObject      *object,
     self->input_method = g_value_dup_object (value);
     pos_debug_widget_set_input_method (self->debug_widget, self->input_method);
     break;
-  case PROP_COMPLETER:
-    pos_input_surface_set_completer (self, g_value_get_object (value));
+  case PROP_COMPLETER_MANAGER:
+    pos_input_surface_set_completer_manager (self, g_value_get_object (value));
     break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     pos_screen_keyboard_set_enabled (self, g_value_get_boolean (value));
@@ -767,6 +787,9 @@ pos_input_surface_get_property (GObject    *object,
   switch (property_id) {
   case PROP_COMPLETER:
     g_value_set_object (value, self->completer);
+    break;
+  case PROP_COMPLETER_MANAGER:
+    g_value_set_object (value, self->completer_manager);
     break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     g_value_set_boolean (value, pos_input_surface_get_screen_keyboard_enabled (self));
@@ -962,6 +985,7 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->xkbinfo);
   g_clear_object (&self->css_provider);
   g_clear_object (&self->completer);
+  g_clear_object (&self->completer_manager);
   g_clear_pointer (&self->theme_name, g_free);
   g_clear_pointer (&self->osks, g_hash_table_destroy);
 
@@ -1162,14 +1186,25 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
                          POS_TYPE_INPUT_METHOD,
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+   /**
+    * PosInputSurface:completer:
+    *
+    * A completer implementing the #PosCompleter interface.
+    *
+    */
+   props[PROP_COMPLETER] =
+     g_param_spec_object ("completer", "", "",
+                          POS_TYPE_COMPLETER,
+                          G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   /**
-   * PosInputSurface:completer:
+   * PosInputSurface:completer-manager:
    *
-   * A completer implementing the #PosCompleter interface.
+   * A completer manager to use. It allows to query which implementation of
+   * [iface@Completer] to use.
    */
-  props[PROP_COMPLETER] =
-    g_param_spec_object ("completer", "", "",
-                         POS_TYPE_COMPLETER,
+  props[PROP_COMPLETER_MANAGER] =
+    g_param_spec_object ("completer-manager", "", "",
+                         POS_TYPE_COMPLETER_MANAGER,
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   /**
@@ -1198,7 +1233,6 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   props[PROP_COMPLETER_ACTIVE] =
     g_param_spec_boolean ("completer-active", "", "", FALSE,
                           G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
-
   /**
    * PosInputSurface:completion-enabled
    *
