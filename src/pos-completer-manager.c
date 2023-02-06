@@ -17,6 +17,9 @@
 #ifdef POS_HAVE_HUNSPELL
 # include "completers/pos-completer-hunspell.h"
 #endif
+#ifdef POS_HAVE_VARNAM
+# include "completers/pos-completer-varnam.h"
+#endif
 
 #include "contrib/util.h"
 
@@ -64,6 +67,10 @@ init_completer (const char *name, GError **err)
 #ifdef POS_HAVE_HUNSPELL
   else if (g_strcmp0 (name, "hunspell") == 0)
     return pos_completer_hunspell_new (err);
+#endif
+#ifdef POS_HAVE_VARNAM
+  else if (g_strcmp0 (name, "varnam") == 0)
+    return pos_completer_varnam_new (err);
 #endif
   /* Other optional completer go here */
   return NULL;
