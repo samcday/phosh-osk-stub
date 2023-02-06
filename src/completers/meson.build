@@ -83,15 +83,51 @@ else
   libpos_completer_fzf_dep = declare_dependency()
 endif
 
+if hunspell_dep.found()
+  #  hunspell based completer
+  libpos_completer_hunspell_sources = files(
+    'pos-completer-hunspell.h',
+    'pos-completer-hunspell.c',
+  )
+
+  libpos_completer_hunspell_deps = [
+    gio_dep,
+    glib_dep,
+    gtk_dep,
+    hunspell_dep,
+  ]
+
+  libpos_completer_hunspell_lib = static_library(
+    'pos-completer-hunspell',
+    libpos_completer_hunspell_sources,
+    include_directories: pos_includes,
+    c_args: ['-DPOS_HUNSPELL_DICT_PATH="@0@:@1@"'.format(
+      datadir / 'hunspell',
+      datadir / 'myspell')
+    ],
+    install: false,
+    dependencies: libpos_completer_hunspell_deps)
+
+  libpos_completer_hunspell_dep = declare_dependency(
+    include_directories: libpos_completer_includes,
+    link_with: libpos_completer_hunspell_lib,
+  )
+else
+  libpos_completer_hunspell_sources = []
+  libpos_completer_hunspell_lib = []
+  libpos_completer_hunspell_dep = declare_dependency()
+endif
 
 libpos_completers_sources = [
   libpos_completer_fzf_sources,
+  libpos_completer_hunspell_sources,
   libpos_completer_pipe_sources,
   libpos_completer_presage_sources,
 ]
 
 libpos_completer_libs = [
   libpos_completer_fzf_lib,
+  libpos_completer_hunspell_lib,
   libpos_completer_pipe_lib,
   libpos_completer_presage_lib,
 ]
@@ -99,6 +135,7 @@ libpos_completer_libs = [
 libpos_completers_dep = declare_dependency(
   dependencies: [
     libpos_completer_fzf_dep,
+    libpos_completer_hunspell_dep,
     libpos_completer_pipe_dep,
     libpos_completer_presage_dep,
   ]

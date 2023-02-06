@@ -14,6 +14,9 @@
 #ifdef POS_HAVE_FZF
 # include "completers/pos-completer-fzf.h"
 #endif
+#ifdef POS_HAVE_HUNSPELL
+# include "completers/pos-completer-hunspell.h"
+#endif
 
 #include "contrib/util.h"
 
@@ -55,6 +58,10 @@ init_completer (const char *name, GError **err)
 #ifdef POS_HAVE_FZF
   else if (g_strcmp0 (name, "fzf") == 0)
     return pos_completer_fzf_new (err);
+#endif
+#ifdef POS_HAVE_HUNSPELL
+  else if (g_strcmp0 (name, "hunspell") == 0)
+    return pos_completer_hunspell_new (err);
 #endif
   /* Other optional completer go here */
   return NULL;

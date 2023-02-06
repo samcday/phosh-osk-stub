@@ -114,12 +114,14 @@ xkbcommon_dep = dependency('xkbcommon')
 # For completion engines
 presage_dep = cc.find_library('presage')
 fzf = find_program('fzf', required: false)
+hunspell_dep = dependency('hunspell', required: false)
 
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 config_h.set('POS_HAVE_FZF', fzf.found())
+config_h.set('POS_HAVE_HUNSPELL', hunspell_dep.found())
 config_h.set_quoted('POS_DEFAULT_COMPLETER', 'presage')
 
 configure_file(
@@ -154,6 +156,7 @@ summary({
 summary({
     'Presage': presage_dep.found(),
     'Fzf': fzf.found(),
+    'Hunspell': hunspell_dep.found(),
   },
   bool_yn: true,
   section: 'Completers',
