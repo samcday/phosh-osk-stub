@@ -1420,6 +1420,11 @@ pos_input_surface_init (PosInputSurface *self)
                             self);
   on_completion_mode_changed (self, NULL, self->osk_settings);
 
+  pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
+                             _("Terminal"),
+                             "terminal",
+                             NULL,
+                             NULL);
   if (test_layout) {
     insert_layout (self, "xkb", test_layout);
   } else {
@@ -1438,8 +1443,6 @@ pos_input_surface_init (PosInputSurface *self)
   g_signal_connect_swapped (gtk_settings, "notify::gtk-theme-name",
                             G_CALLBACK (on_gtk_theme_name_changed), self);
   on_gtk_theme_name_changed (self, NULL, gtk_settings);
-
-  pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal), "Terminal", "terminal", NULL, NULL);
 
   self->clicked_id = g_signal_add_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), 0,
                                                  on_click_hook, self, NULL);
