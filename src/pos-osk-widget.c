@@ -359,14 +359,12 @@ get_key (PosOskWidget *self, const char *symbol, GStrv symbols, const char *labe
          const char *style, guint num_keys)
 {
   if (g_strcmp0 (symbol, " ") == 0) {
-    double width;
-
-    width = (num_keys == 5) ? 2.0 : 4.0;
     return g_object_new (POS_TYPE_OSK_KEY,
                          "label", self->display_name,
                          "symbol", symbol,
                          "symbols", symbols,
-                         "width", width,
+                         "width", 2.0,
+                         "expand", TRUE,
                          NULL);
   }
   return g_object_new (POS_TYPE_OSK_KEY,
@@ -460,6 +458,32 @@ parse_rows (PosOskWidget *self, PosOskWidgetKeyboardLayer *layer, JsonArray *row
     max_width = MAX (row->width, max_width);
   }
   layer->width = max_width;
+
+  /* If the row has a key that should be expanded use that one to fill
+     the maximum width */
+  for (int r = 0; r < num_rows; r++) {
+    PosOskWidgetRow *row = pos_osk_widget_get_layer_row (self, l, r);
+    PosOskKey *expand_key = NULL;
+
+    /* Find possible key to expand */
+    for (int k = 0; k < row->keys->len; k++) {
+      PosOskKey *key = g_ptr_array_index (row->keys, k);
+
+      if (pos_osk_key_get_expand (key)) {
+        expand_key = key;
+        break;
+      }
+    }
+
+    if (expand_key) {
+      float width = pos_osk_key_get_width (expand_key);
+      float expand = layer->width - row->width;
+      if (width > 0) {
+        pos_osk_key_set_width (expand_key, width + expand);
+        row->width += expand;
+      }
+    }
+  }
 
   /* We know the max width, now we can calculate offsets */
   for (int r = 0; r < num_rows; r++) {
