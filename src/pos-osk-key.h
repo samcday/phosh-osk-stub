@@ -27,6 +27,7 @@ G_DECLARE_FINAL_TYPE (PosOskKey, pos_osk_key, POS, OSK_KEY, GObject)
 
 
 PosOskKey          *pos_osk_key_new (const char *label);
+void                pos_osk_key_set_width (PosOskKey *self, double width);
 double              pos_osk_key_get_width (PosOskKey *self);
 PosOskKeyUse        pos_osk_key_get_use (PosOskKey *self);
 gboolean            pos_osk_key_get_pressed (PosOskKey *self);
