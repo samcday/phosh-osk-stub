@@ -37,5 +37,6 @@ PosOskWidgetLayer   pos_osk_key_get_layer (PosOskKey *self);
 GStrv               pos_osk_key_get_symbols (PosOskKey *self);
 void                pos_osk_key_set_box (PosOskKey *self, const GdkRectangle *box);
 const GdkRectangle *pos_osk_key_get_box (PosOskKey *self);
+gboolean            pos_osk_key_get_expand (PosOskKey *self);
 
 G_END_DECLS
