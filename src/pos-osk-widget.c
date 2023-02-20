@@ -312,7 +312,8 @@ add_common_keys_pre (PosOskWidget *self, PosOskWidgetRow *row, PosOskWidgetLayer
   switch (rownum) {
   case 2:
     /* Only add a shift key to the normal layer if we have a caps layer */
-    if (layer != POS_OSK_WIDGET_LAYER_NORMAL || self->layout.layers[POS_OSK_WIDGET_LAYER_CAPS].width > 0.0) {
+    if (layer != POS_OSK_WIDGET_LAYER_NORMAL ||
+        self->layout.layers[POS_OSK_WIDGET_LAYER_CAPS].width > 0.0) {
       key = g_object_new (POS_TYPE_OSK_KEY,
                           "use", POS_OSK_KEY_USE_TOGGLE,
                           "icon", "keyboard-shift-filled-symbolic",
