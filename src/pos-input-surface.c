@@ -1426,7 +1426,8 @@ pos_input_surface_init (PosInputSurface *self)
                              NULL,
                              NULL);
   if (test_layout) {
-    insert_layout (self, "xkb", test_layout);
+    PosOskWidget *osk_widget = insert_layout (self, "xkb", test_layout);
+    hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));
   } else {
     g_object_connect (self->input_settings,
                       "swapped-signal::changed::sources",
