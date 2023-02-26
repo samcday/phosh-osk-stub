@@ -28,6 +28,7 @@ Rules-Requires-Root: no
 Package: phosh-osk-stub
 Architecture: any
 Recommends:
+ fonts-noto-core,
  phosh-osk-data-eu,
 Depends:
  ${misc:Depends},
