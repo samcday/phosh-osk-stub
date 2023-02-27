@@ -27,6 +27,7 @@ G_DECLARE_FINAL_TYPE (PosOskKey, pos_osk_key, POS, OSK_KEY, GObject)
 
 
 PosOskKey          *pos_osk_key_new (const char *label);
+void                pos_osk_key_set_width (PosOskKey *self, double width);
 double              pos_osk_key_get_width (PosOskKey *self);
 PosOskKeyUse        pos_osk_key_get_use (PosOskKey *self);
 gboolean            pos_osk_key_get_pressed (PosOskKey *self);
@@ -37,5 +38,6 @@ PosOskWidgetLayer   pos_osk_key_get_layer (PosOskKey *self);
 GStrv               pos_osk_key_get_symbols (PosOskKey *self);
 void                pos_osk_key_set_box (PosOskKey *self, const GdkRectangle *box);
 const GdkRectangle *pos_osk_key_get_box (PosOskKey *self);
+gboolean            pos_osk_key_get_expand (PosOskKey *self);
 
 G_END_DECLS

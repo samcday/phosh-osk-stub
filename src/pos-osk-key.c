@@ -20,6 +20,7 @@ enum {
   PROP_ICON,
   PROP_STYLE,
   PROP_LAYER,
+  PROP_EXPAND,
   PROP_PRESSED,
   PROP_LAST_PROP
 };
@@ -42,6 +43,7 @@ struct _PosOskKey {
   char             *style;
   PosOskWidgetLayer layer;
   GdkRectangle      box;
+  gboolean          expand;
   gboolean          pressed;
 };
 G_DEFINE_TYPE (PosOskKey, pos_osk_key, G_TYPE_OBJECT)
@@ -60,7 +62,7 @@ pos_osk_key_set_property (GObject      *object,
     self->use = g_value_get_enum (value);
     break;
   case PROP_WIDTH:
-    self->width = g_value_get_double (value);
+    pos_osk_key_set_width (self, g_value_get_double (value));
     break;
   case PROP_SYMBOL:
     self->symbol = g_value_dup_string (value);
@@ -79,6 +81,9 @@ pos_osk_key_set_property (GObject      *object,
     break;
   case PROP_LAYER:
     self->layer = g_value_get_enum (value);
+    break;
+  case PROP_EXPAND:
+    self->expand = g_value_get_boolean (value);
     break;
   case PROP_PRESSED:
     pos_osk_key_set_pressed (self, g_value_get_boolean (value));
@@ -122,6 +127,9 @@ pos_osk_key_get_property (GObject    *object,
     break;
   case PROP_LAYER:
     g_value_set_enum (value, self->layer);
+    break;
+  case PROP_EXPAND:
+    g_value_set_boolean (value, self->expand);
     break;
   case PROP_PRESSED:
     g_value_set_boolean (value, self->pressed);
@@ -179,7 +187,7 @@ pos_osk_key_class_init (PosOskKeyClass *klass)
                          1.0,
                          10.0,
                          1.0,
-                         G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   /**
    * PosOskKey:symbol
    *
@@ -248,6 +256,17 @@ pos_osk_key_class_init (PosOskKeyClass *klass)
                        FALSE,
                        G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   /**
+   * PosOskKey:expand
+   *
+   * Whether the key expands to use free space in available in a row
+   */
+  props[PROP_EXPAND] =
+    g_param_spec_boolean ("expand",
+                          "",
+                          "",
+                          FALSE,
+                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  /**
    * PosOskKey:pressed
    *
    * Whether the key is currently pressed
@@ -277,6 +296,18 @@ pos_osk_key_new (const char *symbol)
 {
   return POS_OSK_KEY (g_object_new (POS_TYPE_OSK_KEY, "symbol", symbol, NULL));
 }
+
+
+void
+pos_osk_key_set_width (PosOskKey *self, double width)
+{
+  g_return_if_fail (POS_IS_OSK_KEY (self));
+  g_return_if_fail (width > 0.0);
+
+  self->width = width;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_WIDTH]);
+}
+
 
 double
 pos_osk_key_get_width (PosOskKey *self)
@@ -376,4 +407,12 @@ pos_osk_key_get_box (PosOskKey *self)
   g_return_val_if_fail (POS_IS_OSK_KEY (self), NULL);
 
   return &self->box;
+}
+
+gboolean
+pos_osk_key_get_expand (PosOskKey *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_KEY (self), FALSE);
+
+  return self->expand;
 }
