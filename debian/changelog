@@ -1,3 +1,51 @@
+phosh-osk-stub (0.25.0) experimental; urgency=medium
+
+  * shortcuts-bar: Don't change background on hover
+  * shortcuts-bar: Allow shortcuts to have different width.
+    Ctrl+Shift+a takes considerably more space than e.g. Ctrl-a
+    and as we want as many shortcuts in reach as possible allow
+    for different sizes.
+    Use slightly larger padding to make things not look too crammed.
+  * shortcuts-bar: Make scrollbar consistent with emoji picker scrollbar
+  * input-surface: Disable layout switching via swipe gesture by default.
+    It's confusing to users and we have a popover now and copy/paste buttons
+    can be added to the terminal shortcuts bar.
+  * osk-stub: Allow to enable debug surface.
+    We simply do this by allowing swipes.
+  * doc: Link to GTK docs for valid accelerator values
+  * news: Fix wording
+  * input-surface: Set the terminal layout early.
+    Just so we have layout setting closer together
+  * input-surface: Mark Terminal display name as translatable
+  * build: Drop config.h template.
+    Extra effort to keep it in sync when adding
+    new configuration data.
+  * layouts/terminal: Make special shell characters easier to reach.
+    The often needed ones should now be reachable via the first symbol level
+    or a popover on the default level.
+  * input-surface: Make sure we select the test layout.
+    We want it visible right away.
+  * Add helper to screenshot all language layouts.
+    We screenshot at the 360x720, this can be changed by giving another
+    phoc.ini
+    Somewhat based on phosh's (long retired) smoketest:
+  * packaging: Recommend fonts-noto-core.
+    Otherwise we lack characters like the tab key
+  * osk-key: Add expand property.
+    This allows a key to take up extra horizontal space in a row.
+  * osk-key: Allow to modify key width.
+    So far it was construct-only but we want to fix it up later on.
+  * osk-widget: Break overly long line
+  * osk-widget: Allow space bar to take extra horizontal space.
+    Instead of hardcoding a few values based on the number of keys rather
+    expand to the maximum width.
+    This avoids that the keys to switch layers jump around a lot based on
+    the with of the space key. It's still not perfect in layouts that use
+    11 keys in the `normal` layer but 10 keys in the `symbols` layer (e.g.
+    Swedish).
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 27 Feb 2023 09:30:12 +0100
+
 phosh-osk-stub (0.24.0) experimental; urgency=medium
 
   [ Guido Günther ]
