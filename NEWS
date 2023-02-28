@@ -1,3 +1,13 @@
+phosh-osk-stub 0.25.0
+---------------------
+Released: January 2023
+* Make sure space bar gets all available horizontal space
+* Terminal: Fit more shortcuts into the shortcuts row
+* Terminal: Make frequently used shell characters easier to reach
+* Disable layout switching via swipes by default
+* Contributors:
+    * Guido Günther
+
 phosh-osk-stub 0.24.0
 ---------------------
 Released: January 2023
