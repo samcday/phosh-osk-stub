@@ -5,11 +5,11 @@
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
 
-  <name>phosh</name>
-  <shortname>phosh</shortname>
+  <name>phosh-osk-stub</name>
+  <shortname>phosh-osk-stub</shortname>
   <shortdesc>An on screen keyboard stub for Phosh</shortdesc>
-  <description>A debugging tool for keyboard and input related issues
-  in phosh.</description>
+  <description>An experimental On Screen Keyboard and debugging tool
+   for keyboard and input related issues in phosh.</description>
   <homepage rdf:resource="https://gitlab.gnome.org/World/Phosh/phosh/" />
   <license rdf:resource="http://usefulinc.com/doap/licenses/gpl" />
 
@@ -20,13 +20,6 @@
       <foaf:name>Guido Günther</foaf:name>
       <foaf:mbox rdf:resource="mailto:agx@sigxcpu.org" />
       <gnome:userid>guidog</gnome:userid>
-    </foaf:Person>
-  </maintainer>
-  <maintainer>
-    <foaf:Person>
-      <foaf:name>Zander Brown</foaf:name>
-      <foaf:mbox rdf:resource="mailto:zbrown@gnome.org" />
-      <gnome:userid>zbrown</gnome:userid>
     </foaf:Person>
   </maintainer>
 </Project>
