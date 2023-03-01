@@ -23,7 +23,7 @@ trap cleanup EXIT
 
 mkdir -p "$WORKDIR"
 screen="360x720@1"
-WLR_BACKENDS=wayland phoc -C "${PHOC_INI}" \
+WLR_BACKENDS=headless phoc -C "${PHOC_INI}" \
      -E "printenv | grep WAYLAND_DISPLAY= > ${WORKDIR}/wl-info; swaybg ${BG_OPTS}" &
 PHOC_PID=$!
 
