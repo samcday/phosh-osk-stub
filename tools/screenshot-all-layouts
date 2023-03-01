@@ -9,7 +9,7 @@
 set -e
 
 WORKDIR=_build/screenshots
-PHOC_INI=${PHOC_INI:/usr/share/phosh/phoc.ini}
+PHOC_INI=${PHOC_INI:-/usr/share/phosh/phoc.ini}
 
 function cleanup()
 {
