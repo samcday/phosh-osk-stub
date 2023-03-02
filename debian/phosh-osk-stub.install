@@ -1,3 +1,4 @@
 usr/bin/phosh-osk-stub
 usr/share/glib-2.0/schemas/
+usr/share/metainfo/
 usr/share/applications/*.desktop usr/share/phosh-osk-stub/

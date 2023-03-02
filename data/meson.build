@@ -1,8 +1,10 @@
 desktop_file = 'sm.puri.OSK0.desktop'
 target = 'sm.puri.OSK0.desktop'
 
+app_id = 'sm.puri.Phosh.OskStub'
+
 if get_option('default_osk') == false
-  target = 'sm.puri.Phosh.OskStub.desktop'
+  target = '@0@.desktop'.format(app_id)
 endif
 
 desktopconf = configuration_data()
@@ -57,3 +59,17 @@ install_data(
   install_dir: schemasdir
 )
 
+appstream_file = i18n.merge_file(
+  input: '@0@.metainfo.xml.in'.format(app_id),
+  output: '@0@.metainfo.xml'.format(app_id),
+  po_dir: '../po',
+  install: true,
+  install_dir: join_paths(get_option('datadir'), 'metainfo')
+)
+
+appstream_util = find_program('appstreamcli', required: false)
+if appstream_util.found()
+  test('Validate appstream file', appstream_util,
+    args: ['validate', '--no-net', appstream_file]
+  )
+endif

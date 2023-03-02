@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>sm.puri.Phosh.OskStub.desktop</id>
+  <name>Phosh Osk Stub</name>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      Phosh-osk-stub is an experimental on screen keyboard with these features:
+    </p>
+    <ul>
+      <li>Character popovers</li>
+      <li>Experimental word completion</li>
+      <li>Gesture based cursor movement</li>
+      <li>Lots of emojies 😀</li>
+      <li>Debug mode to debug text-input/input-mehtod issues</li>
+      <li>More than 30 different layouts</li>
+      <li>Configurable short cuts in terminal layout</li>
+    </ul>
+    <p>
+      Phosh-osk-stub is still in development. Use with care.
+    </p>
+  </description>
+  <summary>An experimental On Screen Keyboard and debug tool</summary>
+
+  <content_rating type="oars-1.1"/>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </recommends>
+
+  <url type="homepage">https://gitlab.gnome.org//guidog/phosh-osk-stub</url>
+  <url type="bugtracker">https://gitlab.gnome.org//guidog/phosh-osk-stub</url>
+
+  <launchable type="desktop-id">sm.puri.Phosh.OskStub.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Character Popover</caption>
+      <image>https://gitlab.gnome.org//guidog/phosh-osk-stub/-/raw/main/screenshots/pos-popover.png?inline=false</image>
+    </screenshot>
+    <screenshot type="default">
+      <caption>Emoji Layout</caption>
+      <image>https://gitlab.gnome.org//guidog/phosh-osk-stub/-/raw/main/screenshots/pos-emoji.png?inline=false</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="0.25.0" date="2023-02-28">
+      <description>
+        <ul>
+          <li>Use maximum width for space bar</li>
+          <li>Fit more shortcuts into the shortcuts bar</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>
