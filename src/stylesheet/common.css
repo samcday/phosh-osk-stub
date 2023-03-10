@@ -117,7 +117,7 @@ pos-shortcuts-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
-pos-shortcuts-barscrollbar {
+pos-shortcuts-bar scrollbar {
   background-color: transparent;
   border: none;
   transition: none;
