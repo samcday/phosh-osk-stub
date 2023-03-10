@@ -50,6 +50,9 @@ pos-key.return.pressed {
   color: alpha(@theme_selected_fg_color, 0.8);
 }
 
+/*
+ * character popover
+ */
 pos-char-popup {
   font-family: cantarell, sans-serif;
 
@@ -81,6 +84,9 @@ pos-char-popup button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
+/*
+ * completion bar
+ */
 pos-completion-bar button {
   color: @pos_fg_color;
   background: @pos_bg_color;
@@ -93,10 +99,16 @@ pos-completion-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
+/*
+ * menu popup
+ */
 #pos-menu-popup modelbutton {
   padding: 5px 10px 5px 10px;
 }
 
+/*
+ * shortcuts bar
+ */
 pos-shortcuts-bar button {
   color: @pos_fg_color;
   background: shade(@pos_key_bg_color, 0.75);
