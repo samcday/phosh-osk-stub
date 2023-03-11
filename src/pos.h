@@ -10,6 +10,7 @@
 G_BEGIN_DECLS
 
 #include "pos-main.h"
+#include "pos-completer-manager.h"
 #include "pos-enums.h"
 #include "pos-osk-dbus.h"
 #include "pos-input-method.h"

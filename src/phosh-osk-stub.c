@@ -10,7 +10,6 @@
 
 #include "pos-config.h"
 #include "pos.h"
-#include "completers/pos-completer-presage.h"
 
 #include "input-method-unstable-v2-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
@@ -248,7 +247,7 @@ create_input_surface (struct wl_seat                         *seat,
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
-  g_autoptr (PosCompleter) completer = NULL;
+  g_autoptr (PosCompleterManager) completer_manager = NULL;
   g_autoptr (GError) err = NULL;
   gboolean force_completion;
 
@@ -260,10 +259,7 @@ create_input_surface (struct wl_seat                         *seat,
 
   virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
-  completer = pos_completer_presage_new (&err);
-  if (completer == NULL) {
-    g_critical ("Failed to init completer: %s", err->message);
-  }
+  completer_manager = pos_completer_manager_new ();
 
   im = pos_input_method_new (im_manager, seat);
 
@@ -282,7 +278,7 @@ create_input_surface (struct wl_seat                         *seat,
                                  /* pos-input-surface */
                                  "input-method", im,
                                  "keyboard-driver", vk_driver,
-                                 "completer", completer,
+                                 "completer-manager", completer_manager,
                                  "completion-enabled", force_completion,
                                  NULL);
 
