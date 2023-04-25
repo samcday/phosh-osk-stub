@@ -111,9 +111,11 @@ ENVIRONMENT VARIABLES
     GSetting is usually managed by the user and Phosh.
   - ``force-completion``: Force text completion to ignoring the `completion-mode` GSetting.
 - ``POS_TEST_LAYOUT``: Load the given layout instead of the ones configured via GSetting.
-  The available values depend on how phosh-osk-stub was built. Available are currently at most
-  ``presage`` (default completer), ``fzf`` (only useful for experiments)
 - ``POS_TEST_COMPLETER``: Use the given completer instead of the configured ones.
+  The available values depend on how phosh-osk-stub was built. Available are currently at most
+
+  - ``presage``: default completer based on presarge libarary
+  - ``fzf``: Completer based on fzf command line tool (only useful for experiments
 - ``G_MESSAGES_DEBUG``, ``G_DEBUG`` and other environment variables supported
   by glib. https://docs.gtk.org/glib/running.html
 - ``GTK_DEBUG`` and other environment variables supported by GTK, see
