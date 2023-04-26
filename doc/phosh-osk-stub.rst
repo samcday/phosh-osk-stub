@@ -115,6 +115,7 @@ ENVIRONMENT VARIABLES
   The available values depend on how phosh-osk-stub was built. Available are currently at most
 
   - ``presage``: default completer based on presarge libarary
+  - ``pipe``: completer using a pipe, see the ``sm.puri.phosh.osk.Completers.Pipe`` ``command`` gsetting
   - ``fzf``: Completer based on fzf command line tool (only useful for experiments
 - ``G_MESSAGES_DEBUG``, ``G_DEBUG`` and other environment variables supported
   by glib. https://docs.gtk.org/glib/running.html

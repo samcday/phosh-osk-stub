@@ -10,6 +10,7 @@
 
 #include "pos-completer-manager.h"
 #include "completers/pos-completer-presage.h"
+#include "completers/pos-completer-pipe.h"
 #ifdef POS_HAVE_FZF
 # include "completers/pos-completer-fzf.h"
 #endif
@@ -102,6 +103,8 @@ pos_completer_manager_init (PosCompleterManager *self)
   name = name ?: "presage";
   if (g_strcmp0 (name, "presage") == 0)
     self->default_ = pos_completer_presage_new (&err);
+  else if (g_strcmp0 (name, "pipe") == 0)
+    self->default_ = pos_completer_pipe_new (&err);
 #ifdef POS_HAVE_FZF
   else if (g_strcmp0 (name, "fzf") == 0)
     self->default_ = pos_completer_fzf_new (&err);

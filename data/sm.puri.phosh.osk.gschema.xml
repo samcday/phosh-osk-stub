@@ -34,4 +34,15 @@
     </key>
   </schema>
 
+  <schema id='sm.puri.phosh.osk.Completers.Pipe'
+          path='/sm/puri/phosh/osk/completers/pipe/'>
+    <key name='command' type='s'>
+      <default>'cat'</default>
+      <summary>The command to use for the pipe based completer. The given command should read
+        the preedit from standard input and output possible completions newline seperated on stdout.
+      </summary>
+      <description/>
+    </key>
+  </schema>
+
 </schemalist>
