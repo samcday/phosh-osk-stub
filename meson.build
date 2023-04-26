@@ -17,7 +17,6 @@ pkgdatadir = join_paths(datadir, meson.project_name())
 pkglibdir = join_paths(libdir, meson.project_name())
 systemddir = join_paths(prefix, 'lib/systemd')
 systemduserdir = join_paths(systemddir, 'user')
-presagedictdir = datadir / 'phosh' / 'osk' / 'presage'
 schemasdir = datadir / 'glib-2.0' / 'schemas'
 
 glib_ver = '2.66'
@@ -120,7 +119,6 @@ config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
-config_h.set_quoted('PRESAGE_DICT_DIR', presagedictdir)
 config_h.set('POS_HAVE_FZF', fzf.found())
 
 configure_file(

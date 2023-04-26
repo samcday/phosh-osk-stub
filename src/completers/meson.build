@@ -19,6 +19,7 @@ libpos_completer_presage_lib = static_library(
   include_directories: pos_includes,
   install: false,
   dependencies: libpos_completer_presage_deps,
+  c_args: ['-DPRESAGE_DICT_DIR="@0@"'.format(datadir / 'phosh' / 'osk' / 'presage')],
   override_options : ['cpp_std=c++11'])
 
 libpos_completer_presage_dep = declare_dependency(
