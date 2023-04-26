@@ -6,14 +6,14 @@
   <project_license>GPL-3.0-or-later</project_license>
   <description>
     <p>
-      Phosh-osk-stub is an experimental on screen keyboard with these features:
+      Phosh-osk-stub is an <em>experimental</em> on screen keyboard with these features:
     </p>
     <ul>
       <li>Character popovers</li>
-      <li>Experimental word completion</li>
+      <li>Word completion</li>
       <li>Gesture based cursor movement</li>
-      <li>Lots of emojies 😀</li>
-      <li>Debug mode to debug text-input/input-mehtod issues</li>
+      <li>Lots of emojis 😀</li>
+      <li>Debug mode to debug text-input/input-method issues</li>
       <li>More than 30 different layouts</li>
       <li>Configurable short cuts in terminal layout</li>
     </ul>
@@ -51,6 +51,17 @@
   </screenshots>
 
   <releases>
+    <release version="0.27.0" date="2023-04-30">
+      <description>
+        <p>This version adds support for two new completion engines</p>
+        <ul>
+          <li>Allow to select default completer via GSetting or environment variable</li>
+          <li>Add typo correction completer using hunspell</li>
+          <li>Add Unix pipe like completer</li>
+          <li>Some style fixes</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.25.0" date="2023-02-28">
       <description>
         <ul>

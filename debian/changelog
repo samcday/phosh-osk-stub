@@ -1,3 +1,73 @@
+phosh-osk-stub (0.27.0) experimental; urgency=medium
+
+  * Update doap file.
+    Fix some copy and paste errors when bringing that one in from
+    phosh.
+  * Add appstream metainfo
+  * tools: Properly pick up default phoc.ini
+  * tools: Use headless backend for screenshots.
+    No need to bring up a window on the host and this way it's
+    simpler in CI.
+  * build: Detect available completers.
+    The check for fzf is actually a runtime check but use it as this is
+    solely for testing we assume built-time env == runtime env.
+    We don't break any existing configurations since switching completers
+    needed code changes anyway.
+  * Add completer-manager.
+    This class is responsible for mapping completion engines to keyboard
+    layouts / locales.
+    It keeps the input-surface clear from any knowledge about which
+    completers are available.
+    This introduces the minimal object which just returns the presage
+    completer. The next commits will then add more completers.
+  * input-surface: Hook up completer-manager.
+    This already allows to switch the default completer via an environment
+    variable.
+  * completers/fzf: Drop commented out code
+  * completers/fzf: Take an error location and use initable.
+    This makes completers consistent. We use that as an opportunity to check
+    if the word list is present.
+  * completer-manager: Allow to select completer via POS_TEST_COMPLETER.
+    This moves the default completer from compile time to program startup
+    time.
+  * Use a common dependency for all completers.
+    This way we can keep the knowledge about available completers in
+    completers/ (and PosCompleterManager).
+  * shortcutsbar: Make css actually apply
+  * css: Add section markers
+  * doc: Fix POS_TEST_COMPLETER docs.
+    The value descriptions ended up in the wrong place.
+  * completers: Add unix pipe like completer.
+    The completer gets the current preedit on stdin and can output a list of
+    completions. We default to `cat` which just offers the current preedit
+    as completion.
+  * input-surface: Don't leak completions pos_completer_get_completions is
+    "transfer: full"
+  * completion-bar: Use a bold font for suggestions.  Makes them a bit more
+    prominent
+  * pipe: Only force kill command if still running
+  * build: Move presage definitions to completers
+  * completers: Make name a r/o property and set it
+  * completer-manager: Allow to set default completer via GSetting.  Keep
+    presage as the default.
+  * osk-widget: Set language and region.  This corresponds the parts of a unix
+    locale like <lang>_<region> although we use all lowercase.
+  * completer: Split language and region.  This avoids leaking implementation
+    details of the layouts into the completer.
+  * input-surface: No need to switch language when switching to terminal
+  * ci: Switch to image with libhunspell-dev
+  * packaging: Enable hunspell completer.
+    It's easier to set up than presage and pretty useful in en-us at least.
+  * completers: Add simple hunspell completer.
+  * Allow to use either hunspell or presage.
+    We prefer hunspell atm. Later on we want presage and hunspell active
+    at the same time.
+  * doc: Update manpage.
+    Document gsettings, mark completion in general as no longer
+    experimental.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 26 Apr 2023 11:34:01 +0200
+
 phosh-osk-stub (0.25.0) experimental; urgency=medium
 
   * shortcuts-bar: Don't change background on hover
