@@ -75,7 +75,7 @@ pos_completer_default_init (PosCompleterInterface *iface)
    * The name of this completer
    */
   g_object_interface_install_property (
-    iface, g_param_spec_string ("name", "", "", NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+    iface, g_param_spec_string ("name", "", "", NULL, G_PARAM_READABLE));
 
   /**
    * PosCompleter:preedit:
@@ -154,6 +154,24 @@ pos_completer_default_init (PosCompleterInterface *iface)
                 G_TYPE_UINT);
 }
 
+/**
+ * pos_completer_get_name:
+ * @self: the completer
+ *
+ * Returns the completers name
+ *
+ * Returns: (transfer none): the name
+ */
+const char *
+pos_completer_get_name (PosCompleter *self)
+{
+  PosCompleterInterface *iface;
+
+  g_return_val_if_fail (POS_IS_COMPLETER (self), NULL);
+
+  iface = POS_COMPLETER_GET_IFACE (self);
+  return iface->get_name (self);
+}
 
 /**
  * pos_completer_feed_symbol:

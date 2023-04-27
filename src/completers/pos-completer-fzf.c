@@ -142,9 +142,6 @@ pos_completer_fzf_set_property (GObject      *object,
   PosCompleterFzf *self = POS_COMPLETER_FZF (object);
 
   switch (property_id) {
-  case PROP_NAME:
-    self->name = g_value_dup_string (value);
-    break;
   case PROP_PREEDIT:
     pos_completer_fzf_set_preedit (POS_COMPLETER (self), g_value_get_string (value));
     break;
@@ -191,7 +188,6 @@ pos_completer_fzf_finalize (GObject *object)
 {
   PosCompleterFzf *self = POS_COMPLETER_FZF(object);
 
-  g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->completions, g_strfreev);
   g_string_free (self->preedit, TRUE);
 
@@ -308,6 +304,13 @@ pos_completer_fzf_initable_interface_init (GInitableIface *iface)
   iface->init = pos_completer_fzf_initable_init;
 }
 
+static const char *
+pos_completer_fzf_get_name (PosCompleter *iface)
+{
+  PosCompleterFzf *self = POS_COMPLETER_FZF (iface);
+
+  return self->name;
+}
 
 static gboolean
 pos_completer_fzf_feed_symbol (PosCompleter *iface, const char *symbol)
@@ -394,6 +397,7 @@ pos_completer_fzf_feed_symbol (PosCompleter *iface, const char *symbol)
 static void
 pos_completer_fzf_interface_init (PosCompleterInterface *iface)
 {
+  iface->get_name = pos_completer_fzf_get_name;
   iface->feed_symbol = pos_completer_fzf_feed_symbol;
   iface->get_preedit = pos_completer_fzf_get_preedit;
   iface->set_preedit = pos_completer_fzf_set_preedit;
@@ -405,6 +409,7 @@ pos_completer_fzf_init (PosCompleterFzf *self)
 {
   self->max_completions = MAX_COMPLETIONS;
   self->preedit = g_string_new (NULL);
+  self->name = "fzf";
 }
 
 /**

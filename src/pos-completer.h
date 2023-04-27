@@ -42,6 +42,7 @@ struct _PosCompleterInterface
 {
   GTypeInterface parent_iface;
 
+  const char *   (*get_name)    (PosCompleter *self);
   gboolean       (*feed_symbol) (PosCompleter *self, const char *symbol);
   const char *   (*get_preedit) (PosCompleter *self);
   void           (*set_preedit) (PosCompleter *self, const char *preedit);
@@ -54,6 +55,7 @@ struct _PosCompleterInterface
 };
 
 /* Used by completion users */
+const char    *pos_completer_get_name (PosCompleter *self);
 gboolean       pos_completer_feed_symbol (PosCompleter *self, const char *symbol);
 GStrv          pos_completer_get_completions (PosCompleter *self);
 const char    *pos_completer_get_preedit (PosCompleter *self);

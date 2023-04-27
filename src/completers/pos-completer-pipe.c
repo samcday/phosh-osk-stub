@@ -111,9 +111,6 @@ pos_completer_pipe_set_property (GObject      *object,
   PosCompleterPipe *self = POS_COMPLETER_PIPE (object);
 
   switch (property_id) {
-  case PROP_NAME:
-    self->name = g_value_dup_string (value);
-    break;
   case PROP_PREEDIT:
     pos_completer_pipe_set_preedit (POS_COMPLETER (self), g_value_get_string (value));
     break;
@@ -165,7 +162,6 @@ pos_completer_pipe_finalize (GObject *object)
   g_cancellable_cancel (self->cancel);
   g_clear_object (&self->cancel);
   g_clear_object (&self->proc);
-  g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->command, g_strfreev);
   g_clear_pointer (&self->completions, g_strfreev);
   g_string_free (self->preedit, TRUE);
@@ -260,6 +256,15 @@ pos_completer_pipe_initable_interface_init (GInitableIface *iface)
 }
 
 
+static const char *
+pos_completer_pipe_get_name (PosCompleter *iface)
+{
+  PosCompleterPipe *self = POS_COMPLETER_PIPE (iface);
+
+  return self->name;
+}
+
+
 static void
 on_communicate_finish (GObject *source, GAsyncResult *res, gpointer user_data)
 {
@@ -351,6 +356,7 @@ pos_completer_pipe_feed_symbol (PosCompleter *iface, const char *symbol)
 static void
 pos_completer_pipe_interface_init (PosCompleterInterface *iface)
 {
+  iface->get_name = pos_completer_pipe_get_name;
   iface->feed_symbol = pos_completer_pipe_feed_symbol;
   iface->get_preedit = pos_completer_pipe_get_preedit;
   iface->set_preedit = pos_completer_pipe_set_preedit;
@@ -362,6 +368,7 @@ pos_completer_pipe_init (PosCompleterPipe *self)
 {
   self->preedit = g_string_new (NULL);
   self->cancel = g_cancellable_new ();
+  self->name = "pipe";
 
   self->settings = g_settings_new ("sm.puri.phosh.osk.Completers.Pipe");
 }

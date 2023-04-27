@@ -262,9 +262,6 @@ pos_completer_presage_set_property (GObject      *object,
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (object);
 
   switch (property_id) {
-  case PROP_NAME:
-    self->name = g_value_dup_string (value);
-    break;
   case PROP_PREEDIT:
     pos_completer_presage_set_preedit (POS_COMPLETER (self), g_value_get_string (value));
     break;
@@ -311,7 +308,6 @@ pos_completer_presage_finalize (GObject *object)
 {
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (object);
 
-  g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->completions, g_strfreev);
   g_string_free (self->preedit, TRUE);
   g_clear_pointer (&self->before_text, g_free);
@@ -416,6 +412,15 @@ pos_completer_presage_initable_interface_init (GInitableIface *iface)
 }
 
 
+static const char *
+pos_completer_presage_get_name (PosCompleter *iface)
+{
+  PosCompleterPresage *self = POS_COMPLETER_PRESAGE (iface);
+
+  return self->name;
+}
+
+
 static gboolean
 pos_completer_presage_feed_symbol (PosCompleter *iface, const char *symbol)
 {
@@ -442,6 +447,7 @@ pos_completer_presage_feed_symbol (PosCompleter *iface, const char *symbol)
 static void
 pos_completer_presage_interface_init (PosCompleterInterface *iface)
 {
+  iface->get_name = pos_completer_presage_get_name;
   iface->feed_symbol = pos_completer_presage_feed_symbol;
   iface->get_preedit = pos_completer_presage_get_preedit;
   iface->set_preedit = pos_completer_presage_set_preedit;
@@ -457,6 +463,7 @@ pos_completer_presage_init (PosCompleterPresage *self)
 {
   self->max_completions = MAX_COMPLETIONS;
   self->preedit = g_string_new (NULL);
+  self->name = "presage";
 }
 
 /**
