@@ -104,7 +104,7 @@ pos_completion_bar_set_completions (PosCompletionBar *self, GStrv completions)
                         "child", lbl,
                         "visible", TRUE,
                         NULL);
-    g_object_set_data_full (G_OBJECT (btn), "pos-text", completions[i], g_free);
+    g_object_set_data_full (G_OBJECT (btn), "pos-text", g_strdup (completions[i]), g_free);
 
     g_signal_connect_swapped (btn, "clicked", G_CALLBACK (on_button_clicked), self);
     gtk_container_add (GTK_CONTAINER (self->buttons), btn);

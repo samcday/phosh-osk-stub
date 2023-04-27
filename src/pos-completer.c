@@ -182,7 +182,7 @@ pos_completer_feed_symbol (PosCompleter *self, const char *symbol)
  *
  * Returns the current possible completions.
  *
- * Returns: (transfer none): the completions
+ * Returns: (transfer full): the completions
  */
 GStrv
 pos_completer_get_completions (PosCompleter *self)
