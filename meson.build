@@ -120,6 +120,7 @@ config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
 config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 config_h.set('POS_HAVE_FZF', fzf.found())
+config_h.set_quoted('POS_DEFAULT_COMPLETER', 'presage')
 
 configure_file(
   output: 'pos-config.h',
