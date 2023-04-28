@@ -1,32 +1,37 @@
 libpos_completer_includes = include_directories('.')
 
-# Presage based completer
-libpos_completer_presage_sources = files(
-  'pos-completer-presage.h',
-  'pos-completer-presage.c',
-)
+if presage_dep.found()
+  # Presage based completer
+  libpos_completer_presage_sources = files(
+    'pos-completer-presage.h',
+    'pos-completer-presage.c',
+  )
 
-libpos_completer_presage_deps = [
-  gio_dep,
-  glib_dep,
-  gtk_dep,
-  presage_dep,
-]
+  libpos_completer_presage_deps = [
+    gio_dep,
+    glib_dep,
+    gtk_dep,
+    presage_dep,
+  ]
 
-libpos_completer_presage_lib = static_library(
-  'pos-completer-presage',
-  libpos_completer_presage_sources,
-  include_directories: pos_includes,
-  install: false,
-  dependencies: libpos_completer_presage_deps,
-  c_args: ['-DPRESAGE_DICT_DIR="@0@"'.format(datadir / 'phosh' / 'osk' / 'presage')],
-  override_options : ['cpp_std=c++11'])
+  libpos_completer_presage_lib = static_library(
+    'pos-completer-presage',
+    libpos_completer_presage_sources,
+    include_directories: pos_includes,
+    install: false,
+    dependencies: libpos_completer_presage_deps,
+    c_args: ['-DPRESAGE_DICT_DIR="@0@"'.format(datadir / 'phosh' / 'osk' / 'presage')],
+    override_options : ['cpp_std=c++11'])
 
-libpos_completer_presage_dep = declare_dependency(
-  include_directories: libpos_completer_includes,
-  link_with: libpos_completer_presage_lib,
-)
-
+  libpos_completer_presage_dep = declare_dependency(
+    include_directories: libpos_completer_includes,
+    link_with: libpos_completer_presage_lib,
+  )
+else
+  libpos_completer_presage_sources = []
+  libpos_completer_presage_lib = []
+  libpos_completer_presage_dep = declare_dependency()
+endif
 
 #  pipe like completer
 libpos_completer_pipe_sources = files(

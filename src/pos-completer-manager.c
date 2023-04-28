@@ -51,10 +51,12 @@ G_DEFINE_TYPE (PosCompleterManager, pos_completer_manager, G_TYPE_OBJECT)
 static PosCompleter *
 init_completer (const char *name, GError **err)
 {
-  if (g_strcmp0 (name, "presage") == 0)
-    return pos_completer_presage_new (err);
-  else if (g_strcmp0 (name, "pipe") == 0)
+  if (g_strcmp0 (name, "pipe") == 0)
     return pos_completer_pipe_new (err);
+#ifdef POS_HAVE_PRESAGE
+  else if (g_strcmp0 (name, "presage") == 0)
+    return pos_completer_presage_new (err);
+#endif
 #ifdef POS_HAVE_FZF
   else if (g_strcmp0 (name, "fzf") == 0)
     return pos_completer_fzf_new (err);

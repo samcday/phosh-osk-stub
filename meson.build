@@ -112,9 +112,17 @@ wayland_protos_dep = dependency('wayland-protocols', version: '>=1.12')
 xkbcommon_dep = dependency('xkbcommon')
 
 # For completion engines
-presage_dep = cc.find_library('presage')
-fzf = find_program('fzf', required: false)
 hunspell_dep = dependency('hunspell', required: false)
+fzf = find_program('fzf', required: false)
+presage_dep = cc.find_library('presage', required: false)
+
+if hunspell_dep.found()
+  default_completer = 'hunspell'
+elif presage_dep.found()
+  default_completer = 'presage'
+else
+  error('No usable completer found')
+endif
 
 config_h = configuration_data()
 config_h.set_quoted('GETTEXT_PACKAGE', 'phosh-osk-stub')
@@ -122,7 +130,8 @@ config_h.set_quoted('LOCALEDIR', localedir)
 config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 config_h.set('POS_HAVE_FZF', fzf.found())
 config_h.set('POS_HAVE_HUNSPELL', hunspell_dep.found())
-config_h.set_quoted('POS_DEFAULT_COMPLETER', 'presage')
+config_h.set('POS_HAVE_PRESAGE', presage_dep.found())
+config_h.set_quoted('POS_DEFAULT_COMPLETER', default_completer)
 
 configure_file(
   output: 'pos-config.h',
@@ -154,6 +163,7 @@ summary({
 )
 
 summary({
+    'Default': default_completer,
     'Presage': presage_dep.found(),
     'Fzf': fzf.found(),
     'Hunspell': hunspell_dep.found(),
