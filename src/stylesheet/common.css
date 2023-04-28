@@ -93,6 +93,7 @@ pos-completion-bar button {
   padding-left: 10px;
   padding-right: 10px;
   border: none;
+  font-weight: bold;
 }
 
 pos-completion-bar button:active {
