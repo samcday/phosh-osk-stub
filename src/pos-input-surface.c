@@ -243,8 +243,10 @@ on_completer_preedit_changed (PosInputSurface *self)
 static void
 on_completer_completions_changed (PosInputSurface *self)
 {
+  g_auto (GStrv) completions = pos_completer_get_completions (self->completer);
+
   pos_completion_bar_set_completions (POS_COMPLETION_BAR (self->completion_bar),
-                                      pos_completer_get_completions (self->completer));
+                                      completions);
 }
 
 
