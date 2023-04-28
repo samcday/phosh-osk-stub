@@ -248,7 +248,7 @@ pos_completer_pipe_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-
+  g_debug ("Using command '%s'", self->command[0]);
   return TRUE;
 }
 
@@ -323,13 +323,12 @@ pos_completer_pipe_feed_symbol (PosCompleter *iface, const char *symbol)
     return FALSE;
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_PREEDIT]);
-  if (self->proc) {
+  g_debug ("Looking up string '%s'", self->preedit->str);
+
+  if (self->proc && g_subprocess_get_if_exited (self->proc) == FALSE) {
     g_debug ("Killing slow %s", g_subprocess_get_identifier (self->proc));
     g_subprocess_force_exit (self->proc);
   }
-
-  g_debug ("Looking up string '%s'", self->preedit->str);
-
   g_clear_object (&self->proc);
   self->proc = g_subprocess_newv ((const char * const *)self->command,
                                   G_SUBPROCESS_FLAGS_STDOUT_PIPE |
