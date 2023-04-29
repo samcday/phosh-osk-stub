@@ -28,6 +28,7 @@ gboolean          pos_osk_widget_set_layout (PosOskWidget *self,
                                              GError      **err);
 void              pos_osk_widget_set_mode   (PosOskWidget *self, PosOskWidgetMode mode);
 PosOskWidgetMode  pos_osk_widget_get_mode   (PosOskWidget *self);
-const char       *pos_osk_widget_get_locale (PosOskWidget *self);
+const char       *pos_osk_widget_get_lang   (PosOskWidget *self);
+const char       *pos_osk_widget_get_region (PosOskWidget *self);
 
 G_END_DECLS

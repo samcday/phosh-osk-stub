@@ -84,7 +84,8 @@ typedef struct {
 /**
  * PosOskWidgetLayout:
  * @name: The display name of the layout, e.g. `English Great Britain`, `English Great (US)`
- * @locale: The layout's locale, e.g. `en-GB`, `en`
+ * @locale: The layout's `locale` field as parsed from the data, e.g. `en-GB`, `en`
+ *  For internal use only.
  *
  * Information about a keyboard layout as parsed from the layout
  * file. The keys are grouped in different layers that are displayed
@@ -104,6 +105,8 @@ typedef struct {
  * PosOskWidget:
  * @name: The name of the layout, e.g. `de`, `us`, `de+ch`
  * @display_name: The display name of the layout, e.g. `German`, `English (US)`
+ * @langauge: The language of the layout e.g. `de`, `en`
+ * @region: The region the layout is for e.g. `at` for language `de` or `us` for language `en`.
  *
  * Renders the keyboard and reacts to keypresses by signal emissions.
  */
@@ -119,6 +122,9 @@ struct _PosOskWidget {
 
   char                *name;
   char                *display_name;
+  char                *lang;
+  char                *region;
+
   PosOskKey           *current;
   PosOskKey           *space;
   GtkGestureLongPress *long_press;
@@ -1216,6 +1222,8 @@ pos_osk_widget_finalize (GObject *object)
   g_clear_object (&self->long_press);
   g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->display_name, g_free);
+  g_clear_pointer (&self->lang, g_free);
+  g_clear_pointer (&self->region, g_free);
 
   G_OBJECT_CLASS (pos_osk_widget_parent_class)->finalize (object);
 }
@@ -1465,6 +1473,40 @@ pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer)
 }
 
 
+static void
+parse_lang (PosOskWidget *self)
+{
+  g_auto (GStrv) parts = NULL;
+
+  g_clear_pointer (&self->lang, g_free);
+  g_clear_pointer (&self->region, g_free);
+
+  parts = g_strsplit (self->layout.locale, "-", -1);
+  g_assert (g_strv_length (parts) < 3);
+
+  /* Keyboard layout has locale like `pt-PT` */
+  if (g_strv_length (parts) == 2) {
+    self->lang = g_ascii_strdown (parts[0], -1);
+    self->region = g_ascii_strdown (parts[1], -1);
+    return;
+  }
+
+  /* Keyboard layout has language (`en`), region is from name (`us`) */
+  self->lang = g_strdup (self->layout.locale);
+  if (strchr (self->name, '+') == 0) {
+    self->region = g_strdup (self->name);
+    return;
+  }
+
+  /* Like above but name also has a layout variant (`in+mal`) */
+  g_strfreev (parts);
+  parts = g_strsplit (self->name, "+", -1);
+  self->region = g_strdup (parts[0]);
+}
+
+
+
+
 /**
  * pos_osk_widget_set_layout:
  * @self: The osk widget
@@ -1516,6 +1558,9 @@ pos_osk_widget_set_layout (PosOskWidget *self,
 
   json = (char*) g_bytes_get_data (data, &size);
   ret = parse_layout (self, json, size);
+
+  parse_lang (self);
+
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NAME]);
 
   return ret;
@@ -1582,11 +1627,36 @@ pos_osk_widget_get_mode (PosOskWidget *self)
   return self->mode;
 }
 
-
+/**
+ * pos_osk_widget_get_lang:
+ * @self: The osk widget
+ *
+ * Get the language e.g. `en`, `de`.
+ *
+ * Returns: The language
+ */
 const char *
-pos_osk_widget_get_locale (PosOskWidget *self)
+pos_osk_widget_get_lang (PosOskWidget *self)
 {
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
 
-  return self->layout.locale;
+  return self->lang;
+}
+
+
+/**
+ * pos_osk_widget_get_region:
+ * @self: The osk widget
+ *
+ * Get the region the language is used in e.g. `at`, `ch`, `de` for `de`. or
+ * `us`, `gb` for `en`.
+ *
+ * Returns: The language
+ */
+const char *
+pos_osk_widget_get_region (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return self->region;
 }

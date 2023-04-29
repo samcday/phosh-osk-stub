@@ -582,7 +582,7 @@ on_visible_child_changed (PosInputSurface *self)
   /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
-  switch_language (self, pos_osk_widget_get_locale (osk));
+  switch_language (self, pos_osk_widget_get_lang (osk));
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -694,7 +694,7 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       "swapped-signal::update",
                       G_CALLBACK (on_completer_update), self,
                       NULL);
-    switch_language (self, pos_osk_widget_get_locale (POS_OSK_WIDGET (self->last_layout)));
+    switch_language (self, pos_osk_widget_get_lang (POS_OSK_WIDGET (self->last_layout)));
   } else {
     g_debug ("Removing completer");
   }
