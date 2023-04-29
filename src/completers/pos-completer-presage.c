@@ -184,7 +184,10 @@ pos_completer_presage_set_surrounding_text (PosCompleter *iface,
 
 
 static gboolean
-pos_completer_presage_set_language (PosCompleter *completer, const char *locale, GError **error)
+pos_completer_presage_set_language (PosCompleter *completer,
+                                    const char   *lang,
+                                    const char   *region,
+                                    GError      **error)
 {
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (completer);
   g_autofree char *dbdir = NULL;
@@ -192,16 +195,11 @@ pos_completer_presage_set_language (PosCompleter *completer, const char *locale,
   g_autofree char *dbpath = NULL;
   g_auto (GStrv) parts = NULL;
   gboolean ret;
-  const char *lang;
   presage_error_code_t result;
 
   g_return_val_if_fail (POS_IS_COMPLETER_PRESAGE (self), FALSE);
 
-  /* TODO: e.g. de-AT, de-CH */
-  parts = g_strsplit (locale, "-", 1);
-  lang = parts[0];
-
-  /* TODO: likely better to use locale and fall back to lang */
+  /* TODO: handle region */
   if (g_strcmp0 (self->lang, lang) == 0)
     return TRUE;
 
@@ -396,7 +394,10 @@ pos_completer_presage_initable_init (GInitable    *initable,
   presage_config_set (self->presage, "Presage.Selector.REPEAT_SUGGESTIONS", "yes");
 
   /* Set up default language */
-  if (pos_completer_presage_set_language (POS_COMPLETER (self), POS_COMPLETER_DEFAULT_LANG, error) == FALSE)
+  if (pos_completer_presage_set_language (POS_COMPLETER (self),
+                                          POS_COMPLETER_DEFAULT_LANG,
+                                          POS_COMPLETER_DEFAULT_REGION,
+                                          error) == FALSE)
     return FALSE;
 
   g_debug ("Presage completer inited with lang '%s'", self->lang);

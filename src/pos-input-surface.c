@@ -542,7 +542,7 @@ select_layout_change_state (GSimpleAction *action,
 
 
 static void
-switch_language (PosInputSurface *self, const char *locale)
+switch_language (PosInputSurface *self, const char *locale, const char *region)
 {
   gboolean success;
   g_autoptr (GError) err = NULL;
@@ -550,12 +550,16 @@ switch_language (PosInputSurface *self, const char *locale)
   if (self->completer == NULL)
     return;
 
-  g_debug ("Switching language, locale: '%s'", locale);
-  success = pos_completer_set_language (self->completer, locale, &err);
+  g_debug ("Switching language, locale: '%s-%s'", locale, region);
+  success = pos_completer_set_language (self->completer, locale, region, &err);
   if (success == FALSE) {
-    g_warning ("Failed to set language: %s, switching to '%s' instead",
-               err->message, POS_COMPLETER_DEFAULT_LANG);
-    pos_completer_set_language (self->completer, POS_COMPLETER_DEFAULT_LANG, NULL);
+    g_warning ("Failed to set language: %s-%s: %s, switching to '%s-%s' instead",
+               locale, region, err->message, POS_COMPLETER_DEFAULT_LANG,
+               POS_COMPLETER_DEFAULT_REGION);
+    pos_completer_set_language (self->completer,
+                                POS_COMPLETER_DEFAULT_LANG,
+                                POS_COMPLETER_DEFAULT_REGION,
+                                NULL);
   }
 
   pos_completion_bar_set_completions (POS_COMPLETION_BAR (self->completion_bar), NULL);
@@ -582,7 +586,7 @@ on_visible_child_changed (PosInputSurface *self)
   /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
-  switch_language (self, pos_osk_widget_get_lang (osk));
+  switch_language (self, pos_osk_widget_get_lang (osk), pos_osk_widget_get_region (osk));
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -694,7 +698,9 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       "swapped-signal::update",
                       G_CALLBACK (on_completer_update), self,
                       NULL);
-    switch_language (self, pos_osk_widget_get_lang (POS_OSK_WIDGET (self->last_layout)));
+    switch_language (self,
+                     pos_osk_widget_get_lang (POS_OSK_WIDGET (self->last_layout)),
+                     pos_osk_widget_get_region (POS_OSK_WIDGET (self->last_layout)));
   } else {
     g_debug ("Removing completer");
   }
