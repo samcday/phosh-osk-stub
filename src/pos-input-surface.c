@@ -586,7 +586,8 @@ on_visible_child_changed (PosInputSurface *self)
   /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
-  switch_language (self, pos_osk_widget_get_lang (osk), pos_osk_widget_get_region (osk));
+  if (osk != POS_OSK_WIDGET (self->osk_terminal))
+    switch_language (self, pos_osk_widget_get_lang (osk), pos_osk_widget_get_region (osk));
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
