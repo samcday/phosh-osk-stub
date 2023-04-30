@@ -249,7 +249,6 @@ create_input_surface (struct wl_seat                         *seat,
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
   g_autoptr (PosCompleterManager) completer_manager = NULL;
-  g_autoptr (GError) err = NULL;
   gboolean force_completion;
 
   g_assert (seat);
@@ -270,8 +269,8 @@ create_input_surface (struct wl_seat                         *seat,
                                  "layer-shell", layer_shell,
                                  "height", INPUT_SURFACE_HEIGHT,
                                  "anchor", ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-                                 ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
-                                 ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
+                                           ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+                                           ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
                                  "layer", ZWLR_LAYER_SHELL_V1_LAYER_TOP,
                                  "kbd-interactivity", FALSE,
                                  "exclusive-zone", INPUT_SURFACE_HEIGHT,
