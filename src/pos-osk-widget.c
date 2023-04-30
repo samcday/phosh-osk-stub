@@ -761,6 +761,16 @@ key_repeat_cancel (PosOskWidget *self)
 }
 
 
+static void
+pos_osk_widget_key_press_action (PosOskWidget *self, PosOskKey *key)
+{
+  self->current = key;
+  pos_osk_widget_set_key_pressed (self, key, TRUE);
+
+  g_signal_emit (self, signals[OSK_KEY_DOWN], 0, pos_osk_key_get_symbol (key));
+}
+
+
 static gboolean
 pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -780,15 +790,13 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
     g_warning ("Got button press event for %s while another key %s is pressed",
                POS_OSK_KEY_DBG (key), POS_OSK_KEY_DBG (self->current));
   }
-  self->current = key;
-  pos_osk_widget_set_key_pressed (self, key, TRUE);
-
-  g_signal_emit (self, signals[OSK_KEY_DOWN], 0, pos_osk_key_get_symbol (key));
+  pos_osk_widget_key_press_action (self, key);
 
   if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_KEY) {
     self->repeat_id = g_timeout_add (KEY_REPEAT_DELAY, on_repeat_timeout, self);
     g_source_set_name_by_id (self->repeat_id, "[pos-key-repeat-timeout]");
   }
+
   return GDK_EVENT_STOP;
 }
 
@@ -819,6 +827,30 @@ pos_osk_widget_show_menu (PosOskWidget *self, PosOskKey *key)
 }
 
 
+static void
+pos_osk_widget_key_release_action (PosOskWidget *self, PosOskKey *key)
+{
+  switch (pos_osk_key_get_use (key)) {
+  case POS_OSK_KEY_USE_TOGGLE:
+    switch_layer (self, key);
+    break;
+
+  case POS_OSK_KEY_USE_KEY:
+    pos_osk_widget_set_key_pressed (self, self->current, FALSE);
+    g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
+    g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (key));
+    switch_layer (self, key);
+    break;
+
+  case POS_OSK_KEY_USE_MENU:
+    pos_osk_widget_show_menu (self, key);
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+}
+
+
 static gboolean
 pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -841,24 +873,7 @@ pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
   key = pos_osk_widget_locate_key (self, event->x, event->y);
   g_return_val_if_fail (key != NULL, GDK_EVENT_PROPAGATE);
 
-  switch (pos_osk_key_get_use (key)) {
-  case POS_OSK_KEY_USE_TOGGLE:
-    switch_layer (self, key);
-    break;
-
-  case POS_OSK_KEY_USE_KEY:
-    pos_osk_widget_set_key_pressed (self, self->current, FALSE);
-    g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
-    g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (key));
-    switch_layer (self, key);
-    break;
-
-  case POS_OSK_KEY_USE_MENU:
-    pos_osk_widget_show_menu (self, key);
-    break;
-  default:
-    g_assert_not_reached ();
-  }
+  pos_osk_widget_key_release_action (self, key);
 
   self->current = NULL;
   return GDK_EVENT_STOP;
