@@ -793,7 +793,7 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
   }
   pos_osk_widget_key_press_action (self, key);
 
-  if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_KEY) {
+  if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_DELETE) {
     self->repeat_id = g_timeout_add (KEY_REPEAT_DELAY, on_repeat_timeout, self);
     g_source_set_name_by_id (self->repeat_id, "[pos-key-repeat-timeout]");
   }
