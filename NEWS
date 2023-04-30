@@ -1,3 +1,18 @@
+phosh-osk-stub 0.27.0
+---------------------
+Released: April 2023
+* Allow to switch default completion engine via environment variable
+  or GSetting.
+* Add unix pipe like completer that allows to get completions
+  from the output of an executable.
+* Add hunspell based completer for typo correction
+* Word completion itself isn't considered experimental anymore.  The
+  completion engines using surrounding text like the presage based completers
+  still are.
+* Some style fixups
+* Contributors:
+    * Guido Günther
+
 phosh-osk-stub 0.25.0
 ---------------------
 Released: January 2023
