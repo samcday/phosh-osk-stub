@@ -279,7 +279,6 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
 {
   PosOskKey *key;
 
-  /* TODO: we could create these only once and g_object_ref them */
   switch (rownum) {
   case 2:
     key = g_object_new (POS_TYPE_OSK_KEY,
