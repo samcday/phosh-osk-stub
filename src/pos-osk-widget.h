@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "phosh-osk-enums.h"
 #include "pos-enums.h"
 #include "pos-enum-types.h"
 #include <gtk/gtk.h>
@@ -16,7 +17,7 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PosOskWidget, pos_osk_widget, POS, OSK_WIDGET, GtkDrawingArea)
 
-PosOskWidget     *pos_osk_widget_new (void);
+PosOskWidget     *pos_osk_widget_new        (PhoshOskFeatures features);
 const char       *pos_osk_widget_get_name   (PosOskWidget *self);
 const char       *pos_osk_widget_get_display_name (PosOskWidget *self);
 void              pos_osk_widget_set_layer  (PosOskWidget *self, PosOskWidgetLayer layer);
@@ -30,5 +31,6 @@ void              pos_osk_widget_set_mode   (PosOskWidget *self, PosOskWidgetMod
 PosOskWidgetMode  pos_osk_widget_get_mode   (PosOskWidget *self);
 const char       *pos_osk_widget_get_lang   (PosOskWidget *self);
 const char       *pos_osk_widget_get_region (PosOskWidget *self);
+void              pos_osk_widget_set_features (PosOskWidget *self, PhoshOskFeatures features);
 
 G_END_DECLS

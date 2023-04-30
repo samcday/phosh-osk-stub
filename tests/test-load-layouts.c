@@ -32,9 +32,10 @@ test_load_layouts (void)
                                          &err);
   g_assert_no_error (err);
   for (int i = 0; names[i]; i++) {
-    PosOskWidget *osk_widget = g_object_ref_sink (pos_osk_widget_new ());
+    PosOskWidget *osk_widget;
     g_autofree char *layout = NULL;
 
+    osk_widget = g_object_ref_sink (pos_osk_widget_new (PHOSH_OSK_FEATURE_DEFAULT));
     g_assert (g_str_has_suffix (names[i], ".json"));
     layout = g_strndup (names[i], strlen (names[i]) - strlen (".json"));
     g_test_message ("Loading layout %s", layout);

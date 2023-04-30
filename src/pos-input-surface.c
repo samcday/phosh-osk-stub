@@ -1277,7 +1277,7 @@ insert_osk (PosInputSurface *self,
   if (osk_widget)
     return osk_widget;
 
-  osk_widget = pos_osk_widget_new ();
+  osk_widget = pos_osk_widget_new (PHOSH_OSK_FEATURE_DEFAULT);
   if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget),
                                   display_name, layout, variant, &err)) {
     g_warning ("Failed to load osk layout for %s: %s", name, err->message);

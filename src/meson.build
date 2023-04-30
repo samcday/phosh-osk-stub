@@ -1,7 +1,7 @@
 subdir('dbus')
 subdir('layouts')
 
-libpos_enum_headers = files(['pos-enums.h'])
+libpos_enum_headers = files(['pos-enums.h', 'phosh-osk-enums.h'])
 libpos_enum_sources = gnome.mkenums_simple(
   'pos-enum-types',
   sources : libpos_enum_headers)
