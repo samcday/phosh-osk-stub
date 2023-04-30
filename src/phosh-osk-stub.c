@@ -36,6 +36,7 @@
  * PosDebugFlags:
  * @POS_DEBUG_FLAG_FORCE_SHOW: Ignore the `screen-keyboard-enabled` GSetting and always enable the OSK
  * @POS_DEBUG_FLAG_FORCE_COMPLETEION: Force text completion to on
+ * @POS_DEBUG_FLAG_DEBUG_SURFACE: Enable the debug surface
  */
 typedef enum _PosDebugFlags {
   POS_DEBUG_FLAG_NONE              = 0,
