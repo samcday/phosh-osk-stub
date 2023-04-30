@@ -9,6 +9,13 @@
         input's request and/or manually.
       </description>
     </key>
+    <key name="osk-features" flags="sm.puri.phosh.osk.PhoshOskFeatures">
+      <default>[]</default>
+      <summary>Features to enable on all layouts</summary>
+      <description>
+        A list of features that should be enabled on all configured layouts.
+      </description>
+    </key>
   </schema>
 
   <schema id='sm.puri.phosh.osk.EmojiPicker'
