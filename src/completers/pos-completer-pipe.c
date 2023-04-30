@@ -111,9 +111,6 @@ pos_completer_pipe_set_property (GObject      *object,
   PosCompleterPipe *self = POS_COMPLETER_PIPE (object);
 
   switch (property_id) {
-  case PROP_NAME:
-    self->name = g_value_dup_string (value);
-    break;
   case PROP_PREEDIT:
     pos_completer_pipe_set_preedit (POS_COMPLETER (self), g_value_get_string (value));
     break;
@@ -165,7 +162,6 @@ pos_completer_pipe_finalize (GObject *object)
   g_cancellable_cancel (self->cancel);
   g_clear_object (&self->cancel);
   g_clear_object (&self->proc);
-  g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->command, g_strfreev);
   g_clear_pointer (&self->completions, g_strfreev);
   g_string_free (self->preedit, TRUE);
@@ -248,7 +244,7 @@ pos_completer_pipe_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-
+  g_debug ("Using command '%s'", self->command[0]);
   return TRUE;
 }
 
@@ -257,6 +253,15 @@ static void
 pos_completer_pipe_initable_interface_init (GInitableIface *iface)
 {
   iface->init = pos_completer_pipe_initable_init;
+}
+
+
+static const char *
+pos_completer_pipe_get_name (PosCompleter *iface)
+{
+  PosCompleterPipe *self = POS_COMPLETER_PIPE (iface);
+
+  return self->name;
 }
 
 
@@ -323,13 +328,12 @@ pos_completer_pipe_feed_symbol (PosCompleter *iface, const char *symbol)
     return FALSE;
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_PREEDIT]);
-  if (self->proc) {
+  g_debug ("Looking up string '%s'", self->preedit->str);
+
+  if (self->proc && g_subprocess_get_if_exited (self->proc) == FALSE) {
     g_debug ("Killing slow %s", g_subprocess_get_identifier (self->proc));
     g_subprocess_force_exit (self->proc);
   }
-
-  g_debug ("Looking up string '%s'", self->preedit->str);
-
   g_clear_object (&self->proc);
   self->proc = g_subprocess_newv ((const char * const *)self->command,
                                   G_SUBPROCESS_FLAGS_STDOUT_PIPE |
@@ -352,6 +356,7 @@ pos_completer_pipe_feed_symbol (PosCompleter *iface, const char *symbol)
 static void
 pos_completer_pipe_interface_init (PosCompleterInterface *iface)
 {
+  iface->get_name = pos_completer_pipe_get_name;
   iface->feed_symbol = pos_completer_pipe_feed_symbol;
   iface->get_preedit = pos_completer_pipe_get_preedit;
   iface->set_preedit = pos_completer_pipe_set_preedit;
@@ -363,6 +368,7 @@ pos_completer_pipe_init (PosCompleterPipe *self)
 {
   self->preedit = g_string_new (NULL);
   self->cancel = g_cancellable_new ();
+  self->name = "pipe";
 
   self->settings = g_settings_new ("sm.puri.phosh.osk.Completers.Pipe");
 }

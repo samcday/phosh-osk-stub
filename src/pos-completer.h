@@ -11,6 +11,7 @@
 G_BEGIN_DECLS
 
 #define POS_COMPLETER_DEFAULT_LANG "en"
+#define POS_COMPLETER_DEFAULT_REGION "us"
 
 GQuark pos_completer_error_quark(void);
 
@@ -42,6 +43,7 @@ struct _PosCompleterInterface
 {
   GTypeInterface parent_iface;
 
+  const char *   (*get_name)    (PosCompleter *self);
   gboolean       (*feed_symbol) (PosCompleter *self, const char *symbol);
   const char *   (*get_preedit) (PosCompleter *self);
   void           (*set_preedit) (PosCompleter *self, const char *preedit);
@@ -50,10 +52,14 @@ struct _PosCompleterInterface
   void           (*set_surrounding_text) (PosCompleter *self,
                                           const char *before_text,
                                           const char *after_text);
-  gboolean       (*set_language) (PosCompleter  *self, const char *locale, GError **error);
+  gboolean       (*set_language) (PosCompleter  *self,
+                                  const char    *lang,
+                                  const char    *region,
+                                  GError       **error);
 };
 
 /* Used by completion users */
+const char    *pos_completer_get_name (PosCompleter *self);
 gboolean       pos_completer_feed_symbol (PosCompleter *self, const char *symbol);
 GStrv          pos_completer_get_completions (PosCompleter *self);
 const char    *pos_completer_get_preedit (PosCompleter *self);
@@ -64,7 +70,8 @@ void           pos_completer_set_surrounding_text (PosCompleter *self,
                                                    const char *before_text,
                                                    const char *after_text);
 gboolean       pos_completer_set_language (PosCompleter  *self,
-                                           const char    *locale,
+                                           const char    *lang,
+                                           const char    *region,
                                            GError       **error);
 
 G_END_DECLS

@@ -34,6 +34,16 @@
     </key>
   </schema>
 
+  <schema id='sm.puri.phosh.osk.Completers'
+          path='/sm/puri/phosh/osk/completers/'>
+    <key name='default' type='s'>
+      <default>''</default>
+      <summary>The default completer to use. An empty value let's the osk make a pick.
+      </summary>
+      <description/>
+    </key>
+  </schema>
+
   <schema id='sm.puri.phosh.osk.Completers.Pipe'
           path='/sm/puri/phosh/osk/completers/pipe/'>
     <key name='command' type='s'>

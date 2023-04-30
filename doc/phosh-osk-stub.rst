@@ -64,9 +64,9 @@ configuration of word completion (see below).
 WORD COMPLETION
 ^^^^^^^^^^^^^^^
 
-``phosh-osk-stub`` has *experimental* support for word completion based on the
-`presage` library. It has several modes of operation represented by flags that
-can be combined:
+``phosh-osk-stub`` has support for word completion via various
+completer (see below). It has several modes of operation represented
+by flags that can be combined:
 
 - `off`: no completion
 - `manual`: enable and disable completion via an option in the language popover
@@ -88,6 +88,68 @@ enabled configured via the `gsettings` command:
   gsettings set sm.puri.phosh.osk completion-mode "['manual','hint']"
   # Reset to default (off)
   gsettings reset sm.puri.phosh.osk completion-mode
+
+AVAILABLE COMPLETERS
+####################
+
+The available completers depend on how ``phosh-osk-stub`` was
+built. Available are currently at most
+
+  - ``hunspell``: word correction based on the hunspell library
+  - ``presage``: (experimental) word prediction based on the presage libarary
+  - ``pipe``: completer using a pipe
+  - ``fzf``: completer based on fzf command line tool. Useful for experiments)
+
+The default completer is selected via the
+``sm.puri.phosh.osk.Completers`` ``default`` GSetting.
+
+::
+
+  gsettings set sm.puri.phosh.osk.Completers default hunspell
+
+You need to restart ``phosh-osk-stub`` for the new default completer
+to become active.
+
+
+HUNSPELL CONFIGURATION
+**********************
+
+The hunspell completer needs dictionaries and affix files in
+``/usr/share/hunspell`. Most importantly ``/usr/share/hunspell/en_US.dic``
+and ``/usr/share/hunspell/en_US.aff`` are required as fallback when no
+matching dictionary for the current layout is found.
+
+
+TEXT COMPLETION USING PRESAGE
+*****************************
+
+The presage based completer is considered experimental as there are
+some known issues when interacting with GTK4 applications.
+
+For the presage based completer to work you need a model file in
+`/usr/share/phosh/osk/presage/`. Likely your distribution already
+ships one with the presage library. You can simply symlink it
+there.  Models for more languages can be found in
+https://gitlab.gnome.org/guidog/phosh-osk-data
+
+
+TEXT COMPLETION USING PIPE
+**************************
+
+This completer feeds the current input word (preedit) to an executable
+file and expects the executable to output possible completions on
+stdout. The executable to invoke is configured via the
+``sm.puri.phosh.osk.Completers.Pipe`` ``command`` GSetting. It defaults
+to ``cat``. This can be used to experiment with different completion
+patterns without having to modify ``phosh-osk-stub`` itself.
+
+::
+
+  gsettings set sm.puri.phosh.osk.Completers.Pipe command 'wc -c'
+
+You need to restart ``phosh-osk-stub`` for the new command to become
+active.
+
 
 TERMINAL SHORTCUTS
 ^^^^^^^^^^^^^^^^^^
@@ -112,11 +174,7 @@ ENVIRONMENT VARIABLES
   - ``force-completion``: Force text completion to ignoring the `completion-mode` GSetting.
 - ``POS_TEST_LAYOUT``: Load the given layout instead of the ones configured via GSetting.
 - ``POS_TEST_COMPLETER``: Use the given completer instead of the configured ones.
-  The available values depend on how phosh-osk-stub was built. Available are currently at most
-
-  - ``presage``: default completer based on presarge libarary
-  - ``pipe``: completer using a pipe, see the ``sm.puri.phosh.osk.Completers.Pipe`` ``command`` gsetting
-  - ``fzf``: Completer based on fzf command line tool (only useful for experiments
+  The available values depend on how phosh-osk-stub was built (see above).
 - ``G_MESSAGES_DEBUG``, ``G_DEBUG`` and other environment variables supported
   by glib. https://docs.gtk.org/glib/running.html
 - ``GTK_DEBUG`` and other environment variables supported by GTK, see
@@ -125,4 +183,4 @@ ENVIRONMENT VARIABLES
 See also
 --------
 
-``phosh(1)`` ``squeekboard(1)`` ``text2ngram(1)`` ``gsettings(1)``
+``phosh(1)`` ``squeekboard(1)`` ``text2ngram(1)`` ``gsettings(1)`` ``hunspell(5)``

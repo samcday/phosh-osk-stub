@@ -13,6 +13,7 @@ Build-Depends:
  libgirepository1.0-dev <!nodoc>,
  libgtk-3-dev,
  libhandy-1-dev (>= 1.1.90),
+ libhunspell-dev,
  libjson-glib-dev,
  libpresage-dev,
  libwayland-dev,
@@ -29,6 +30,7 @@ Package: phosh-osk-stub
 Architecture: any
 Recommends:
  fonts-noto-core,
+ hunspell-en-US,
  phosh-osk-data-eu,
 Depends:
  ${misc:Depends},

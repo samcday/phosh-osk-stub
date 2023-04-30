@@ -16,9 +16,13 @@ test_load_layouts (void)
   g_autoptr (GResource) pos_resource = NULL;
   g_autoptr (GError) err = NULL;
   g_auto (GStrv) names = NULL;
+  g_autoptr (GRegex) lang_re = g_regex_new ("^[a-z]{2,3}$",
+                                            G_REGEX_DEFAULT,
+                                            G_REGEX_MATCH_DEFAULT,
+                                            NULL);
+  g_autoptr (GRegex) region_re = g_regex_ref (lang_re);
 
   pos_init ();
-
   pos_resource = pos_get_resource ();
   g_assert_nonnull (pos_resource);
 
@@ -35,6 +39,19 @@ test_load_layouts (void)
     layout = g_strndup (names[i], strlen (names[i]) - strlen (".json"));
     g_test_message ("Loading layout %s", layout);
     pos_osk_widget_set_layout (osk_widget, "Test", layout, NULL, &err);
+
+    if (g_strcmp0 (names[i], "terminal.json")) {
+        g_assert_nonnull (pos_osk_widget_get_lang (osk_widget));
+        g_assert_nonnull (pos_osk_widget_get_region (osk_widget));
+        g_assert_true (g_regex_match (lang_re,
+                                      pos_osk_widget_get_lang (osk_widget),
+                                      G_REGEX_MATCH_DEFAULT,
+                                      NULL));
+        g_assert_true (g_regex_match (region_re, pos_osk_widget_get_region (osk_widget),
+                                      G_REGEX_MATCH_DEFAULT,
+                                      NULL));
+    }
+
     g_assert_no_error (err);
     g_assert_finalize_object (osk_widget);
   }

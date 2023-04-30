@@ -184,7 +184,10 @@ pos_completer_presage_set_surrounding_text (PosCompleter *iface,
 
 
 static gboolean
-pos_completer_presage_set_language (PosCompleter *completer, const char *locale, GError **error)
+pos_completer_presage_set_language (PosCompleter *completer,
+                                    const char   *lang,
+                                    const char   *region,
+                                    GError      **error)
 {
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (completer);
   g_autofree char *dbdir = NULL;
@@ -192,16 +195,11 @@ pos_completer_presage_set_language (PosCompleter *completer, const char *locale,
   g_autofree char *dbpath = NULL;
   g_auto (GStrv) parts = NULL;
   gboolean ret;
-  const char *lang;
   presage_error_code_t result;
 
   g_return_val_if_fail (POS_IS_COMPLETER_PRESAGE (self), FALSE);
 
-  /* TODO: e.g. de-AT, de-CH */
-  parts = g_strsplit (locale, "-", 1);
-  lang = parts[0];
-
-  /* TODO: likely better to use locale and fall back to lang */
+  /* TODO: handle region */
   if (g_strcmp0 (self->lang, lang) == 0)
     return TRUE;
 
@@ -262,9 +260,6 @@ pos_completer_presage_set_property (GObject      *object,
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (object);
 
   switch (property_id) {
-  case PROP_NAME:
-    self->name = g_value_dup_string (value);
-    break;
   case PROP_PREEDIT:
     pos_completer_presage_set_preedit (POS_COMPLETER (self), g_value_get_string (value));
     break;
@@ -311,7 +306,6 @@ pos_completer_presage_finalize (GObject *object)
 {
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (object);
 
-  g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->completions, g_strfreev);
   g_string_free (self->preedit, TRUE);
   g_clear_pointer (&self->before_text, g_free);
@@ -400,7 +394,10 @@ pos_completer_presage_initable_init (GInitable    *initable,
   presage_config_set (self->presage, "Presage.Selector.REPEAT_SUGGESTIONS", "yes");
 
   /* Set up default language */
-  if (pos_completer_presage_set_language (POS_COMPLETER (self), POS_COMPLETER_DEFAULT_LANG, error) == FALSE)
+  if (pos_completer_presage_set_language (POS_COMPLETER (self),
+                                          POS_COMPLETER_DEFAULT_LANG,
+                                          POS_COMPLETER_DEFAULT_REGION,
+                                          error) == FALSE)
     return FALSE;
 
   g_debug ("Presage completer inited with lang '%s'", self->lang);
@@ -413,6 +410,15 @@ static void
 pos_completer_presage_initable_interface_init (GInitableIface *iface)
 {
   iface->init = pos_completer_presage_initable_init;
+}
+
+
+static const char *
+pos_completer_presage_get_name (PosCompleter *iface)
+{
+  PosCompleterPresage *self = POS_COMPLETER_PRESAGE (iface);
+
+  return self->name;
 }
 
 
@@ -442,6 +448,7 @@ pos_completer_presage_feed_symbol (PosCompleter *iface, const char *symbol)
 static void
 pos_completer_presage_interface_init (PosCompleterInterface *iface)
 {
+  iface->get_name = pos_completer_presage_get_name;
   iface->feed_symbol = pos_completer_presage_feed_symbol;
   iface->get_preedit = pos_completer_presage_get_preedit;
   iface->set_preedit = pos_completer_presage_set_preedit;
@@ -457,6 +464,7 @@ pos_completer_presage_init (PosCompleterPresage *self)
 {
   self->max_completions = MAX_COMPLETIONS;
   self->preedit = g_string_new (NULL);
+  self->name = "presage";
 }
 
 /**
