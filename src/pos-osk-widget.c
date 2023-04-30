@@ -282,6 +282,7 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
   switch (rownum) {
   case 2:
     key = g_object_new (POS_TYPE_OSK_KEY,
+                        "use", POS_OSK_KEY_USE_DELETE,
                         "symbol", "KEY_BACKSPACE",
                         "icon", "edit-clear-symbolic",
                         "width", 1.5,
@@ -835,6 +836,7 @@ pos_osk_widget_key_release_action (PosOskWidget *self, PosOskKey *key)
     switch_layer (self, key);
     break;
 
+  case POS_OSK_KEY_USE_DELETE:
   case POS_OSK_KEY_USE_KEY:
     pos_osk_widget_set_key_pressed (self, self->current, FALSE);
     g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
