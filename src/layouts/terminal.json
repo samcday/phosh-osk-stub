@@ -261,7 +261,12 @@
           ],
           [
             "L"
-          ]
+          ],
+          {
+            "symbol": "KEY_ESC",
+            "label": "ESC",
+            "style": "sys"
+          }
         ],
         [
           [
