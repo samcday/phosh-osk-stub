@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component type="desktop">
-  <id>sm.puri.Phosh.OskStub.desktop</id>
+<component type="inputmethod">
+  <id>sm.puri.phosh.osk-stub</id>
   <name>Phosh Osk Stub</name>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
@@ -18,10 +18,19 @@
       <li>Configurable short cuts in terminal layout</li>
     </ul>
     <p>
-      Phosh-osk-stub is still in development. Use with care.
+      It acts a Wayland input-method or virtual keyboard.
+    </p>
+    <p>
+      Phosh-osk-stub is still in development. <em>Use with care</em>.
     </p>
   </description>
-  <summary>An experimental On Screen Keyboard and debug tool</summary>
+  <summary>An experimental On Screen Keyboard for Phosh</summary>
+
+  <keywords>
+    <keyword>input-method</keyword>
+    <keyword>multilingual</keyword>
+    <keyword>emoji</keyword>
+  </keywords>
 
   <content_rating type="oars-1.1"/>
 
@@ -36,8 +45,6 @@
 
   <url type="homepage">https://gitlab.gnome.org//guidog/phosh-osk-stub</url>
   <url type="bugtracker">https://gitlab.gnome.org//guidog/phosh-osk-stub</url>
-
-  <launchable type="desktop-id">sm.puri.Phosh.OskStub.desktop</launchable>
 
   <screenshots>
     <screenshot type="default">
