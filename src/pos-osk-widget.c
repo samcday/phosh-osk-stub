@@ -10,6 +10,9 @@
 
 #include "util.h"
 #include "pos-char-popup.h"
+#include "phosh-osk-enums.h"
+#include "pos-enums.h"
+#include "pos-enum-types.h"
 #include "pos-osk-key.h"
 #include "pos-osk-widget.h"
 
@@ -41,6 +44,7 @@ static guint signals[N_SIGNALS];
 
 enum {
   PROP_0,
+  PROP_FEATURES,
   PROP_LAYER,
   PROP_NAME,
   PROP_MODE,
@@ -113,6 +117,7 @@ typedef struct {
 struct _PosOskWidget {
   GtkDrawingArea       parent;
 
+  PhoshOskFeatures     features;
   int                  width, height;
   PosOskWidgetLayout   layout;
 
@@ -279,10 +284,10 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
 {
   PosOskKey *key;
 
-  /* TODO: we could create these only once and g_object_ref them */
   switch (rownum) {
   case 2:
     key = g_object_new (POS_TYPE_OSK_KEY,
+                        "use", POS_OSK_KEY_USE_DELETE,
                         "symbol", "KEY_BACKSPACE",
                         "icon", "edit-clear-symbolic",
                         "width", 1.5,
@@ -613,6 +618,25 @@ parse_layout (PosOskWidget *self, const char *json, gsize size)
 
 
 static void
+pos_osk_widget_set_property (GObject      *object,
+                             guint         property_id,
+                             const GValue *value,
+                             GParamSpec   *pspec)
+{
+  PosOskWidget *self = POS_OSK_WIDGET (object);
+
+  switch (property_id) {
+  case PROP_FEATURES:
+    self->features = g_value_get_flags (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
 pos_osk_widget_get_property (GObject    *object,
                              guint       property_id,
                              GValue     *value,
@@ -629,6 +653,9 @@ pos_osk_widget_get_property (GObject    *object,
     break;
   case PROP_MODE:
     g_value_set_enum (value, self->mode);
+    break;
+  case PROP_FEATURES:
+    g_value_set_flags (value, self->features);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -762,6 +789,16 @@ key_repeat_cancel (PosOskWidget *self)
 }
 
 
+static void
+pos_osk_widget_key_press_action (PosOskWidget *self, PosOskKey *key)
+{
+  self->current = key;
+  pos_osk_widget_set_key_pressed (self, key, TRUE);
+
+  g_signal_emit (self, signals[OSK_KEY_DOWN], 0, pos_osk_key_get_symbol (key));
+}
+
+
 static gboolean
 pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -781,15 +818,13 @@ pos_osk_widget_button_press_event (GtkWidget *widget, GdkEventButton *event)
     g_warning ("Got button press event for %s while another key %s is pressed",
                POS_OSK_KEY_DBG (key), POS_OSK_KEY_DBG (self->current));
   }
-  self->current = key;
-  pos_osk_widget_set_key_pressed (self, key, TRUE);
+  pos_osk_widget_key_press_action (self, key);
 
-  g_signal_emit (self, signals[OSK_KEY_DOWN], 0, pos_osk_key_get_symbol (key));
-
-  if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_KEY) {
+  if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_DELETE) {
     self->repeat_id = g_timeout_add (KEY_REPEAT_DELAY, on_repeat_timeout, self);
     g_source_set_name_by_id (self->repeat_id, "[pos-key-repeat-timeout]");
   }
+
   return GDK_EVENT_STOP;
 }
 
@@ -820,6 +855,31 @@ pos_osk_widget_show_menu (PosOskWidget *self, PosOskKey *key)
 }
 
 
+static void
+pos_osk_widget_key_release_action (PosOskWidget *self, PosOskKey *key)
+{
+  switch (pos_osk_key_get_use (key)) {
+  case POS_OSK_KEY_USE_TOGGLE:
+    switch_layer (self, key);
+    break;
+
+  case POS_OSK_KEY_USE_DELETE:
+  case POS_OSK_KEY_USE_KEY:
+    pos_osk_widget_set_key_pressed (self, self->current, FALSE);
+    g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
+    g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (key));
+    switch_layer (self, key);
+    break;
+
+  case POS_OSK_KEY_USE_MENU:
+    pos_osk_widget_show_menu (self, key);
+    break;
+  default:
+    g_assert_not_reached ();
+  }
+}
+
+
 static gboolean
 pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
 {
@@ -842,24 +902,7 @@ pos_osk_widget_button_release_event (GtkWidget *widget, GdkEventButton *event)
   key = pos_osk_widget_locate_key (self, event->x, event->y);
   g_return_val_if_fail (key != NULL, GDK_EVENT_PROPAGATE);
 
-  switch (pos_osk_key_get_use (key)) {
-  case POS_OSK_KEY_USE_TOGGLE:
-    switch_layer (self, key);
-    break;
-
-  case POS_OSK_KEY_USE_KEY:
-    pos_osk_widget_set_key_pressed (self, self->current, FALSE);
-    g_signal_emit (self, signals[OSK_KEY_UP], 0, pos_osk_key_get_symbol (key));
-    g_signal_emit (self, signals[OSK_KEY_SYMBOL], 0, pos_osk_key_get_symbol (key));
-    switch_layer (self, key);
-    break;
-
-  case POS_OSK_KEY_USE_MENU:
-    pos_osk_widget_show_menu (self, key);
-    break;
-  default:
-    g_assert_not_reached ();
-  }
+  pos_osk_widget_key_release_action (self, key);
 
   self->current = NULL;
   return GDK_EVENT_STOP;
@@ -891,8 +934,18 @@ pos_osk_widget_motion_notify_event (GtkWidget *widget, GdkEventMotion *event)
 
   key = pos_osk_widget_locate_key (self, event->x, event->y);
   if (self->current && key != self->current) {
-    g_debug ("Crossed key boundary, cancelling");
-    pos_osk_widget_cancel_press (self);
+    gboolean accept = !!(self->features & PHOSH_OSK_FEATURE_KEY_DRAG);
+
+    g_debug ("Crossed key boundary, %s", accept ? "accepting" : "canceling");
+    if (accept) {
+      /* Handle current key */
+      pos_osk_widget_key_release_action (self, self->current);
+      /* Make the new key current */
+      pos_osk_widget_key_press_action (self, key);
+      return GDK_EVENT_STOP;
+    } else {
+      pos_osk_widget_cancel_press (self);
+    }
   }
 
   return GDK_EVENT_PROPAGATE;
@@ -1254,6 +1307,7 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
   object_class->get_property = pos_osk_widget_get_property;
+  object_class->set_property = pos_osk_widget_set_property;
   object_class->finalize = pos_osk_widget_finalize;
 
   widget_class->draw = pos_osk_widget_draw;
@@ -1264,7 +1318,16 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   widget_class->get_preferred_height = pos_osk_widget_get_preferred_height;
   widget_class->get_preferred_width = pos_osk_widget_get_preferred_width;
 
-
+  /**
+   * PosOskWidget:features
+   *
+   * Feauture flags to configure this widget
+   */
+  props[PROP_FEATURES] =
+    g_param_spec_flags ("features", "", "",
+                        PHOSH_TYPE_OSK_FEATURES,
+                        PHOSH_OSK_FEATURE_DEFAULT,
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   /**
    * PosOskWidget:layer
    *
@@ -1287,7 +1350,7 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   /**
    * PosOskWidget:mode
    *
-   * The current mode of the widget
+   * The current input `mode` of the widget.
    */
   props[PROP_MODE] =
     g_param_spec_enum ("mode", "", "",
@@ -1425,9 +1488,11 @@ pos_osk_widget_init (PosOskWidget *self)
 
 
 PosOskWidget *
-pos_osk_widget_new (void)
+pos_osk_widget_new (PhoshOskFeatures features)
 {
-  return POS_OSK_WIDGET (g_object_new (POS_TYPE_OSK_WIDGET, NULL));
+  return POS_OSK_WIDGET (g_object_new (POS_TYPE_OSK_WIDGET,
+                                       "features", features,
+                                       NULL));
 }
 
 
@@ -1659,4 +1724,24 @@ pos_osk_widget_get_region (PosOskWidget *self)
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
 
   return self->region;
+}
+
+
+/**
+ * pos_osk_widget_set_features:
+ * @self: The osk widget
+ * @features: The features
+ *
+ * Update the OSKs features flags.
+ */
+void
+pos_osk_widget_set_features (PosOskWidget *self, PhoshOskFeatures features)
+{
+  g_return_if_fail (POS_IS_OSK_WIDGET (self));
+
+  if (features == self->features)
+    return;
+
+  self->features = features;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_FEATURES]);
 }

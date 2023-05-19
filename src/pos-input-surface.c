@@ -45,6 +45,7 @@ enum {
   PROP_SURFACE_VISIBLE,
   PROP_COMPLETER_ACTIVE,
   PROP_COMPLETION_ENABLED,
+  PROP_OSK_FEATURES,
   PROP_LAST_PROP
 };
 static GParamSpec *props[PROP_LAST_PROP];
@@ -88,6 +89,7 @@ struct _PosInputSurface {
   GtkWidget               *emoji_picker;
   GtkWidget               *last_layout;
   PosShortcutsBar         *shortcuts_bar;
+  PhoshOskFeatures         osk_features;
 
   /* The debug surface */
   PosDebugWidget          *debug_widget;
@@ -751,6 +753,29 @@ pos_input_surface_set_completion_enabled (PosInputSurface *self, gboolean enable
 
 
 static void
+update_osk_features (gpointer key, gpointer value, gpointer data)
+{
+  PosOskWidget *osk_widget = POS_OSK_WIDGET (value);
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+
+  pos_osk_widget_set_features (osk_widget, self->osk_features);
+}
+
+
+static void
+pos_input_surface_set_osk_features (PosInputSurface *self, PhoshOskFeatures osk_features)
+{
+  if (self->osk_features == osk_features)
+    return;
+
+  self->osk_features = osk_features;
+  g_hash_table_foreach (self->osks, update_osk_features, self);
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_OSK_FEATURES]);
+}
+
+
+static void
 pos_input_surface_set_property (GObject      *object,
                                 guint         property_id,
                                 const GValue *value,
@@ -777,6 +802,9 @@ pos_input_surface_set_property (GObject      *object,
     break;
   case PROP_COMPLETION_ENABLED:
     pos_input_surface_set_completion_enabled (self, g_value_get_boolean (value));
+    break;
+  case PROP_OSK_FEATURES:
+    pos_input_surface_set_osk_features (self, g_value_get_flags (value));
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -811,6 +839,9 @@ pos_input_surface_get_property (GObject    *object,
     break;
   case PROP_COMPLETION_ENABLED:
     g_value_set_boolean (value, self->completion_enabled);
+    break;
+  case PROP_OSK_FEATURES:
+    g_value_set_flags (value, self->osk_features);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1258,6 +1289,16 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
                          /* TODO: should be an interface */
                          POS_TYPE_VK_DRIVER,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosInputSurface:osk-features
+   *
+   * Features to enable on all OSKs.
+   */
+  props[PROP_OSK_FEATURES] =
+    g_param_spec_flags ("osk-features", "", "",
+                        PHOSH_TYPE_OSK_FEATURES,
+                        PHOSH_OSK_FEATURE_DEFAULT,
+                        G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 }
@@ -1277,7 +1318,7 @@ insert_osk (PosInputSurface *self,
   if (osk_widget)
     return osk_widget;
 
-  osk_widget = pos_osk_widget_new ();
+  osk_widget = pos_osk_widget_new (self->osk_features);
   if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget),
                                   display_name, layout, variant, &err)) {
     g_warning ("Failed to load osk layout for %s: %s", name, err->message);
@@ -1454,7 +1495,8 @@ pos_input_surface_init (PosInputSurface *self)
   g_settings_bind (self->a11y_settings, "screen-keyboard-enabled",
                    self, "screen-keyboard-enabled", G_SETTINGS_BIND_GET);
 
-  self->osks = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify)gtk_widget_destroy);
+  self->osks = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+                                      (GDestroyNotify)gtk_widget_destroy);
   self->xkbinfo = gnome_xkb_info_new ();
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
   self->osk_settings = g_settings_new ("sm.puri.phosh.osk");
@@ -1462,6 +1504,7 @@ pos_input_surface_init (PosInputSurface *self)
                             G_CALLBACK (on_completion_mode_changed),
                             self);
   on_completion_mode_changed (self, NULL, self->osk_settings);
+  g_settings_bind (self->osk_settings, "osk-features", self, "osk-features", G_SETTINGS_BIND_GET);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
                              _("Terminal"),

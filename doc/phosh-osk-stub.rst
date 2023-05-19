@@ -65,7 +65,7 @@ WORD COMPLETION
 ^^^^^^^^^^^^^^^
 
 ``phosh-osk-stub`` has support for word completion via various
-completer (see below). It has several modes of operation represented
+completers (see below). It has several modes of operation represented
 by flags that can be combined:
 
 - `off`: no completion
@@ -111,8 +111,8 @@ You need to restart ``phosh-osk-stub`` for the new default completer
 to become active.
 
 
-HUNSPELL CONFIGURATION
-**********************
+TEXT CORRECTION USING HUNSPELL
+******************************
 
 The hunspell completer needs dictionaries and affix files in
 ``/usr/share/hunspell`. Most importantly ``/usr/share/hunspell/en_US.dic``
