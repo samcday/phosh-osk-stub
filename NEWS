@@ -1,3 +1,13 @@
+phosh-osk-stub 0.28.0
+---------------------
+Released: May 2023
+* Add a mode that allows to input characters without lifting the finger
+  With this swipeGuess can sensibly be used as pipe based completer
+* Add Esc key to terminal layout in the captial layer
+* Contributors:
+    * Guido Günther
+    * Undef
+
 phosh-osk-stub 0.27.0
 ---------------------
 Released: April 2023

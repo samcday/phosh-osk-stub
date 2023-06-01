@@ -1,3 +1,39 @@
+phosh-osk-stub (0.28.0) experimental; urgency=medium
+
+  [ Undef ]
+  * layouts/terminal: Add escape to capital layer.
+    Not having this key means that every key in the middle row moves slightly
+    right on pressing shift, leading to occasional typos on the terminal
+    keyboard.
+
+  [ Guido Günther ]
+  * manpage: Minor consistency tweak
+  * osk-stub: Document all debug flags
+  * osk-stub: Remove unused variable
+  * osk-widget: Move actual key actions into separate functions
+  * osk-widget: Add 'delete' key use.
+    Adding more use-types will allow us to do less string parsing in the
+    future and to specify the key-use in the layouts already. This will also
+    be useful for more complex layout switchings e.g. for uim.
+  * osk-widget: Limit key repeat to delete.
+    It doesn't work for keys with popovers anyway, it's not needed for space
+    as we move the cursor with that so backspace (and maybe <return>) remain
+    the only sensible users.
+  * osk-widget: Allow to drag fingers between keys.
+    The default is to cancel the keypress when the finger leaves the area of
+    one key and enters the area of another. Add a new mode that marks the
+    old key as released and the new key as pressed instead.
+    For that introduce features flags.
+  * input-surface: Add common features for all layouts.
+    There's some features we want to configure for all layouts.
+    Allow to set them via a property on the input-surface and
+    bind it to a gsetting.
+  * metainfo: Switch to inputmethod.
+    It's not a desktop application but rather a wayland input method
+    and virtual keyboard.
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 31 May 2023 17:50:40 +0200
+
 phosh-osk-stub (0.27.0) experimental; urgency=medium
 
   * Update doap file.
