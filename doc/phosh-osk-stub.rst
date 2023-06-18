@@ -61,6 +61,15 @@ configuration of the loaded layouts from
 ``org.gnome.desktop.a11y.applications``'s ``screen-keyboard-enabled`` and
 configuration of word completion (see below).
 
+For the keyboard to fold and unfold automatically make sure
+``org.gnome.desktop.interface`` ``gtk-im-module`` is set to the empty string
+(`''`).  This is the default in most distributions. If unsure check via:
+
+::
+
+  gsettings get org.gnome.desktop.interface gtk-im-module
+
+
 WORD COMPLETION
 ^^^^^^^^^^^^^^^
 
