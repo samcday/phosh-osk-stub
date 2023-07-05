@@ -171,6 +171,22 @@ terminal layout. These are configured via the ``shortcuts`` GSetting
 
 For valid values see documentation of `gtk_accelerator_parse()`: https://docs.gtk.org/gtk3/func.accelerator_parse.html
 
+IGNORING ACTIVATION
+^^^^^^^^^^^^^^^^^^^
+For some applications you might not want to unfold the OSK when the
+application requests it. This can e.g. be useful when you usually read what
+the application displays (and hence want to use as much as screen
+space as possible) but the application focuses a text entry. By adding the
+application's app-id to the ``ignore-activation`` list you can prevent the automatic
+unfold. The OSK can still be unfolded by other means (e.g. via the DBus API or the OSK
+button in Phosh). To determine an applications app-id you can use the
+``foreign-toplevel`` command.
+
+::
+
+  gsettings set sm.puri.phosh.osk ignore-activation "['org.gnome.Calculator']"
+
+
 ENVIRONMENT VARIABLES
 ---------------------
 
