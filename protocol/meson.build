@@ -10,6 +10,7 @@ wl_protos = [
   [wl_protocol_dir, 'stable/xdg-shell/xdg-shell.xml'],
   ['input-method-unstable-v2.xml'],
   ['virtual-keyboard-unstable-v1.xml'],
+  ['wlr-foreign-toplevel-management-unstable-v1.xml'],
   ['wlr-layer-shell-unstable-v1.xml'],
 ]
 

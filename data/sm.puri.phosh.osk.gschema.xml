@@ -16,6 +16,16 @@
         A list of features that should be enabled on all configured layouts.
       </description>
     </key>
+
+    <key name="ignore-activation" type='as'>
+      <default>[]</default>
+      <summary>Ignore requests to activate the OSK for certain applications</summary>
+      <description>
+        A list of application-ids that are ignored when they request an input method.
+        This means that the OSK doesn't unfold automatically on e.g. text inputs fields
+        in these applications and the user must unfold the OSK via other means.
+      </description>
+    </key>
   </schema>
 
   <schema id='sm.puri.phosh.osk.EmojiPicker'

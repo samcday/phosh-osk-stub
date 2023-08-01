@@ -11,6 +11,7 @@
 #include "pos-config.h"
 #include "pos.h"
 
+#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include "input-method-unstable-v2-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
 
@@ -54,9 +55,11 @@ static struct wl_seat *_seat;
 static struct zwlr_layer_shell_v1 *_layer_shell;
 static struct zwp_input_method_manager_v2 *_input_method_manager;
 static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
+struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
 
 PosDebugFlags _debug_flags;
 PosOskDbus *_osk_dbus;
+PosActivationFilter *_activation_filter;
 
 
 /* TODO:
@@ -201,6 +204,9 @@ set_surface_prop_surface_visible (GBinding     *binding,
     enabled = TRUE;
   else
     enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+
+  if (_activation_filter && !pos_activation_filter_allow_active (_activation_filter))
+    enabled = FALSE;
 
   g_debug ("active: %d, enabled: %d", visible, enabled);
   if (enabled == FALSE)
@@ -357,15 +363,21 @@ registry_handle_global (void               *data,
     _seat = wl_registry_bind (registry, name, &wl_seat_interface, version);
   } else if (!strcmp (interface, zwlr_layer_shell_v1_interface.name)) {
     _layer_shell = wl_registry_bind (_registry, name, &zwlr_layer_shell_v1_interface, 1);
+  } else if (!strcmp (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
+    _foreign_toplevel_manager = wl_registry_bind (registry, name,
+                                                  &zwlr_foreign_toplevel_manager_v1_interface, 1);
+    _activation_filter = pos_activation_filter_new (_foreign_toplevel_manager);
   } else if (!strcmp (interface, zwp_virtual_keyboard_manager_v1_interface.name)) {
     _virtual_keyboard_manager = wl_registry_bind (registry, name,
                                                   &zwp_virtual_keyboard_manager_v1_interface, 1);
   }
 
   if (_seat && _input_method_manager && _layer_shell && _virtual_keyboard_manager &&
-      !_input_surface) {
+      _foreign_toplevel_manager && !_input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
-    create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
+    create_input_surface (_seat, _virtual_keyboard_manager,
+                          _input_method_manager,
+                          _layer_shell,
                           _osk_dbus);
   }
 }
@@ -488,6 +500,7 @@ main (int argc, char *argv[])
   if (_input_surface)
     dispose_input_surface (_input_surface);
   g_clear_object (&_osk_dbus);
+  g_clear_object (&_activation_filter);
 
   pos_uninit ();
 
