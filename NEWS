@@ -1,3 +1,10 @@
+phosh-osk-stub 0.30.0
+---------------------
+Released: August 2023
+* Allow to prevent automatic keyboard unfold based on app-id
+* Contributors:
+    * Guido Günther
+
 phosh-osk-stub 0.28.0
 ---------------------
 Released: May 2023

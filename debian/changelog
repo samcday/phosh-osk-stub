@@ -1,3 +1,11 @@
+phosh-osk-stub (0.30.0) experimental; urgency=medium
+
+  * docs: Mention org.gnome.desktop.interface gtk-im-module
+  * Allow to keep the OSK folded when some apps are active
+  * doc: Document ignore-activation gsetting
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 01 Aug 2023 20:41:00 +0200
+
 phosh-osk-stub (0.28.0) experimental; urgency=medium
 
   [ Undef ]
