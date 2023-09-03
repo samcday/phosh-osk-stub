@@ -243,6 +243,8 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
   { GDK_KEY_period, KEY_DOT },
   { GDK_KEY_slash, KEY_SLASH },
 
+  /* The keymap maps <COMP> to Menu */
+  { GDK_KEY_Menu, KEY_COMPOSE },
   { GDK_KEY_space, KEY_SPACE },
   { GDK_KEY_Left, KEY_LEFT },
   { GDK_KEY_Right, KEY_RIGHT },
