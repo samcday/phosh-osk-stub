@@ -58,6 +58,13 @@
   </screenshots>
 
   <releases>
+    <release version="0.31.0" date="2023-09-04">
+      <description>
+        <ul>
+          <li>Allow to prevent add menu key to shortcuts</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.30.0" date="2023-08-01">
       <description>
         <ul>
