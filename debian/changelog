@@ -1,3 +1,10 @@
+phosh-osk-stub (0.31.0) experimental; urgency=medium
+
+  * vk-driver: Add menu key.
+    This allows to add the menu key to the keyboard shortcuts
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 03 Sep 2023 10:49:22 +0200
+
 phosh-osk-stub (0.30.0) experimental; urgency=medium
 
   * docs: Mention org.gnome.desktop.interface gtk-im-module
