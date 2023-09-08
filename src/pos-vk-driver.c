@@ -203,6 +203,7 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
   { GDK_KEY_minus, KEY_MINUS },
   { GDK_KEY_equal, KEY_EQUAL },
   { GDK_KEY_BackSpace, KEY_BACKSPACE },
+  { GDK_KEY_Delete, KEY_DELETE },
 
   { GDK_KEY_Tab, KEY_TAB },
   { GDK_KEY_q, KEY_Q },
