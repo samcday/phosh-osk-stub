@@ -63,8 +63,45 @@ typedef struct {
   guint modifiers;
 } PosKeycode;
 
-static const PosKeycode keycodes_us[] = {
+static const PosKeycode keycodes_common[] = {
+  /* special keys */
+  { "KEY_LEFT", KEY_LEFT, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_RIGHT", KEY_RIGHT, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_UP", KEY_UP, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_DOWN", KEY_DOWN, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_ENTER", KEY_ENTER, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_TAB", KEY_TAB, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_BACKSPACE" ,KEY_BACKSPACE, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_ESC", KEY_ESC, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F1", KEY_F1, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F2", KEY_F2, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F3", KEY_F3, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F4", KEY_F4, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F5", KEY_F5, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F6", KEY_F6, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F7", KEY_F7, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F8", KEY_F8, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F9", KEY_F9, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F10", KEY_F10, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F11", KEY_F11, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_F12", KEY_F12, POS_KEYCODE_MODIFIER_NONE },
+  { "KEY_COPY", KEY_C, POS_KEYCODE_MODIFIER_CTRL },
+  { "KEY_PASTE", KEY_V, POS_KEYCODE_MODIFIER_CTRL },
+  /* common keys */
   { " ", KEY_SPACE, POS_KEYCODE_MODIFIER_NONE},
+  { "0", KEY_0, POS_KEYCODE_MODIFIER_NONE },
+  { "1", KEY_1, POS_KEYCODE_MODIFIER_NONE },
+  { "2", KEY_2, POS_KEYCODE_MODIFIER_NONE },
+  { "3", KEY_3, POS_KEYCODE_MODIFIER_NONE },
+  { "4", KEY_4, POS_KEYCODE_MODIFIER_NONE },
+  { "5", KEY_5, POS_KEYCODE_MODIFIER_NONE },
+  { "6", KEY_6, POS_KEYCODE_MODIFIER_NONE },
+  { "7", KEY_7, POS_KEYCODE_MODIFIER_NONE },
+  { "8", KEY_8, POS_KEYCODE_MODIFIER_NONE },
+  { "9", KEY_9, POS_KEYCODE_MODIFIER_NONE },
+};
+
+static const PosKeycode keycodes_us[] = {
   { "!", KEY_1, POS_KEYCODE_MODIFIER_SHIFT },
   { "#", KEY_3, POS_KEYCODE_MODIFIER_SHIFT },
   { "$", KEY_4, POS_KEYCODE_MODIFIER_SHIFT },
@@ -78,16 +115,6 @@ static const PosKeycode keycodes_us[] = {
   { "-", KEY_MINUS, POS_KEYCODE_MODIFIER_NONE },
   { ".", KEY_DOT, POS_KEYCODE_MODIFIER_NONE },
   { "/", KEY_SLASH, POS_KEYCODE_MODIFIER_NONE },
-  { "0", KEY_0, POS_KEYCODE_MODIFIER_NONE },
-  { "1", KEY_1, POS_KEYCODE_MODIFIER_NONE },
-  { "2", KEY_2, POS_KEYCODE_MODIFIER_NONE },
-  { "3", KEY_3, POS_KEYCODE_MODIFIER_NONE },
-  { "4", KEY_4, POS_KEYCODE_MODIFIER_NONE },
-  { "5", KEY_5, POS_KEYCODE_MODIFIER_NONE },
-  { "6", KEY_6, POS_KEYCODE_MODIFIER_NONE },
-  { "7", KEY_7, POS_KEYCODE_MODIFIER_NONE },
-  { "8", KEY_8, POS_KEYCODE_MODIFIER_NONE },
-  { "9", KEY_9, POS_KEYCODE_MODIFIER_NONE },
   { ":", KEY_SEMICOLON, POS_KEYCODE_MODIFIER_SHIFT },
   { ";", KEY_SEMICOLON, POS_KEYCODE_MODIFIER_NONE },
   { "=", KEY_EQUAL, POS_KEYCODE_MODIFIER_NONE },
@@ -156,29 +183,6 @@ static const PosKeycode keycodes_us[] = {
   { "|", KEY_BACKSLASH, POS_KEYCODE_MODIFIER_SHIFT },
   { "}", KEY_RIGHTBRACE, POS_KEYCODE_MODIFIER_SHIFT },
   { "~", KEY_GRAVE, POS_KEYCODE_MODIFIER_SHIFT },
-  /* special keys */
-  { "KEY_LEFT", KEY_LEFT, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_RIGHT", KEY_RIGHT, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_UP", KEY_UP, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_DOWN", KEY_DOWN, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_ENTER", KEY_ENTER, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_TAB", KEY_TAB, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_BACKSPACE" ,KEY_BACKSPACE, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_ESC", KEY_ESC, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F1", KEY_F1, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F2", KEY_F2, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F3", KEY_F3, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F4", KEY_F4, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F5", KEY_F5, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F6", KEY_F6, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F7", KEY_F7, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F8", KEY_F8, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F9", KEY_F9, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F10", KEY_F10, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F11", KEY_F11, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_F12", KEY_F12, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_COPY", KEY_C, POS_KEYCODE_MODIFIER_CTRL },
-  { "KEY_PASTE", KEY_V, POS_KEYCODE_MODIFIER_CTRL },
 };
 
 
@@ -265,6 +269,22 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
   { GDK_KEY_Up, KEY_UP },
   { GDK_KEY_Down, KEY_DOWN },
 };
+
+
+static void
+pos_vk_driver_update_keycodes (PosVkDriver *self, const char *layout_id)
+{
+  const PosKeycode *keycodes = keycodes_us;
+
+  g_clear_pointer (&self->keycodes, g_hash_table_destroy);
+
+  self->keycodes = g_hash_table_new (g_str_hash, g_str_equal);
+  for (int i = 0; i < G_N_ELEMENTS (keycodes_common); i++)
+    g_hash_table_insert (self->keycodes, keycodes_common[i].key,  (gpointer)&keycodes_common[i]);
+
+  for (int i = 0; keycodes[i].key != NULL; i++)
+    g_hash_table_insert (self->keycodes, keycodes[i].key,  (gpointer)&keycodes[i]);
+}
 
 
 static void
@@ -434,10 +454,6 @@ pos_vk_driver_init (PosVkDriver *self)
 {
   self->xkbinfo = gnome_xkb_info_new ();
 
-  self->keycodes = g_hash_table_new (g_str_hash, g_str_equal);
-  for (int i = 0; i < G_N_ELEMENTS (keycodes_us); i++)
-    g_hash_table_insert (self->keycodes, keycodes_us[i].key,  (gpointer)&keycodes_us[i]);
-
   self->gdk_keycodes = g_hash_table_new (g_direct_hash, g_direct_equal);
   for (int i = 0; i < G_N_ELEMENTS (keycodes_gdk_us); i++)
     g_hash_table_insert (self->gdk_keycodes, GUINT_TO_POINTER (keycodes_gdk_us[i].gdk_keycode),
@@ -551,7 +567,8 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
  * @self: The vk driver
  * @id: The xkb layout id (e.g. `de`, `at`)
  *
- * Sets the given keymap honoring xkb-options set in GNOME.
+ * Sets the given keymap honoring xkb-options set in GNOME. When possible send
+ * keycodes matching that layout id.
  */
 void
 pos_vk_driver_set_keymap (PosVkDriver *self, const char *layout_id)
@@ -584,4 +601,6 @@ pos_vk_driver_set_keymap (PosVkDriver *self, const char *layout_id)
   self->layout_id = g_strdup (layout_id);
   g_debug ("Switching to layout %s %s", layout, variant);
   set_xkb_keymap (self, layout, variant, xkb_options_string);
+
+  pos_vk_driver_update_keycodes (self, layout_id);
 }
