@@ -1292,7 +1292,11 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   props[PROP_COMPLETION_ENABLED] =
     g_param_spec_boolean ("completion-enabled", "", "", FALSE,
                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
-
+  /**
+   * PosInputSurface:keyboard-driver:
+   *
+   * Keyboard driver for submitting keycodes and handling associated keymaps.
+   */
   props[PROP_KEYBOARD_DRIVER] =
     g_param_spec_object ("keyboard-driver", "", "",
                          /* TODO: should be an interface */
