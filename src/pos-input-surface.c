@@ -487,8 +487,7 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
   g_debug ("Menu popoup activated at %d %d, current: '%s'", rect.x, rect.y, osk_name);
 
   layout_action = g_action_map_lookup_action (G_ACTION_MAP (self->action_map), "select-layout");
-  g_simple_action_set_state (G_SIMPLE_ACTION (layout_action),
-                             g_variant_new ("s", osk_name));
+  g_simple_action_set_state (G_SIMPLE_ACTION (layout_action), g_variant_new ("s", osk_name));
 
   gtk_container_foreach (GTK_CONTAINER (self->menu_box_layouts),
                          (GtkCallback) gtk_widget_destroy,
@@ -544,10 +543,13 @@ select_layout_change_state (GSimpleAction *action,
 
 
 static void
-switch_language (PosInputSurface *self, const char *locale, const char *region)
+switch_language (PosInputSurface *self, const char *locale, const char *region, const char *layout_id)
 {
   gboolean success;
   g_autoptr (GError) err = NULL;
+
+  if (self->keyboard_driver)
+    pos_vk_driver_set_keymap (self->keyboard_driver, layout_id);
 
   if (self->completer == NULL)
     return;
@@ -588,8 +590,14 @@ on_visible_child_changed (PosInputSurface *self)
   /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
-  if (osk != POS_OSK_WIDGET (self->osk_terminal))
-    switch_language (self, pos_osk_widget_get_lang (osk), pos_osk_widget_get_region (osk));
+  if (osk != POS_OSK_WIDGET (self->osk_terminal)) {
+    switch_language (self,
+                     pos_osk_widget_get_lang (osk),
+                     pos_osk_widget_get_region (osk),
+                     pos_osk_widget_get_layout_id (osk));
+  } else {
+    pos_vk_driver_set_keymap (self->keyboard_driver, pos_osk_widget_get_layout_id (osk));
+  }
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -703,7 +711,8 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       NULL);
     switch_language (self,
                      pos_osk_widget_get_lang (POS_OSK_WIDGET (self->last_layout)),
-                     pos_osk_widget_get_region (POS_OSK_WIDGET (self->last_layout)));
+                     pos_osk_widget_get_region (POS_OSK_WIDGET (self->last_layout)),
+                     pos_osk_widget_get_layout_id (POS_OSK_WIDGET (self->last_layout)));
   } else {
     g_debug ("Removing completer");
   }
