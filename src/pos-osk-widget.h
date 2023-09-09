@@ -23,12 +23,14 @@ const char       *pos_osk_widget_get_display_name (PosOskWidget *self);
 void              pos_osk_widget_set_layer  (PosOskWidget *self, PosOskWidgetLayer layer);
 PosOskWidgetLayer pos_osk_widget_get_layer  (PosOskWidget *self);
 gboolean          pos_osk_widget_set_layout (PosOskWidget *self,
+                                             const char   *layout_id,
                                              const char   *display_name,
                                              const char   *layout,
                                              const char   *variant,
                                              GError      **err);
 void              pos_osk_widget_set_mode   (PosOskWidget *self, PosOskWidgetMode mode);
 PosOskWidgetMode  pos_osk_widget_get_mode   (PosOskWidget *self);
+const char       *pos_osk_widget_get_layout_id (PosOskWidget *self);
 const char       *pos_osk_widget_get_lang   (PosOskWidget *self);
 const char       *pos_osk_widget_get_region (PosOskWidget *self);
 void              pos_osk_widget_set_features (PosOskWidget *self, PhoshOskFeatures features);

@@ -129,6 +129,7 @@ struct _PosOskWidget {
   char                *display_name;
   char                *lang;
   char                *region;
+  char                *layout_id;
 
   PosOskKey           *current;
   PosOskKey           *space;
@@ -1277,6 +1278,7 @@ pos_osk_widget_finalize (GObject *object)
   g_clear_pointer (&self->display_name, g_free);
   g_clear_pointer (&self->lang, g_free);
   g_clear_pointer (&self->region, g_free);
+  g_clear_pointer (&self->layout_id, g_free);
 
   G_OBJECT_CLASS (pos_osk_widget_parent_class)->finalize (object);
 }
@@ -1575,6 +1577,8 @@ parse_lang (PosOskWidget *self)
 /**
  * pos_osk_widget_set_layout:
  * @self: The osk widget
+ * @layout_id: The (xkb) layout id. This can differ from the widget layout and variant
+ *  e.g. in the case of terminal where we use a `terminal` layout but an xkb keymap `us`.
  * @display_name: The display name. Should be used when displaying layout information
  *    to the user. (E.g. 'English (US)')
  * @layout: The name of the layout. E.g. `jp`, `de`
@@ -1587,6 +1591,7 @@ parse_lang (PosOskWidget *self)
  */
 gboolean
 pos_osk_widget_set_layout (PosOskWidget *self,
+                           const char   *layout_id,
                            const char   *display_name,
                            const char   *layout,
                            const char   *variant,
@@ -1614,6 +1619,8 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   self->name = g_steal_pointer (&name);
   g_free (self->display_name);
   self->display_name = g_strdup (display_name);
+  g_free (self->layout_id);
+  self->layout_id = g_strdup (layout_id);
 
   path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", self->name);
   data = g_resources_lookup_data (path, 0, err);
@@ -1724,6 +1731,20 @@ pos_osk_widget_get_region (PosOskWidget *self)
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
 
   return self->region;
+}
+
+/**
+ * pos_osk_widget_get_layout_id:
+ * @self: The osk widget
+ *
+ * The (xkb) keymap layout_id used with this widget.
+ */
+const char *
+pos_osk_widget_get_layout_id (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return self->layout_id;
 }
 
 

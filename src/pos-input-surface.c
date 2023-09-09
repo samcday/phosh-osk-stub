@@ -1307,6 +1307,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 static PosOskWidget *
 insert_osk (PosInputSurface *self,
             const char      *name,
+            const char      *layout_id,
             const char      *display_name,
             const char      *layout,
             const char      *variant)
@@ -1319,7 +1320,7 @@ insert_osk (PosInputSurface *self,
     return osk_widget;
 
   osk_widget = pos_osk_widget_new (self->osk_features);
-  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget),
+  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget), layout_id,
                                   display_name, layout, variant, &err)) {
     g_warning ("Failed to load osk layout for %s: %s", name, err->message);
 
@@ -1346,7 +1347,7 @@ insert_osk (PosInputSurface *self,
 
 
 static PosOskWidget *
-insert_layout (PosInputSurface *self, const char *type, const char *id)
+insert_layout (PosInputSurface *self, const char *type, const char *layout_id)
 {
   g_autofree char *name = NULL;
   const gchar *layout = NULL;
@@ -1354,13 +1355,13 @@ insert_layout (PosInputSurface *self, const char *type, const char *id)
   const gchar *display_name = NULL;
 
   if (g_strcmp0 (type, "xkb")) {
-    g_debug ("Not a xkb layout: '%s' - ignoring", id);
+    g_debug ("Not a xkb layout: '%s' - ignoring", layout_id);
     return NULL;
   }
 
-  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id, &display_name, NULL,
+  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, layout_id, &display_name, NULL,
                                        &layout, &variant)) {
-    g_warning ("Failed to get layout info for %s", id);
+    g_warning ("Failed to get layout info for %s", layout_id);
     return NULL;
   }
   if (STR_IS_NULL_OR_EMPTY (variant))
@@ -1368,7 +1369,7 @@ insert_layout (PosInputSurface *self, const char *type, const char *id)
   else
     name = g_strdup_printf ("%s+%s", layout, variant);
 
-  return insert_osk (self, name, display_name, layout, variant);
+  return insert_osk (self, name, layout_id, display_name, layout, variant);
 }
 
 
@@ -1421,7 +1422,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 
   /* If nothing is left add a default */
   if (g_hash_table_size (self->osks) == 0) {
-    insert_osk (self, "us", "English (USA)", "us", NULL);
+    insert_osk (self, "us", "us", "English (USA)", "us", NULL);
   }
 }
 
@@ -1507,6 +1508,7 @@ pos_input_surface_init (PosInputSurface *self)
   g_settings_bind (self->osk_settings, "osk-features", self, "osk-features", G_SETTINGS_BIND_GET);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
+                             "us",
                              _("Terminal"),
                              "terminal",
                              NULL,
