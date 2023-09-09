@@ -183,6 +183,155 @@ static const PosKeycode keycodes_us[] = {
   { "|", KEY_BACKSLASH, POS_KEYCODE_MODIFIER_SHIFT },
   { "}", KEY_RIGHTBRACE, POS_KEYCODE_MODIFIER_SHIFT },
   { "~", KEY_GRAVE, POS_KEYCODE_MODIFIER_SHIFT },
+  { NULL },
+};
+
+
+static const PosKeycode keycodes_de[] = {
+  /* no modifier in de layout */
+  /* 1st row */
+  { "^", KEY_GRAVE, POS_KEYCODE_MODIFIER_NONE },
+  { "ß", KEY_MINUS, POS_KEYCODE_MODIFIER_NONE },
+
+  /* 2nd row */
+  { "q", KEY_Q, POS_KEYCODE_MODIFIER_NONE },
+  { "w", KEY_W, POS_KEYCODE_MODIFIER_NONE },
+  { "e", KEY_E, POS_KEYCODE_MODIFIER_NONE },
+  { "r", KEY_R, POS_KEYCODE_MODIFIER_NONE },
+  { "t", KEY_T, POS_KEYCODE_MODIFIER_NONE },
+  { "z", KEY_Y, POS_KEYCODE_MODIFIER_NONE },
+  { "u", KEY_U, POS_KEYCODE_MODIFIER_NONE },
+  { "i", KEY_I, POS_KEYCODE_MODIFIER_NONE },
+  { "o", KEY_O, POS_KEYCODE_MODIFIER_NONE },
+  { "p", KEY_P, POS_KEYCODE_MODIFIER_NONE },
+  { "ü", KEY_LEFTBRACE, POS_KEYCODE_MODIFIER_NONE },
+  { "+", KEY_RIGHTBRACE, POS_KEYCODE_MODIFIER_NONE },
+  { "#", KEY_BACKSLASH, POS_KEYCODE_MODIFIER_NONE },
+
+  /* 3rd row */
+  { "a", KEY_A, POS_KEYCODE_MODIFIER_NONE },
+  { "s", KEY_S, POS_KEYCODE_MODIFIER_NONE },
+  { "d", KEY_D, POS_KEYCODE_MODIFIER_NONE },
+  { "f", KEY_F, POS_KEYCODE_MODIFIER_NONE },
+  { "g", KEY_G, POS_KEYCODE_MODIFIER_NONE },
+  { "h", KEY_H, POS_KEYCODE_MODIFIER_NONE },
+  { "j", KEY_J, POS_KEYCODE_MODIFIER_NONE },
+  { "k", KEY_K, POS_KEYCODE_MODIFIER_NONE },
+  { "l", KEY_L, POS_KEYCODE_MODIFIER_NONE },
+  { "ö", KEY_SEMICOLON, POS_KEYCODE_MODIFIER_NONE },
+  { "ä", KEY_APOSTROPHE, POS_KEYCODE_MODIFIER_NONE },
+
+  /* 4th row */
+  { "y", KEY_Z, POS_KEYCODE_MODIFIER_NONE },
+  { "x", KEY_X, POS_KEYCODE_MODIFIER_NONE },
+  { "c", KEY_C, POS_KEYCODE_MODIFIER_NONE },
+  { "v", KEY_V, POS_KEYCODE_MODIFIER_NONE },
+  { "b", KEY_B, POS_KEYCODE_MODIFIER_NONE },
+  { "n", KEY_N, POS_KEYCODE_MODIFIER_NONE },
+  { "m", KEY_M, POS_KEYCODE_MODIFIER_NONE },
+  { ",", KEY_COMMA, POS_KEYCODE_MODIFIER_NONE },
+  { ".", KEY_DOT, POS_KEYCODE_MODIFIER_NONE },
+  { "-", KEY_SLASH, POS_KEYCODE_MODIFIER_NONE },
+
+  /* 5th row */
+  { "<", KEY_102ND, POS_KEYCODE_MODIFIER_NONE },
+
+  /* 1st row + shift */
+  { "°", KEY_GRAVE, POS_KEYCODE_MODIFIER_SHIFT },
+  { "!", KEY_1, POS_KEYCODE_MODIFIER_SHIFT },
+  { "\"", KEY_2, POS_KEYCODE_MODIFIER_SHIFT },
+  { "§", KEY_3, POS_KEYCODE_MODIFIER_SHIFT },
+  { "$", KEY_4, POS_KEYCODE_MODIFIER_SHIFT },
+  { "%", KEY_5, POS_KEYCODE_MODIFIER_SHIFT },
+  { "&", KEY_6, POS_KEYCODE_MODIFIER_SHIFT },
+  { "/", KEY_7, POS_KEYCODE_MODIFIER_SHIFT },
+  { "(", KEY_8, POS_KEYCODE_MODIFIER_SHIFT },
+  { ")", KEY_9, POS_KEYCODE_MODIFIER_SHIFT },
+  { "=", KEY_0, POS_KEYCODE_MODIFIER_SHIFT },
+  { "?", KEY_MINUS, POS_KEYCODE_MODIFIER_SHIFT },
+  { "`", KEY_EQUAL, POS_KEYCODE_MODIFIER_SHIFT },
+
+  /* 2nd row + shift */
+  { "Q", KEY_Q, POS_KEYCODE_MODIFIER_SHIFT },
+  { "W", KEY_W, POS_KEYCODE_MODIFIER_SHIFT },
+  { "E", KEY_E, POS_KEYCODE_MODIFIER_SHIFT },
+  { "R", KEY_R, POS_KEYCODE_MODIFIER_SHIFT },
+  { "T", KEY_T, POS_KEYCODE_MODIFIER_SHIFT },
+  { "Z", KEY_Y, POS_KEYCODE_MODIFIER_SHIFT },
+  { "U", KEY_U, POS_KEYCODE_MODIFIER_SHIFT },
+  { "I", KEY_I, POS_KEYCODE_MODIFIER_SHIFT },
+  { "O", KEY_O, POS_KEYCODE_MODIFIER_SHIFT },
+  { "P", KEY_P, POS_KEYCODE_MODIFIER_SHIFT },
+  { "Ü", KEY_LEFTBRACE, POS_KEYCODE_MODIFIER_SHIFT },
+  { "*", KEY_RIGHTBRACE, POS_KEYCODE_MODIFIER_SHIFT },
+  { "\'", KEY_BACKSLASH, POS_KEYCODE_MODIFIER_SHIFT },
+
+  /* 3rd row + shift */
+  { "A", KEY_A, POS_KEYCODE_MODIFIER_SHIFT },
+  { "S", KEY_S, POS_KEYCODE_MODIFIER_SHIFT },
+  { "D", KEY_D, POS_KEYCODE_MODIFIER_SHIFT },
+  { "F", KEY_F, POS_KEYCODE_MODIFIER_SHIFT },
+  { "G", KEY_G, POS_KEYCODE_MODIFIER_SHIFT },
+  { "H", KEY_H, POS_KEYCODE_MODIFIER_SHIFT },
+  { "J", KEY_J, POS_KEYCODE_MODIFIER_SHIFT },
+  { "K", KEY_K, POS_KEYCODE_MODIFIER_SHIFT },
+  { "L", KEY_L, POS_KEYCODE_MODIFIER_SHIFT },
+  { "Ö", KEY_SEMICOLON, POS_KEYCODE_MODIFIER_SHIFT },
+  { "Ä", KEY_APOSTROPHE, POS_KEYCODE_MODIFIER_SHIFT },
+
+  /* 4rd row + shift */
+  { "Y", KEY_Z, POS_KEYCODE_MODIFIER_SHIFT },
+  { "X", KEY_X, POS_KEYCODE_MODIFIER_SHIFT },
+  { "C", KEY_C, POS_KEYCODE_MODIFIER_SHIFT },
+  { "V", KEY_V, POS_KEYCODE_MODIFIER_SHIFT },
+  { "B", KEY_B, POS_KEYCODE_MODIFIER_SHIFT },
+  { "N", KEY_N, POS_KEYCODE_MODIFIER_SHIFT },
+  { "M", KEY_M, POS_KEYCODE_MODIFIER_SHIFT },
+  { ";", KEY_COMMA, POS_KEYCODE_MODIFIER_SHIFT },
+  { ":", KEY_DOT, POS_KEYCODE_MODIFIER_SHIFT },
+  { "_", KEY_SLASH, POS_KEYCODE_MODIFIER_SHIFT },
+
+  /* 5th row */
+  { ">", KEY_102ND, POS_KEYCODE_MODIFIER_SHIFT },
+
+  /* 1st row + AltGr */
+  { "{", KEY_7, POS_KEYCODE_MODIFIER_ALTGR },
+  { "[", KEY_8, POS_KEYCODE_MODIFIER_ALTGR },
+  { "]", KEY_9, POS_KEYCODE_MODIFIER_ALTGR },
+  { "}", KEY_0, POS_KEYCODE_MODIFIER_ALTGR },
+  { "\\", KEY_MINUS, POS_KEYCODE_MODIFIER_ALTGR },
+
+  /* 2nd row + AltGr */
+  { "@", KEY_Q, POS_KEYCODE_MODIFIER_ALTGR },
+  { "€", KEY_E, POS_KEYCODE_MODIFIER_ALTGR },
+  { "¶", KEY_R, POS_KEYCODE_MODIFIER_ALTGR },
+  { "~", KEY_RIGHTBRACE, POS_KEYCODE_MODIFIER_ALTGR },
+
+   /* 4th row + AltGr */
+  { "¢", KEY_C, POS_KEYCODE_MODIFIER_ALTGR },
+  { "•", KEY_COMMA, POS_KEYCODE_MODIFIER_ALTGR },
+  { "…", KEY_DOT, POS_KEYCODE_MODIFIER_ALTGR },
+
+  /* 5th row + AltGr */
+  { "|", KEY_102ND, POS_KEYCODE_MODIFIER_ALTGR },
+
+  /* 1st row + Shift + AltGr */
+  { "£", KEY_3, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+  { "™", KEY_8, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+
+  /* 2nd row + Shift + AltGr */
+  { "®", KEY_R, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+  { "¥", KEY_Y, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+
+  /* 3rd row + Shift + AltGr */
+  { "ẞ", KEY_S, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+
+  /* 4th row + Shift + AltGr */
+  { "©", KEY_C, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+  { "×", KEY_COMMA, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+  { "÷", KEY_DOT, POS_KEYCODE_MODIFIER_SHIFT | POS_KEYCODE_MODIFIER_ALTGR },
+
+  { NULL },
 };
 
 
@@ -281,6 +430,14 @@ pos_vk_driver_update_keycodes (PosVkDriver *self, const char *layout_id)
   self->keycodes = g_hash_table_new (g_str_hash, g_str_equal);
   for (int i = 0; i < G_N_ELEMENTS (keycodes_common); i++)
     g_hash_table_insert (self->keycodes, keycodes_common[i].key,  (gpointer)&keycodes_common[i]);
+
+  if (g_strcmp0 (layout_id, "de") == 0) {
+    g_debug ("Keycodes: de");
+    keycodes = keycodes_de;
+  } else {
+    /* Other layouts go here */
+    g_debug ("Keycodes: us");
+  }
 
   for (int i = 0; keycodes[i].key != NULL; i++)
     g_hash_table_insert (self->keycodes, keycodes[i].key,  (gpointer)&keycodes[i]);
