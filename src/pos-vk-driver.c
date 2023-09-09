@@ -54,6 +54,7 @@ typedef enum {
   POS_KEYCODE_MODIFIER_NONE =  0,
   POS_KEYCODE_MODIFIER_SHIFT = 1 << 0,
   POS_KEYCODE_MODIFIER_CTRL =  1 << 1,
+  POS_KEYCODE_MODIFIER_ALTGR = 1 << 2,
 } PosKeycodeModifier;
 
 typedef struct {
@@ -470,6 +471,8 @@ pos_vk_driver_key_down (PosVkDriver *self, const char *key)
     modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT;
   if (keycode->modifiers & POS_KEYCODE_MODIFIER_CTRL)
     modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
+  if (keycode->modifiers & POS_KEYCODE_MODIFIER_ALTGR)
+    modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALTGR;
 
   /* FIXME: preserve current modifiers */
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
