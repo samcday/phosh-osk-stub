@@ -1235,12 +1235,12 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
                          POS_TYPE_INPUT_METHOD,
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-   /**
-    * PosInputSurface:completer:
-    *
-    * A completer implementing the #PosCompleter interface.
-    *
-    */
+  /**
+   * PosInputSurface:completer:
+   *
+   * A completer implementing the #PosCompleter interface.
+   *
+   */
    props[PROP_COMPLETER] =
      g_param_spec_object ("completer", "", "",
                           POS_TYPE_COMPLETER,
