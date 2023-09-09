@@ -45,6 +45,7 @@ struct _PosVkDriver {
   PosVirtualKeyboard *virtual_keyboard;
 
   GnomeXkbInfo       *xkbinfo;
+  char               *layout_id;
   GSettings          *input_settings;
 };
 G_DEFINE_TYPE (PosVkDriver, pos_vk_driver, G_TYPE_OBJECT)
@@ -403,6 +404,7 @@ pos_vk_driver_finalize (GObject *object)
   g_hash_table_destroy (self->keycodes);
   g_clear_object (&self->input_settings);
   g_clear_object (&self->xkbinfo);
+  g_clear_pointer (&self->layout_id, g_free);
 
   G_OBJECT_CLASS (pos_vk_driver_parent_class)->finalize (object);
 }
@@ -549,7 +551,7 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
  * Sets the given keymap honoring xkb-options set in GNOME.
  */
 void
-pos_vk_driver_set_keymap (PosVkDriver *self, const char *id)
+pos_vk_driver_set_keymap (PosVkDriver *self, const char *layout_id)
 {
   g_auto (GStrv) xkb_options = NULL;
   g_autofree gchar *xkb_options_string = NULL;
@@ -558,20 +560,25 @@ pos_vk_driver_set_keymap (PosVkDriver *self, const char *id)
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
   g_return_if_fail (G_IS_SETTINGS (self->input_settings));
-  g_return_if_fail (id);
+  g_return_if_fail (layout_id);
 
+  if (g_strcmp0 (layout_id, self->layout_id) == 0)
+    return;
+
+  g_clear_pointer (&self->layout_id, g_free);
   xkb_options = g_settings_get_strv (self->input_settings, "xkb-options");
   if (xkb_options) {
     xkb_options_string = g_strjoinv (",", xkb_options);
     g_debug ("Setting options %s", xkb_options_string);
   }
 
-  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id,
+  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, layout_id,
                                        NULL, NULL, &layout, &variant)) {
-    g_debug ("Failed to get layout info for %s", id);
+    g_debug ("Failed to get layout info for %s", layout_id);
     return;
   }
 
+  self->layout_id = g_strdup (layout_id);
   g_debug ("Switching to layout %s %s", layout, variant);
   set_xkb_keymap (self, layout, variant, xkb_options_string);
 }
