@@ -115,6 +115,7 @@ xkbcommon_dep = dependency('xkbcommon')
 hunspell_dep = dependency('hunspell', required: false)
 fzf = find_program('fzf', required: false)
 presage_dep = cc.find_library('presage', required: false)
+varnam_dep = dependency('varnam', required: false)
 
 if hunspell_dep.found()
   default_completer = 'hunspell'
@@ -131,6 +132,7 @@ config_h.set_quoted('PHOSH_OSK_STUB_VERSION', meson.project_version())
 config_h.set('POS_HAVE_FZF', fzf.found())
 config_h.set('POS_HAVE_HUNSPELL', hunspell_dep.found())
 config_h.set('POS_HAVE_PRESAGE', presage_dep.found())
+config_h.set('POS_HAVE_VARNAM', varnam_dep.found())
 config_h.set_quoted('POS_DEFAULT_COMPLETER', default_completer)
 
 configure_file(
@@ -166,6 +168,7 @@ summary({
     'Default': default_completer,
     'Presage': presage_dep.found(),
     'Fzf': fzf.found(),
+    'Libvarnam': varnam_dep.found(),
     'Hunspell': hunspell_dep.found(),
   },
   bool_yn: true,

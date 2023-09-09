@@ -123,11 +123,43 @@ else
   libpos_completer_hunspell_dep = declare_dependency()
 endif
 
+if varnam_dep.found()
+  #  varnam based completer
+  libpos_completer_varnam_sources = files(
+    'pos-completer-varnam.h',
+    'pos-completer-varnam.c',
+  )
+
+  libpos_completer_varnam_deps = [
+    gio_dep,
+    glib_dep,
+    gtk_dep,
+    varnam_dep,
+  ]
+
+  libpos_completer_varnam_lib = static_library(
+    'pos-completer-varnam',
+    libpos_completer_varnam_sources,
+    include_directories: pos_includes,
+    install: false,
+    dependencies: libpos_completer_varnam_deps)
+
+  libpos_completer_varnam_dep = declare_dependency(
+    include_directories: libpos_completer_includes,
+    link_with: libpos_completer_varnam_lib,
+  )
+else
+  libpos_completer_varnam_sources = []
+  libpos_completer_varnam_lib = []
+  libpos_completer_varnam_dep = declare_dependency()
+endif
+
 libpos_completers_sources = [
   libpos_completer_fzf_sources,
   libpos_completer_hunspell_sources,
   libpos_completer_pipe_sources,
   libpos_completer_presage_sources,
+  libpos_completer_varnam_sources,
 ]
 
 libpos_completer_libs = [
@@ -135,6 +167,7 @@ libpos_completer_libs = [
   libpos_completer_hunspell_lib,
   libpos_completer_pipe_lib,
   libpos_completer_presage_lib,
+  libpos_completer_varnam_lib,
 ]
 
 libpos_completers_dep = declare_dependency(
@@ -143,5 +176,6 @@ libpos_completers_dep = declare_dependency(
     libpos_completer_hunspell_dep,
     libpos_completer_pipe_dep,
     libpos_completer_presage_dep,
+    libpos_completer_varnam_dep,
   ]
 )
