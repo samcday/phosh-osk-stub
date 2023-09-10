@@ -1276,7 +1276,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   /**
    * PosInputSurface:completion-enabled
    *
-   * %TRUE if the user enabled completion. That does imply that completion is actually active
+   * %TRUE if the user enabled completion. That does not imply that completion is actually active
    * as this also depends on an input-method being present, a completer configured, etc. This
    * setting merely reflects the users intent.
    */
