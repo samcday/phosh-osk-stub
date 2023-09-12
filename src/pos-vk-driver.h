@@ -21,5 +21,6 @@ void pos_vk_driver_key_down (PosVkDriver *virtual_keyboard, const char *key);
 void pos_vk_driver_key_up (PosVkDriver *virtual_keyboard, const char *key);
 void pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierType modifiers);
 void pos_vk_driver_set_keymap (PosVkDriver *self, const char *id);
+void pos_vk_driver_set_overlay_keymap (PosVkDriver *self, const char * const *symbols);
 
 G_END_DECLS

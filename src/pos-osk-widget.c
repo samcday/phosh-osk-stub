@@ -15,6 +15,7 @@
 #include "pos-enum-types.h"
 #include "pos-osk-key.h"
 #include "pos-osk-widget.h"
+#include "pos-virtual-keyboard.h"
 
 #include <json-glib/json-glib.h>
 #include <pango/pangocairo.h>
@@ -963,6 +964,7 @@ on_symbol_selected (PosOskWidget *self, const char *symbol)
   g_clear_pointer (&self->char_popup, phosh_cp_widget_destroy);
 }
 
+extern PosVirtualKeyboard *virtual_keyboard;
 
 static void
 on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user_data)
