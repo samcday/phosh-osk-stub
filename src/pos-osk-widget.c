@@ -39,6 +39,8 @@ enum {
   OSK_KEY_UP,
   OSK_KEY_CANCELLED,
   OSK_KEY_SYMBOL,
+  OSK_POPOVER_SHOWN,
+  OSK_POPOVER_HIDDEN,
   N_SIGNALS
 };
 static guint signals[N_SIGNALS];
@@ -964,7 +966,14 @@ on_symbol_selected (PosOskWidget *self, const char *symbol)
   g_clear_pointer (&self->char_popup, phosh_cp_widget_destroy);
 }
 
-extern PosVirtualKeyboard *virtual_keyboard;
+
+static void
+on_popover_closed (PosOskWidget *self)
+{
+  g_debug ("Closed symbol popover");
+  g_signal_emit (self, signals[OSK_POPOVER_HIDDEN], 0);
+}
+
 
 static void
 on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user_data)
@@ -995,8 +1004,16 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
   get_popup_pos (key, &rect);
   gtk_popover_set_pointing_to (GTK_POPOVER (self->char_popup), &rect);
 
-  g_signal_connect_swapped (self->char_popup, "selected", G_CALLBACK (on_symbol_selected), self);
+  g_signal_connect_object (self->char_popup, "selected",
+                           G_CALLBACK (on_symbol_selected),
+                           self,
+                           G_CONNECT_SWAPPED);
+  g_signal_connect_object (self->char_popup, "closed",
+                           G_CALLBACK (on_popover_closed),
+                           self,
+                           G_CONNECT_SWAPPED);
   gtk_popover_popup (GTK_POPOVER (self->char_popup));
+  g_signal_emit (self, signals[OSK_POPOVER_SHOWN], 0, symbols);
 }
 
 
@@ -1410,6 +1427,32 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
                                           G_TYPE_NONE,
                                           1,
                                           G_TYPE_STRING);
+  /**
+   * PosOskWidget::popover-shown
+   * @self: The osk widget emitting the symbol
+   * @symbols: The symbols in the popover
+   *
+   * The osk shows a popover to select additional symbols
+   */
+  signals[OSK_POPOVER_SHOWN] = g_signal_new ("popover-shown",
+                                             G_TYPE_FROM_CLASS (klass),
+                                             G_SIGNAL_RUN_LAST,
+                                             0, NULL, NULL, NULL,
+                                             G_TYPE_NONE,
+                                             1,
+                                             G_TYPE_STRV);
+  /**
+   * PosOskWidget::popover-hidden
+   * @self: The osk widget emitting the symbol
+   *
+   * The osk has hidden the symbol popover
+   */
+  signals[OSK_POPOVER_HIDDEN] = g_signal_new ("popover-hidden",
+                                              G_TYPE_FROM_CLASS (klass),
+                                              G_SIGNAL_RUN_LAST,
+                                              0, NULL, NULL, NULL,
+                                              G_TYPE_NONE,
+                                              0);
 
   gtk_widget_class_set_css_name (widget_class, "pos-osk-widget");
 }
