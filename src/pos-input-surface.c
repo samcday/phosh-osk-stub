@@ -487,8 +487,7 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
   g_debug ("Menu popoup activated at %d %d, current: '%s'", rect.x, rect.y, osk_name);
 
   layout_action = g_action_map_lookup_action (G_ACTION_MAP (self->action_map), "select-layout");
-  g_simple_action_set_state (G_SIMPLE_ACTION (layout_action),
-                             g_variant_new ("s", osk_name));
+  g_simple_action_set_state (G_SIMPLE_ACTION (layout_action), g_variant_new ("s", osk_name));
 
   gtk_container_foreach (GTK_CONTAINER (self->menu_box_layouts),
                          (GtkCallback) gtk_widget_destroy,
@@ -544,10 +543,13 @@ select_layout_change_state (GSimpleAction *action,
 
 
 static void
-switch_language (PosInputSurface *self, const char *locale, const char *region)
+switch_language (PosInputSurface *self, const char *locale, const char *region, const char *layout_id)
 {
   gboolean success;
   g_autoptr (GError) err = NULL;
+
+  if (self->keyboard_driver)
+    pos_vk_driver_set_keymap (self->keyboard_driver, layout_id);
 
   if (self->completer == NULL)
     return;
@@ -588,8 +590,14 @@ on_visible_child_changed (PosInputSurface *self)
   /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
-  if (osk != POS_OSK_WIDGET (self->osk_terminal))
-    switch_language (self, pos_osk_widget_get_lang (osk), pos_osk_widget_get_region (osk));
+  if (osk != POS_OSK_WIDGET (self->osk_terminal)) {
+    switch_language (self,
+                     pos_osk_widget_get_lang (osk),
+                     pos_osk_widget_get_region (osk),
+                     pos_osk_widget_get_layout_id (osk));
+  } else {
+    pos_vk_driver_set_keymap (self->keyboard_driver, pos_osk_widget_get_layout_id (osk));
+  }
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -703,7 +711,8 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       NULL);
     switch_language (self,
                      pos_osk_widget_get_lang (POS_OSK_WIDGET (self->last_layout)),
-                     pos_osk_widget_get_region (POS_OSK_WIDGET (self->last_layout)));
+                     pos_osk_widget_get_region (POS_OSK_WIDGET (self->last_layout)),
+                     pos_osk_widget_get_layout_id (POS_OSK_WIDGET (self->last_layout)));
   } else {
     g_debug ("Removing completer");
   }
@@ -1226,12 +1235,12 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
                          POS_TYPE_INPUT_METHOD,
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-   /**
-    * PosInputSurface:completer:
-    *
-    * A completer implementing the #PosCompleter interface.
-    *
-    */
+  /**
+   * PosInputSurface:completer:
+   *
+   * A completer implementing the #PosCompleter interface.
+   *
+   */
    props[PROP_COMPLETER] =
      g_param_spec_object ("completer", "", "",
                           POS_TYPE_COMPLETER,
@@ -1276,14 +1285,18 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   /**
    * PosInputSurface:completion-enabled
    *
-   * %TRUE if the user enabled completion. That does imply that completion is actually active
+   * %TRUE if the user enabled completion. That does not imply that completion is actually active
    * as this also depends on an input-method being present, a completer configured, etc. This
    * setting merely reflects the users intent.
    */
   props[PROP_COMPLETION_ENABLED] =
     g_param_spec_boolean ("completion-enabled", "", "", FALSE,
                           G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
-
+  /**
+   * PosInputSurface:keyboard-driver:
+   *
+   * Keyboard driver for submitting keycodes and handling associated keymaps.
+   */
   props[PROP_KEYBOARD_DRIVER] =
     g_param_spec_object ("keyboard-driver", "", "",
                          /* TODO: should be an interface */
@@ -1307,6 +1320,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 static PosOskWidget *
 insert_osk (PosInputSurface *self,
             const char      *name,
+            const char      *layout_id,
             const char      *display_name,
             const char      *layout,
             const char      *variant)
@@ -1319,7 +1333,7 @@ insert_osk (PosInputSurface *self,
     return osk_widget;
 
   osk_widget = pos_osk_widget_new (self->osk_features);
-  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget),
+  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget), layout_id,
                                   display_name, layout, variant, &err)) {
     g_warning ("Failed to load osk layout for %s: %s", name, err->message);
 
@@ -1346,7 +1360,7 @@ insert_osk (PosInputSurface *self,
 
 
 static PosOskWidget *
-insert_layout (PosInputSurface *self, const char *type, const char *id)
+insert_layout (PosInputSurface *self, const char *type, const char *layout_id)
 {
   g_autofree char *name = NULL;
   const gchar *layout = NULL;
@@ -1354,13 +1368,13 @@ insert_layout (PosInputSurface *self, const char *type, const char *id)
   const gchar *display_name = NULL;
 
   if (g_strcmp0 (type, "xkb")) {
-    g_debug ("Not a xkb layout: '%s' - ignoring", id);
+    g_debug ("Not a xkb layout: '%s' - ignoring", layout_id);
     return NULL;
   }
 
-  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, id, &display_name, NULL,
+  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, layout_id, &display_name, NULL,
                                        &layout, &variant)) {
-    g_warning ("Failed to get layout info for %s", id);
+    g_warning ("Failed to get layout info for %s", layout_id);
     return NULL;
   }
   if (STR_IS_NULL_OR_EMPTY (variant))
@@ -1368,7 +1382,7 @@ insert_layout (PosInputSurface *self, const char *type, const char *id)
   else
     name = g_strdup_printf ("%s+%s", layout, variant);
 
-  return insert_osk (self, name, display_name, layout, variant);
+  return insert_osk (self, name, layout_id, display_name, layout, variant);
 }
 
 
@@ -1421,7 +1435,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 
   /* If nothing is left add a default */
   if (g_hash_table_size (self->osks) == 0) {
-    insert_osk (self, "us", "English (USA)", "us", NULL);
+    insert_osk (self, "us", "us", "English (USA)", "us", NULL);
   }
 }
 
@@ -1507,6 +1521,7 @@ pos_input_surface_init (PosInputSurface *self)
   g_settings_bind (self->osk_settings, "osk-features", self, "osk-features", G_SETTINGS_BIND_GET);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
+                             "us",
                              _("Terminal"),
                              "terminal",
                              NULL,

@@ -39,7 +39,7 @@ test_load_layouts (void)
     g_assert (g_str_has_suffix (names[i], ".json"));
     layout = g_strndup (names[i], strlen (names[i]) - strlen (".json"));
     g_test_message ("Loading layout %s", layout);
-    pos_osk_widget_set_layout (osk_widget, "Test", layout, NULL, &err);
+    pos_osk_widget_set_layout (osk_widget, "us", "Test", layout, NULL, &err);
 
     if (g_strcmp0 (names[i], "terminal.json")) {
         g_assert_nonnull (pos_osk_widget_get_lang (osk_widget));

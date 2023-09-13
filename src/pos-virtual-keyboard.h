@@ -40,5 +40,6 @@ void pos_virtual_keyboard_set_modifiers (PosVirtualKeyboard             *self,
                                          PosVirtualKeyboardModifierFlags depressed,
                                          PosVirtualKeyboardModifierFlags latched,
                                          PosVirtualKeyboardModifierFlags locked);
+void pos_virtual_keyboard_set_keymap (PosVirtualKeyboard *self, const char *keymap);
 
 G_END_DECLS
