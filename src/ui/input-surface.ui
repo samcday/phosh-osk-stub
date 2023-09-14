@@ -6,8 +6,8 @@
     <child>
       <object class="HdyClamp">
         <property name="visible">True</property>
-        <property name="maximum_size">720</property>
-
+        <property name="maximum-size">1024</property>
+        <property name="tightening-threshold">1024</property>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
