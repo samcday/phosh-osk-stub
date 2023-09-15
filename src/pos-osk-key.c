@@ -9,6 +9,7 @@
 #define G_LOG_DOMAIN "pos-osk-key"
 
 #include "pos-osk-key.h"
+#include "pos-enums.h"
 
 enum {
   PROP_0,
