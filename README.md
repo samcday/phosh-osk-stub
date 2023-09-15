@@ -21,8 +21,10 @@ Features:
 - [emoji layout](https://gitlab.gnome.org/guidog/phosh-osk-stub/-/raw/main/screenshots/pos-emoji.png)
 - cursor navigation via space-bar long-press
 - word correction via hunspell
+- use any program as completer via a `pipe` completer ([Example](https://social.librem.one/@agx/110260534404795348))
 - experimental [word completion](https://social.librem.one/@agx/109428599061094716)
   based on the presage library
+- experimental input of Indic languages using [varnam](https://github.com/varnamproject)
 
 ## License
 
