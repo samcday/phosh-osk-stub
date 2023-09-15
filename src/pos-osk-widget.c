@@ -1368,7 +1368,9 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   /**
    * PosOskWidget:name
    *
-   * The name of the current layout
+   * The name of the current layout. The name is unique for this layout. For xkb based layouts
+   * it's `xkb:lang:variant`, for special layouts like `terminal` just `terminal`. The widget
+   * should treat this as opaque value.
    */
   props[PROP_NAME] =
     g_param_spec_string ("name", "", "",
@@ -1592,7 +1594,7 @@ pos_osk_widget_set_layer (PosOskWidget *self, PosOskWidgetLayer layer)
 
 
 static void
-parse_lang (PosOskWidget *self)
+parse_lang (PosOskWidget *self, const char *layout, const char *variant)
 {
   g_auto (GStrv) parts = NULL;
 
@@ -1609,17 +1611,15 @@ parse_lang (PosOskWidget *self)
     return;
   }
 
-  /* Keyboard layout has language (`en`), region is from name (`us`) */
+  /* Keyboard layout has language (`en`), region is from layout (`us`) */
   self->lang = g_strdup (self->layout.locale);
-  if (strchr (self->name, '+') == 0) {
-    self->region = g_strdup (self->name);
+  if (STR_IS_NULL_OR_EMPTY (variant)) {
+    self->region = g_strdup (layout);
     return;
   }
 
-  /* Like above but name also has a layout variant (`in+mal`) */
-  g_strfreev (parts);
-  parts = g_strsplit (self->name, "+", -1);
-  self->region = g_strdup (parts[0]);
+  /* Like above but layout also from variant (`in+mal`) */
+  self->region = g_strdup (variant);
 }
 
 
@@ -1628,12 +1628,15 @@ parse_lang (PosOskWidget *self)
 /**
  * pos_osk_widget_set_layout:
  * @self: The osk widget
+ * @name: The "name" of the layout. This uniquely identifiers the layout. The widget should
+ *  treat this as an opaque value.
  * @layout_id: The (xkb) layout id. This can differ from the widget layout and variant
  *  e.g. in the case of terminal where we use a `terminal` layout but an xkb keymap `us`.
+ *  The widget should treat this as opaque value.
  * @display_name: The display name. Should be used when displaying layout information
  *    to the user. (E.g. 'English (US)')
- * @layout: The name of the layout. E.g. `jp`, `de`
- * @variant: The layout variant, e.g. `ch`
+ * @layout: The name of the layout. to set e.g. `jp`, `de`, 'terminal'
+ * @variant: The layout variant to set , e.g. `ch`
  * @err: The error location
  *
  * Sets the widgets keyboard layout.
@@ -1642,24 +1645,18 @@ parse_lang (PosOskWidget *self)
  */
 gboolean
 pos_osk_widget_set_layout (PosOskWidget *self,
+                           const char   *name,
                            const char   *layout_id,
                            const char   *display_name,
                            const char   *layout,
                            const char   *variant,
                            GError      **err)
 {
-  g_autofree char *name = NULL;
   g_autofree char *path = NULL;
-
   g_autoptr (GBytes) data = NULL;
   const char *json;
   gsize size;
   gboolean ret;
-
-  if (!STR_IS_NULL_OR_EMPTY (variant))
-    name = g_strdup_printf ("%s+%s", layout, variant);
-  else
-    name = g_strdup (layout);
 
   if (g_strcmp0 (self->name, name) == 0)
     return TRUE;
@@ -1667,13 +1664,17 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   if (self->layout.name)
     pos_osk_widget_layout_free (&self->layout);
   g_free (self->name);
-  self->name = g_steal_pointer (&name);
+  self->name = g_strdup (name);
   g_free (self->display_name);
   self->display_name = g_strdup (display_name);
   g_free (self->layout_id);
   self->layout_id = g_strdup (layout_id);
 
-  path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", self->name);
+  if (!STR_IS_NULL_OR_EMPTY (variant))
+    path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s+%s.json", layout, variant);
+  else
+    path = g_strdup_printf ("/sm/puri/phosh/osk-stub/layouts/%s.json", layout);
+
   data = g_resources_lookup_data (path, 0, err);
   if (data == NULL) {
     return FALSE;
@@ -1685,7 +1686,7 @@ pos_osk_widget_set_layout (PosOskWidget *self,
   json = (char*) g_bytes_get_data (data, &size);
   ret = parse_layout (self, json, size);
 
-  parse_lang (self);
+  parse_lang (self, layout, variant);
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_NAME]);
 
@@ -1757,7 +1758,7 @@ pos_osk_widget_get_mode (PosOskWidget *self)
  * pos_osk_widget_get_lang:
  * @self: The osk widget
  *
- * Get the language e.g. `en`, `de`.
+ * Get the language e.g. `en`, `de`
  *
  * Returns: The language
  */

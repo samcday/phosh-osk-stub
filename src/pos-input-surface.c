@@ -1423,6 +1423,20 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 }
 
 
+static char *
+build_layout_name (const char *engine, const char *layout, const char *variant)
+{
+  char *name;
+
+  if (STR_IS_NULL_OR_EMPTY (variant))
+    name = g_strdup_printf ("%s:%s", engine, layout);
+  else
+    name = g_strdup_printf ("%s:%s+%s", engine, layout, variant);
+
+  return name;
+}
+
+
 static PosOskWidget *
 insert_osk (PosInputSurface *self,
             const char      *name,
@@ -1439,8 +1453,13 @@ insert_osk (PosInputSurface *self,
     return osk_widget;
 
   osk_widget = pos_osk_widget_new (self->osk_features);
-  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget), layout_id,
-                                  display_name, layout, variant, &err)) {
+  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (osk_widget),
+                                  name,
+                                  layout_id,
+                                  display_name,
+                                  layout,
+                                  variant,
+                                  &err)) {
     g_warning ("Failed to load osk layout for %s: %s", name, err->message);
 
     gtk_widget_destroy (g_object_ref_sink (GTK_WIDGET (osk_widget)));
@@ -1485,10 +1504,7 @@ insert_xkb_layout (PosInputSurface *self, const char *type, const char *layout_i
     g_warning ("Failed to get layout info for %s", layout_id);
     return NULL;
   }
-  if (STR_IS_NULL_OR_EMPTY (variant))
-    name = g_strdup (layout);
-  else
-    name = g_strdup_printf ("%s+%s", layout, variant);
+  name = build_layout_name ("xkb", layout, variant);
 
   return insert_osk (self, name, layout_id, display_name, layout, variant);
 }
@@ -1630,6 +1646,7 @@ pos_input_surface_init (PosInputSurface *self)
   g_settings_bind (self->osk_settings, "osk-features", self, "osk-features", G_SETTINGS_BIND_GET);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
+                             "terminal",
                              "terminal",
                              _("Terminal"),
                              "terminal",
