@@ -1801,11 +1801,17 @@ pos_input_surface_is_completer_active (PosInputSurface *self)
   if (pos_input_method_get_active (self->input_method) == FALSE)
     return FALSE;
 
+  /* Layout has an "implicit" completer (e.g. varnam) */
+  child = hdy_deck_get_visible_child (self->deck);
+  if (POS_IS_OSK_WIDGET (child) &&
+      g_object_get_data (G_OBJECT (child), "pos-completion-info")) {
+      return TRUE;
+  }
+
   if (self->completion_enabled == FALSE)
     return FALSE;
 
   /* Completion should only be used on "regular" layouts */
-  child = hdy_deck_get_visible_child (self->deck);
   if (POS_IS_OSK_WIDGET (child) == FALSE || child == self->osk_terminal)
     return FALSE;
 
