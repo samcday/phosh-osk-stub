@@ -51,7 +51,9 @@ struct _PosCompleterVarnam {
   varray               *words;
   guint                 max_completions;
 
+  char                 *lang;
   int                   varnam_handle_id;
+  SchemeDetails        *vscheme_details;
 };
 
 
@@ -162,6 +164,12 @@ pos_completer_varnam_finalize (GObject *object)
 {
   PosCompleterVarnam *self = POS_COMPLETER_VARNAM(object);
 
+  if (self->varnam_handle_id >= 0) {
+    varnam_close (self->varnam_handle_id);
+    self->varnam_handle_id = -1;
+  }
+  g_clear_pointer (&self->lang, g_free);
+
   g_clear_pointer (&self->name, g_free);
   g_clear_pointer (&self->completions, g_strfreev);
   g_string_free (self->preedit, TRUE);
@@ -197,25 +205,56 @@ pos_completer_varnam_class_init (PosCompleterVarnamClass *klass)
 
 
 static gboolean
+pos_completer_varnam_set_language (PosCompleter *completer,
+                                   const char   *lang,
+                                   const char   *region,
+                                   GError      **error)
+{
+  PosCompleterVarnam *self = POS_COMPLETER_VARNAM (completer);
+  gboolean ret;
+
+  g_return_val_if_fail (POS_IS_COMPLETER_VARNAM (self), FALSE);
+
+  if (g_strcmp0 (self->lang, lang) == 0)
+    return TRUE;
+
+  g_clear_pointer (&self->lang, g_free);
+  if (self->varnam_handle_id >= 0)
+    varnam_close (self->varnam_handle_id);
+  self->vscheme_details = NULL;
+
+  g_debug ("Switching to language '%s'", lang);
+  ret = varnam_init_from_id ((char *)lang, &self->varnam_handle_id);
+  if (ret != VARNAM_SUCCESS) {
+    g_autofree char *err_msg = varnam_get_last_error (self->varnam_handle_id);
+    g_set_error (error, POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_ENGINE_INIT, "%s", err_msg ?: "Unknown error");
+    self->varnam_handle_id = -1;
+    return FALSE;
+  }
+
+  self->vscheme_details = varnam_get_scheme_details (self->varnam_handle_id);
+  if (ret != VARNAM_SUCCESS) {
+    g_autofree char *err_msg = varnam_get_last_error (self->varnam_handle_id);
+    varnam_close (self->varnam_handle_id);
+    self->varnam_handle_id = -1;
+    g_set_error (error, POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_ENGINE_INIT, "%s", err_msg ?: "Unknown error");
+    return FALSE;
+  }
+
+  self->lang = g_strdup (lang);
+
+  return TRUE;
+}
+
+
+static gboolean
 pos_completer_varnam_initable_init (GInitable    *initable,
                                     GCancellable *cancelable,
                                     GError      **error)
 {
   PosCompleterVarnam *self = POS_COMPLETER_VARNAM (initable);
-  g_autofree char *err_msg = NULL;
-  int ret;
 
-  /* TODO: make lang configurable, allow to set scheme dir */
-  ret = varnam_init_from_id ("ml", &self->varnam_handle_id);
-  if (ret != VARNAM_SUCCESS) {
-    g_set_error (error,
-                 POS_COMPLETER_ERROR,
-                 POS_COMPLETER_ERROR_ENGINE_INIT,
-                 "%s", varnam_get_last_error (self->varnam_handle_id));
-    return FALSE;
-  }
-
-  return TRUE;
+  return pos_completer_varnam_set_language (POS_COMPLETER (self), "ml", NULL, error);
 }
 
 
@@ -244,6 +283,8 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   varray *suggestions;
   int ret;
   int transliteration_id = 1;
+
+  g_return_val_if_fail (self->varnam_handle_id >= 0, FALSE);
 
   if (pos_completer_add_preedit (POS_COMPLETER (self), self->preedit, symbol)) {
     g_signal_emit_by_name (self, "commit-string", self->preedit->str);
@@ -281,6 +322,15 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
 }
 
 
+static char *
+pos_completer_varnam_get_display_name (PosCompleter *iface)
+{
+  PosCompleterVarnam *self = POS_COMPLETER_VARNAM (iface);
+
+  return g_strdup (self->vscheme_details->DisplayName);
+}
+
+
 static void
 pos_completer_varnam_interface_init (PosCompleterInterface *iface)
 {
@@ -288,12 +338,15 @@ pos_completer_varnam_interface_init (PosCompleterInterface *iface)
   iface->feed_symbol = pos_completer_varnam_feed_symbol;
   iface->get_preedit = pos_completer_varnam_get_preedit;
   iface->set_preedit = pos_completer_varnam_set_preedit;
+  iface->set_language = pos_completer_varnam_set_language;
+  iface->get_display_name = pos_completer_varnam_get_display_name;
 }
 
 
 static void
 pos_completer_varnam_init (PosCompleterVarnam *self)
 {
+  self->varnam_handle_id = -1;
   self->max_completions = MAX_COMPLETIONS;
   self->preedit = g_string_new (NULL);
 }
