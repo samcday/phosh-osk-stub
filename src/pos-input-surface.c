@@ -636,28 +636,41 @@ select_layout_change_state (GSimpleAction *action,
 }
 
 
+static void pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer);
+
+/* Switch the completion engine and it's configuration */
 static void
-switch_completion_language (PosInputSurface *self, PosOskWidget *osk)
+pos_input_surface_switch_completion (PosInputSurface *self, PosOskWidget *osk)
 {
+  PosCompletionInfo *info;
   gboolean success;
+  PosCompleter *default_completer;
   g_autoptr (GError) err = NULL;
-  const char *locale, *region;
 
-  if (self->completer == NULL)
-    return;
+  default_completer = pos_completer_manager_get_default_completer (self->completer_manager);
+  info = g_object_get_data (G_OBJECT (self), "pos-completion-info");
+  if (info) {
+    /* Layout with completion info */
+    pos_input_surface_set_completer (self, info->completer);
+    success = pos_completer_set_language (self->completer, info->lang, info->region, &err);
+    if (!success)
+      g_warning ("Failed to switch completer: %s", err->message);
+  } else if (default_completer) {
+    /* Layout without completion info - use default completer */
+    const char *lang = pos_osk_widget_get_lang (osk);
+    const char *region = pos_osk_widget_get_region (osk);
 
-  locale = pos_osk_widget_get_lang (osk);
-  region = pos_osk_widget_get_region (osk);
-  g_debug ("Switching language, locale: '%s-%s'", locale, region);
-  success = pos_completer_set_language (self->completer, locale, region, &err);
-  if (success == FALSE) {
-    g_warning ("Failed to set language: %s-%s: %s, switching to '%s-%s' instead",
-               locale, region, err->message, POS_COMPLETER_DEFAULT_LANG,
-               POS_COMPLETER_DEFAULT_REGION);
-    pos_completer_set_language (self->completer,
-                                POS_COMPLETER_DEFAULT_LANG,
-                                POS_COMPLETER_DEFAULT_REGION,
-                                NULL);
+    pos_input_surface_set_completer (self, default_completer);
+    success = pos_completer_set_language (self->completer, lang, region, &err);
+    if (!success) {
+      g_warning ("Failed to set language: %s-%s: %s, switching to '%s-%s' instead",
+                 lang, region, err->message, POS_COMPLETER_DEFAULT_LANG,
+                 POS_COMPLETER_DEFAULT_REGION);
+      pos_completer_set_language (self->completer,
+                                  POS_COMPLETER_DEFAULT_LANG,
+                                  POS_COMPLETER_DEFAULT_REGION,
+                                  NULL);
+    }
   }
 
   pos_completion_bar_set_completions (POS_COMPLETION_BAR (self->completion_bar), NULL);
@@ -686,7 +699,7 @@ on_visible_child_changed (PosInputSurface *self)
 
   set_keymap (self);
   if (osk != POS_OSK_WIDGET (self->osk_terminal))
-    switch_completion_language (self, osk);
+    pos_input_surface_switch_completion (self, osk);
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -774,7 +787,6 @@ animate_cb (GtkWidget     *widget,
   return G_SOURCE_CONTINUE;
 }
 
-
 static void
 pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
 {
@@ -798,7 +810,6 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       "swapped-signal::update",
                       G_CALLBACK (on_completer_update), self,
                       NULL);
-    switch_completion_language (self, POS_OSK_WIDGET (self->last_layout));
   } else {
     g_debug ("Removing completer");
   }
@@ -811,16 +822,14 @@ static void
 pos_input_surface_set_completer_manager (PosInputSurface     *self,
                                          PosCompleterManager *completer_manager)
 {
-  PosCompleter *default_completer;
-
   if (self->completer_manager == completer_manager)
     return;
 
   g_set_object (&self->completer_manager, completer_manager);
 
-  /* Update the current completer */
-  default_completer = pos_completer_manager_get_default_completer (self->completer_manager);
-  pos_input_surface_set_completer (self, default_completer);
+  /* Switch completion */
+  if (self->last_layout)
+    pos_input_surface_switch_completion (self, POS_OSK_WIDGET (self->last_layout));
 }
 
 
@@ -1438,12 +1447,13 @@ build_layout_name (const char *engine, const char *layout, const char *variant)
 
 
 static PosOskWidget *
-insert_osk (PosInputSurface *self,
-            const char      *name,
-            const char      *layout_id,
-            const char      *display_name,
-            const char      *layout,
-            const char      *variant)
+insert_osk (PosInputSurface   *self,
+            const char        *name,
+            const char        *layout_id,
+            const char        *display_name,
+            const char        *layout,
+            const char        *variant,
+            PosCompletionInfo *info)
 {
   g_autoptr (GError) err = NULL;
   PosOskWidget *osk_widget;
@@ -1465,6 +1475,11 @@ insert_osk (PosInputSurface *self,
     gtk_widget_destroy (g_object_ref_sink (GTK_WIDGET (osk_widget)));
     return NULL;
   }
+
+  g_object_set_data_full (G_OBJECT (osk_widget),
+                          "pos-completion-info",
+                          info,
+                          (GDestroyNotify)pos_completion_info_free);
 
   g_debug ("Adding osk for layout '%s'", name);
   gtk_widget_set_visible (GTK_WIDGET (osk_widget), TRUE);
@@ -1506,7 +1521,46 @@ insert_xkb_layout (PosInputSurface *self, const char *type, const char *layout_i
   }
   name = build_layout_name ("xkb", layout, variant);
 
-  return insert_osk (self, name, layout_id, display_name, layout, variant);
+  return insert_osk (self, name, layout_id, display_name, layout, variant, NULL);
+}
+
+static PosOskWidget *
+insert_ibus_layout (PosInputSurface *self, const char *type, const char *id)
+{
+  const char *engine_name, *lang;
+  g_autofree char *name = NULL;
+  g_autoptr (GError) err = NULL;
+  g_auto (GStrv) parts = NULL;
+  PosCompletionInfo *info;
+
+  /* We don't actually do ibus bus but try to match these to completers */
+  if (g_strcmp0 (type, "ibus")) {
+    g_debug ("Not an ibus layout: '%s' - ignoring", id);
+    return NULL;
+  }
+
+  parts = g_strsplit (id, ":", -1);
+  if (g_strv_length (parts) > 3) {
+    g_warning ("ibus layout '%s' not parsable - ignoring", id);
+    return NULL;
+  }
+  engine_name = parts[0];
+  lang = parts[1];
+
+  info = pos_completer_manager_get_info (self->completer_manager, engine_name, lang, NULL, &err);
+  if (!info) {
+    g_warning ("ibus layout '%s': engine '%s' not usable for '%s': %s - ignoring",
+               id,
+               engine_name,
+               lang,
+               err->message);
+    return NULL;
+  }
+
+  name = build_layout_name ("ibus", lang, NULL);
+
+  /* TODO: allow for other base layouts than "us" */
+  return insert_osk (self, name, id, info->display_name, "us", NULL, info);
 }
 
 
@@ -1538,6 +1592,9 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 
     osk_widget = insert_xkb_layout (self, type, id);
     if (osk_widget == NULL)
+      osk_widget = insert_ibus_layout (self, type, id);
+
+    if (osk_widget == NULL)
       continue;
 
     g_hash_table_add (new, g_strdup (pos_osk_widget_get_name (osk_widget)));
@@ -1559,7 +1616,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 
   /* If nothing is left add a default */
   if (g_hash_table_size (self->osks) == 0) {
-    insert_osk (self, "us", "us", "English (USA)", "us", NULL);
+    insert_osk (self, "us", "us", "English (USA)", "us", NULL, NULL);
   }
 
   set_keymap (self);
