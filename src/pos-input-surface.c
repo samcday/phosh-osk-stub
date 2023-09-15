@@ -1682,6 +1682,7 @@ pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
   g_autoptr (GPropertyAction) completion_action = NULL;
+  g_autoptr (GError) err = NULL;
 
   gtk_widget_init_template (GTK_WIDGET (self));
 
@@ -1716,13 +1717,15 @@ pos_input_surface_init (PosInputSurface *self)
   on_completion_mode_changed (self, NULL, self->osk_settings);
   g_settings_bind (self->osk_settings, "osk-features", self, "osk-features", G_SETTINGS_BIND_GET);
 
-  pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
-                             "terminal",
-                             "terminal",
-                             _("Terminal"),
-                             "terminal",
-                             NULL,
-                             NULL);
+  if (!pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
+                                  "terminal",
+                                  "terminal",
+                                  _("Terminal"),
+                                  "terminal",
+                                  NULL,
+                                  &err)) {
+    g_warning ("Failed to set terminal layout: %s", err->message);
+  }
 
   gtk_settings = gtk_settings_get_default ();
   g_object_set (G_OBJECT (gtk_settings), "gtk-application-prefer-dark-theme", TRUE, NULL);
