@@ -1452,7 +1452,7 @@ insert_osk (PosInputSurface *self,
 
 
 static PosOskWidget *
-insert_layout (PosInputSurface *self, const char *type, const char *layout_id)
+insert_xkb_layout (PosInputSurface *self, const char *type, const char *layout_id)
 {
   g_autofree char *name = NULL;
   const gchar *layout = NULL;
@@ -1504,7 +1504,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   while (g_variant_iter_next (&iter, "(&s&s)", &type, &id)) {
     PosOskWidget *osk_widget;
 
-    osk_widget = insert_layout (self, type, id);
+    osk_widget = insert_xkb_layout (self, type, id);
     if (osk_widget == NULL)
       continue;
 
@@ -1622,7 +1622,7 @@ pos_input_surface_init (PosInputSurface *self)
                              NULL);
 
   if (test_layout) {
-    PosOskWidget *osk_widget = insert_layout (self, "xkb", test_layout);
+    PosOskWidget *osk_widget = insert_xkb_layout (self, "xkb", test_layout);
     hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));
   } else {
     g_object_connect (self->input_settings,
