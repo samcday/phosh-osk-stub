@@ -359,7 +359,6 @@ pos_completer_set_language (PosCompleter *self,
     return TRUE;
 
   g_return_val_if_fail (lang, FALSE);
-  g_return_val_if_fail (region, FALSE);
 
   return iface->set_language (self, lang, region, error);
 }
