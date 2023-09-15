@@ -1071,13 +1071,29 @@ on_im_active_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 }
 
+static PosOskWidget *insert_xkb_layout (PosInputSurface *self, const char *type, const char *id);
+static void on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *settings);
 
 static void
 pos_input_surface_constructed (GObject *object)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (object);
+  const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
 
   G_OBJECT_CLASS (pos_input_surface_parent_class)->constructed (object);
+
+  if (test_layout) {
+    PosOskWidget *osk_widget = insert_xkb_layout (self, "xkb", test_layout);
+    hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));
+  } else {
+    g_object_connect (self->input_settings,
+                      "swapped-signal::changed::sources",
+                      G_CALLBACK (on_input_setting_changed), self,
+                      "swapped-signal::changed::xkb-options",
+                      G_CALLBACK (on_input_setting_changed), self,
+                      NULL);
+    on_input_setting_changed (self, NULL, self->input_settings);
+  }
 
   g_assert (POS_IS_INPUT_METHOD (self->input_method));
   g_object_connect (self->input_method,
@@ -1578,7 +1594,6 @@ static void
 pos_input_surface_init (PosInputSurface *self)
 {
   GtkSettings *gtk_settings;
-  const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
   g_autoptr (GPropertyAction) completion_action = NULL;
 
   gtk_widget_init_template (GTK_WIDGET (self));
@@ -1620,19 +1635,6 @@ pos_input_surface_init (PosInputSurface *self)
                              "terminal",
                              NULL,
                              NULL);
-
-  if (test_layout) {
-    PosOskWidget *osk_widget = insert_xkb_layout (self, "xkb", test_layout);
-    hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));
-  } else {
-    g_object_connect (self->input_settings,
-                      "swapped-signal::changed::sources",
-                      G_CALLBACK (on_input_setting_changed), self,
-                      "swapped-signal::changed::xkb-options",
-                      G_CALLBACK (on_input_setting_changed), self,
-                      NULL);
-    on_input_setting_changed (self, NULL, self->input_settings);
-  }
 
   gtk_settings = gtk_settings_get_default ();
   g_object_set (G_OBJECT (gtk_settings), "gtk-application-prefer-dark-theme", TRUE, NULL);
