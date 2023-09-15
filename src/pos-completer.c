@@ -411,6 +411,20 @@ pos_completer_add_preedit (PosCompleter *self, GString *preedit, const char *sym
   return FALSE;
 }
 
+char *
+pos_completer_get_display_name (PosCompleter *self)
+{
+  PosCompleterInterface *iface;
+
+  g_return_val_if_fail (POS_IS_COMPLETER (self), NULL);
+
+  iface = POS_COMPLETER_GET_IFACE (self);
+  if (iface->get_display_name == NULL)
+    return NULL;
+
+  return iface->get_display_name (self);
+}
+
 /**
  * pos_completer_symbol_is_word_separator:
  * @symbol: the symbol to check
