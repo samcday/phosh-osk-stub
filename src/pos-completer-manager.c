@@ -53,6 +53,25 @@ struct _PosCompleterManager {
 G_DEFINE_TYPE (PosCompleterManager, pos_completer_manager, G_TYPE_OBJECT)
 
 
+static PosCompletionInfo *
+pos_completion_info_new (void)
+{
+  return g_new0 (PosCompletionInfo, 1);
+}
+
+
+void
+pos_completion_info_free (PosCompletionInfo *info)
+{
+  g_clear_object (&info->completer);
+  g_clear_pointer (&info->lang, g_free);
+  g_clear_pointer (&info->region, g_free);
+  g_clear_pointer (&info->display_name, g_free);
+
+  g_free (info);
+}
+
+
 static PosCompleter *
 init_completer (PosCompleterManager *self, const char *name, GError **err)
 {
@@ -235,7 +254,7 @@ pos_completer_manager_init (PosCompleterManager *self)
                                             g_str_equal,
                                             g_free,
                                             g_object_unref);
-  set_initial_completer(self);
+  set_initial_completer (self);
 }
 
 
@@ -259,4 +278,54 @@ pos_completer_manager_get_default_completer (PosCompleterManager *self)
   g_return_val_if_fail (POS_COMPLETER_MANAGER (self), NULL);
 
   return self->default_;
+}
+
+/**
+ * pos_completer_manager_get_info:
+ * @self: The completer manager
+ * @engine: The desired completion engine
+ * @lang: The desired language to use with `engine`
+ * @region:(nullable): The desired region to use with `engine`
+ * @err: (nullable): An error location
+ *
+ * Get an info object that can later be used to select a completer for
+ * a given language.
+ *
+ * Given the engine name and a language fills in the necessary
+ * information and initializes the completion engine. The returned
+ * object can be used with [type@PosCompletionManagre.set_from_info]
+ * to select the given completer for completion.
+ *
+ * Returns: (transfer full)(nullable): The completer information or %NULL on error.
+ */
+PosCompletionInfo *
+pos_completer_manager_get_info (PosCompleterManager *self,
+                                const char          *engine,
+                                const char          *lang,
+                                const char          *region,
+                                GError             **err)
+{
+  PosCompleter *completer;
+  PosCompletionInfo *info = NULL;
+
+  g_return_val_if_fail (POS_COMPLETER_MANAGER (self), NULL);
+  g_return_val_if_fail (engine, NULL);
+  g_return_val_if_fail (lang, NULL);
+  g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+
+  completer = init_completer (self, engine, err);
+  if (!completer)
+    return NULL;
+
+  if (!pos_completer_set_language (completer, lang, region, err))
+    return NULL;
+
+  info = pos_completion_info_new ();
+  info->completer = g_object_ref (completer);
+  info->lang = g_strdup (lang);
+  info->region = g_strdup (region);
+  /* FIXME: lookup from engine */
+  info->display_name = g_strdup (lang);
+
+  return info;
 }
