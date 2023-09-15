@@ -324,8 +324,9 @@ pos_completer_manager_get_info (PosCompleterManager *self,
   info->completer = g_object_ref (completer);
   info->lang = g_strdup (lang);
   info->region = g_strdup (region);
-  /* FIXME: lookup from engine */
-  info->display_name = g_strdup (lang);
+  info->display_name = pos_completer_get_display_name (completer);
+  if (!info->display_name)
+    info->display_name = g_strdup (lang);
 
   return info;
 }

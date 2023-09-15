@@ -532,6 +532,19 @@ on_emoji_picker_delete_last (PosInputSurface *self)
 
 /* menu button */
 
+
+static const char *
+pos_osk_get_display_name (PosOskWidget *osk_widget)
+{
+  PosCompletionInfo *info = g_object_get_data (G_OBJECT (osk_widget), "pos-completion-info");
+
+  if (info)
+    return info->display_name;
+
+  return pos_osk_widget_get_display_name (osk_widget);
+}
+
+
 static void
 menu_add_layout (gpointer key, gpointer value, gpointer data)
 {
@@ -539,7 +552,7 @@ menu_add_layout (gpointer key, gpointer value, gpointer data)
   const char *name = key;
   PosOskWidget *osk_widget = POS_OSK_WIDGET (value);
   PosInputSurface *self = POS_INPUT_SURFACE (data);
-  const char *display_name = pos_osk_widget_get_display_name (osk_widget);
+  const char *display_name = pos_osk_get_display_name (osk_widget);
 
   button = g_object_new (GTK_TYPE_MODEL_BUTTON,
                          "visible", TRUE,
@@ -648,7 +661,8 @@ pos_input_surface_switch_completion (PosInputSurface *self, PosOskWidget *osk)
   g_autoptr (GError) err = NULL;
 
   default_completer = pos_completer_manager_get_default_completer (self->completer_manager);
-  info = g_object_get_data (G_OBJECT (self), "pos-completion-info");
+
+  info = g_object_get_data (G_OBJECT (osk), "pos-completion-info");
   if (info) {
     /* Layout with completion info */
     pos_input_surface_set_completer (self, info->completer);
