@@ -28,7 +28,7 @@
 /**
  * PosCompleterManager:
  *
- * Maps completion engines to locales.
+ * Manages initialization and lookup of the different completion engines.
  *
  * TODO: take user configuration into account.
  *  - map keyboard variants to default completers
@@ -47,33 +47,67 @@ struct _PosCompleterManager {
 
   PosCompleter     *default_;
   GSettings        *settings;
+
+  GHashTable       *completers; /* key: engine name, value: PosCompleter */
 };
 G_DEFINE_TYPE (PosCompleterManager, pos_completer_manager, G_TYPE_OBJECT)
 
 
 static PosCompleter *
-init_completer (const char *name, GError **err)
+init_completer (PosCompleterManager *self, const char *name, GError **err)
 {
-  if (g_strcmp0 (name, "pipe") == 0)
-    return pos_completer_pipe_new (err);
+  g_autoptr (PosCompleter) completer = NULL;
+
+  completer = g_hash_table_lookup (self->completers, name);
+  if (completer)
+    return g_steal_pointer (&completer);
+
+  if (g_strcmp0 (name, "pipe") == 0) {
+    completer = pos_completer_pipe_new (err);
+    if (completer)
+      goto done;
+    return NULL;
 #ifdef POS_HAVE_PRESAGE
-  else if (g_strcmp0 (name, "presage") == 0)
-    return pos_completer_presage_new (err);
+  } else if (g_strcmp0 (name, "presage") == 0) {
+    completer = pos_completer_presage_new (err);
+    if (completer)
+      goto done;
+    return NULL;
 #endif
 #ifdef POS_HAVE_FZF
-  else if (g_strcmp0 (name, "fzf") == 0)
-    return pos_completer_fzf_new (err);
+  } else if (g_strcmp0 (name, "fzf") == 0) {
+    completer = pos_completer_fzf_new (err);
+    if (completer)
+      goto done;
+    return NULL;
 #endif
 #ifdef POS_HAVE_HUNSPELL
-  else if (g_strcmp0 (name, "hunspell") == 0)
-    return pos_completer_hunspell_new (err);
+  } else if (g_strcmp0 (name, "hunspell") == 0) {
+    completer = pos_completer_hunspell_new (err);
+    if (completer)
+      goto done;
+    return NULL;
 #endif
 #ifdef POS_HAVE_VARNAM
-  else if (g_strcmp0 (name, "varnam") == 0)
-    return pos_completer_varnam_new (err);
+  } else if (g_strcmp0 (name, "varnam") == 0) {
+    completer = pos_completer_varnam_new (err);
+    if (completer)
+      goto done;
+    return NULL;
 #endif
-  /* Other optional completer go here */
+    /* Other optional completer go here */
+  }
+
+  g_set_error (err,
+               G_IO_ERROR,
+               G_IO_ERROR_NOT_FOUND,
+               "Completion engine '%s' not found", name);
   return NULL;
+
+ done:
+  if (!g_hash_table_contains (self->completers, name))
+    g_hash_table_insert (self->completers, g_strdup (name), g_object_ref (completer));
+  return completer;
 }
 
 
@@ -88,7 +122,7 @@ on_default_completer_changed (PosCompleterManager *self)
 
   default_name = g_settings_get_string (self->settings, "default");
   if (!STR_IS_NULL_OR_EMPTY (default_name)) {
-    default_ = init_completer (default_name, &err);
+    default_ = init_completer (self, default_name, &err);
     if (default_ == NULL) {
       g_critical ("Failed to init default completer '%s': %s", default_name,
                   err ? err->message : "Completer does not exist");
@@ -98,7 +132,7 @@ on_default_completer_changed (PosCompleterManager *self)
 
   /* Fallback */
   if (default_ == NULL)
-    default_ = init_completer (POS_DEFAULT_COMPLETER, &err);
+    default_ = init_completer (self, POS_DEFAULT_COMPLETER, &err);
   if (default_ == NULL) {
     g_critical ("Failed to init default completer '%s': %s", POS_DEFAULT_COMPLETER,
                 err ? err->message : "Completer does not exist");
@@ -107,7 +141,7 @@ on_default_completer_changed (PosCompleterManager *self)
 
   if (default_ != NULL) {
     g_debug ("Switching default completer to '%s'", pos_completer_get_name (default_));
-    g_set_object (&self->default_, default_);
+    self->default_ = default_;
   }
 }
 
@@ -137,7 +171,8 @@ pos_completer_manager_finalize (GObject *object)
   PosCompleterManager *self = POS_COMPLETER_MANAGER(object);
 
   g_clear_object (&self->settings);
-  g_clear_object (&self->default_);
+  g_clear_pointer (&self->completers, g_hash_table_destroy);
+  self->default_ = NULL;
 
   G_OBJECT_CLASS (pos_completer_manager_parent_class)->finalize (object);
 }
@@ -174,7 +209,7 @@ set_initial_completer (PosCompleterManager *self)
 
   /* Environment */
   if (name) {
-    self->default_ = init_completer (name, &err);
+    self->default_ = init_completer (self, name, &err);
     if (self->default_) {
       g_debug ("Completer '%s' set via environment", pos_completer_get_name (self->default_));
       return;
@@ -196,7 +231,10 @@ static void
 pos_completer_manager_init (PosCompleterManager *self)
 {
   self->settings = g_settings_new ("sm.puri.phosh.osk.Completers");
-
+  self->completers = g_hash_table_new_full (g_str_hash,
+                                            g_str_equal,
+                                            g_free,
+                                            g_object_unref);
   set_initial_completer(self);
 }
 
