@@ -108,6 +108,7 @@ built. Available are currently at most
   - ``presage``: (experimental) word prediction based on the presage libarary
   - ``pipe``: completer using a pipe
   - ``fzf``: completer based on fzf command line tool. Useful for experiments)
+  - ``varnam``: completer using libvarnam for Indic languages
 
 The default completer is selected via the
 ``sm.puri.phosh.osk.Completers`` ``default`` GSetting.
@@ -157,8 +158,16 @@ patterns without having to modify ``phosh-osk-stub`` itself.
   gsettings set sm.puri.phosh.osk.Completers.Pipe command 'wc -c'
 
 You need to restart ``phosh-osk-stub`` for the new command to become
-active.
+active. A commonly used executable is swipeGuess: https://git.sr.ht/~earboxer/swipeGuess
 
+TEXT COMPLETION USING VARNAM
+****************************
+
+This completer feeds the current input word (preedit) to libvarnam.
+Note that the completer is experimental and has Malayalam hardcoded.
+
+For the completer to work it needs libvarnam and the Malaylam schema files
+installed. Please refer to the libvarnam documentation.
 
 TERMINAL SHORTCUTS
 ^^^^^^^^^^^^^^^^^^
