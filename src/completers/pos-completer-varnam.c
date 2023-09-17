@@ -65,12 +65,12 @@ G_DEFINE_TYPE_WITH_CODE (PosCompleterVarnam, pos_completer_varnam, G_TYPE_OBJECT
                                                 pos_completer_varnam_initable_interface_init))
 
 static void
-pos_completer_varnam_set_completions (PosCompleter *iface, GStrv completions)
+pos_completer_varnam_take_completions (PosCompleter *iface, GStrv completions)
 {
   PosCompleterVarnam *self = POS_COMPLETER_VARNAM (iface);
 
   g_strfreev (self->completions);
-  self->completions = g_strdupv (completions);
+  self->completions = completions;
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETIONS]);
 }
@@ -97,7 +97,7 @@ pos_completer_varnam_set_preedit (PosCompleter *iface, const char *preedit)
   if (preedit)
     g_string_append (self->preedit, preedit);
   else {
-    pos_completer_varnam_set_completions (POS_COMPLETER (self), NULL);
+    pos_completer_varnam_take_completions (POS_COMPLETER (self), NULL);
   }
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_PREEDIT]);
@@ -263,7 +263,7 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   ret = varnam_transliterate (self->varnam_handle_id, transliteration_id, self->preedit->str, &suggestions);
   if (ret != VARNAM_SUCCESS) {
     g_warning ("Failed to transliterate: %s\n", varnam_get_last_error (self->varnam_handle_id));
-    pos_completer_varnam_set_completions (POS_COMPLETER (self), NULL);
+    pos_completer_varnam_take_completions (POS_COMPLETER (self), NULL);
     return FALSE;
   }
 
@@ -274,8 +274,8 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   }
   g_ptr_array_add (completions, NULL);
 
-  pos_completer_varnam_set_completions (POS_COMPLETER (self),
-                                        (char **)g_ptr_array_steal (completions, NULL));
+  pos_completer_varnam_take_completions (POS_COMPLETER (self),
+                                         (char **)g_ptr_array_steal (completions, NULL));
 
   return TRUE;
 }
