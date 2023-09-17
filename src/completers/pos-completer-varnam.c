@@ -106,9 +106,9 @@ pos_completer_varnam_set_preedit (PosCompleter *iface, const char *preedit)
 
 static void
 pos_completer_varnam_set_property (GObject      *object,
-                                guint         property_id,
-                                const GValue *value,
-                                GParamSpec   *pspec)
+                                   guint         property_id,
+                                   const GValue *value,
+                                   GParamSpec   *pspec)
 {
   PosCompleterVarnam *self = POS_COMPLETER_VARNAM (object);
 
@@ -128,9 +128,9 @@ pos_completer_varnam_set_property (GObject      *object,
 
 static void
 pos_completer_varnam_get_property (GObject    *object,
-                                guint       property_id,
-                                GValue     *value,
-                                GParamSpec *pspec)
+                                   guint       property_id,
+                                   GValue     *value,
+                                   GParamSpec *pspec)
 {
   PosCompleterVarnam *self = POS_COMPLETER_VARNAM (object);
 
