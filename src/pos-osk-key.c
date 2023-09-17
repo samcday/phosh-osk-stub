@@ -146,6 +146,7 @@ pos_osk_key_finalize (GObject *object)
 {
   PosOskKey *self = POS_OSK_KEY (object);
 
+  g_clear_pointer (&self->symbols, g_strfreev);
   g_clear_pointer (&self->symbol, g_free);
   g_clear_pointer (&self->label, g_free);
   g_clear_pointer (&self->icon, g_free);
