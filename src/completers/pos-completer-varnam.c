@@ -268,7 +268,7 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   }
 
   g_ptr_array_add (completions, g_strdup (self->preedit->str));
-  for (int i = 0; i < varray_length (suggestions) && i < MAX_COMPLETIONS - 1; i++) {
+  for (int i = 0; i < varray_length (suggestions) && i < self->max_completions - 1; i++) {
     Suggestion *sug = varray_get (suggestions, i);
     g_ptr_array_add (completions, g_strdup (sug->Word));
   }
