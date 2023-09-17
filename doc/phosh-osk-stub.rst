@@ -108,7 +108,7 @@ built. Available are currently at most
   - ``presage``: (experimental) word prediction based on the presage libarary
   - ``pipe``: completer using a pipe
   - ``fzf``: completer based on fzf command line tool. Useful for experiments)
-  - ``varnam``: completer using libvarnam for Indic languages
+  - ``varnam``: completer using govarnam for Indic languages
 
 The default completer is selected via the
 ``sm.puri.phosh.osk.Completers`` ``default`` GSetting.
@@ -163,11 +163,11 @@ active. A commonly used executable is swipeGuess: https://git.sr.ht/~earboxer/sw
 TEXT COMPLETION USING VARNAM
 ****************************
 
-This completer feeds the current input word (preedit) to libvarnam.
+This completer feeds the current input word (preedit) to govarnam.
 Note that the completer is experimental and has Malayalam hardcoded.
 
-For the completer to work it needs libvarnam and the Malaylam schema files
-installed. Please refer to the libvarnam documentation.
+For the completer to work it needs govarnam and the Malaylam schema files
+installed. Please refer to the govarnam documentation.
 
 TERMINAL SHORTCUTS
 ^^^^^^^^^^^^^^^^^^
