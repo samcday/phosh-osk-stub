@@ -677,13 +677,17 @@ pos_input_surface_switch_completion (PosInputSurface *self, PosOskWidget *osk)
     pos_input_surface_set_completer (self, default_completer);
     success = pos_completer_set_language (self->completer, lang, region, &err);
     if (!success) {
-      g_warning ("Failed to set language: %s-%s: %s, switching to '%s-%s' instead",
+      g_warning ("Failed to set completion language: %s-%s: %s, switching to '%s-%s' instead",
                  lang, region, err->message, POS_COMPLETER_DEFAULT_LANG,
                  POS_COMPLETER_DEFAULT_REGION);
-      pos_completer_set_language (self->completer,
-                                  POS_COMPLETER_DEFAULT_LANG,
-                                  POS_COMPLETER_DEFAULT_REGION,
-                                  NULL);
+      g_clear_error (&err);
+      if (!pos_completer_set_language (self->completer,
+                                       POS_COMPLETER_DEFAULT_LANG,
+                                       POS_COMPLETER_DEFAULT_REGION,
+                                       &err)) {
+        g_warning ("Failed to set completion language '%s-%s': %s",
+                   POS_COMPLETER_DEFAULT_LANG, POS_COMPLETER_DEFAULT_REGION, err->message);
+      }
     }
   }
 
