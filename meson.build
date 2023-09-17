@@ -115,7 +115,7 @@ xkbcommon_dep = dependency('xkbcommon')
 hunspell_dep = dependency('hunspell', required: false)
 fzf = find_program('fzf', required: false)
 presage_dep = cc.find_library('presage', required: false)
-varnam_dep = dependency('varnam', required: false)
+varnam_dep = dependency('govarnam', required: false)
 
 if hunspell_dep.found()
   default_completer = 'hunspell'
@@ -168,7 +168,7 @@ summary({
     'Default': default_completer,
     'Presage': presage_dep.found(),
     'Fzf': fzf.found(),
-    'Libvarnam': varnam_dep.found(),
+    'Varnam': varnam_dep.found(),
     'Hunspell': hunspell_dep.found(),
   },
   bool_yn: true,

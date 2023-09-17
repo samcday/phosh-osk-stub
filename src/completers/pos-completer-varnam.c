@@ -16,8 +16,10 @@
 #include <gio/gio.h>
 
 #pragma GCC diagnostic ignored "-Wstrict-prototypes"
-#include <varnam.h>
+#include <libgovarnam.h>
 #pragma GCC diagnostic pop
+
+#define MAX_COMPLETIONS 4
 
 enum {
   PROP_0,
@@ -35,7 +37,7 @@ static GParamSpec *props[PROP_LAST_PROP];
  *
  * A completer using varnam.
  *
- * Uses [libvarnam](https://github.com/varnamproject/libvarnam) to
+ * Uses [govarnam](https://github.com/varnamproject/govarnam) to
  * suggest completions.
  *
  * This is mostly to demo a simple completer.
@@ -49,7 +51,7 @@ struct _PosCompleterVarnam {
   varray               *words;
   guint                 max_completions;
 
-  varnam               *varnam_handle;
+  int                   varnam_handle_id;
 };
 
 
@@ -204,12 +206,12 @@ pos_completer_varnam_initable_init (GInitable    *initable,
   int ret;
 
   /* TODO: make lang configurable, allow to set scheme dir */
-  ret = varnam_init_from_id ("ml", &self->varnam_handle, &err_msg);
+  ret = varnam_init_from_id ("ml", &self->varnam_handle_id);
   if (ret != VARNAM_SUCCESS) {
     g_set_error (error,
                  POS_COMPLETER_ERROR,
                  POS_COMPLETER_ERROR_ENGINE_INIT,
-                 "%s", err_msg);
+                 "%s", varnam_get_last_error (self->varnam_handle_id));
     return FALSE;
   }
 
@@ -239,8 +241,9 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   PosCompleterVarnam *self = POS_COMPLETER_VARNAM (iface);
   g_autofree char *preedit = g_strdup (self->preedit->str);
   g_autoptr (GPtrArray) completions = g_ptr_array_new ();
-  varray *words;
+  varray *suggestions;
   int ret;
+  int transliteration_id = 1;
 
   if (pos_completer_add_preedit (POS_COMPLETER (self), self->preedit, symbol)) {
     g_signal_emit_by_name (self, "commit-string", self->preedit->str);
@@ -256,18 +259,18 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
 
   g_debug ("Looking up string '%s'", self->preedit->str);
 
-  ret = varnam_transliterate (self->varnam_handle, self->preedit->str, &words);
+  varnam_cancel (transliteration_id);
+  ret = varnam_transliterate (self->varnam_handle_id, transliteration_id, self->preedit->str, &suggestions);
   if (ret != VARNAM_SUCCESS) {
-    g_warning ("Failed to transliterate: %s\n", varnam_get_last_error (self->varnam_handle));
-    //varnam_destroy (handle);
+    g_warning ("Failed to transliterate: %s\n", varnam_get_last_error (self->varnam_handle_id));
     pos_completer_varnam_set_completions (POS_COMPLETER (self), NULL);
     return FALSE;
   }
 
   g_ptr_array_add (completions, g_strdup (self->preedit->str));
-  for (int i = 0; i < varray_length (words); i++) {
-    vword *word = varray_get (words, i);
-    g_ptr_array_add (completions, g_strdup (word->text));
+  for (int i = 0; i < varray_length (suggestions) && i < MAX_COMPLETIONS - 1; i++) {
+    Suggestion *sug = varray_get (suggestions, i);
+    g_ptr_array_add (completions, g_strdup (sug->Word));
   }
   g_ptr_array_add (completions, NULL);
 
@@ -291,7 +294,7 @@ pos_completer_varnam_interface_init (PosCompleterInterface *iface)
 static void
 pos_completer_varnam_init (PosCompleterVarnam *self)
 {
-  //self->max_completions = MAX_COMPLETIONS;
+  self->max_completions = MAX_COMPLETIONS;
   self->preedit = g_string_new (NULL);
 }
 
