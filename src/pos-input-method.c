@@ -310,7 +310,7 @@ pos_input_method_finalize (GObject *object)
 {
   PosInputMethod *self = POS_INPUT_METHOD(object);
 
-  g_clear_pointer (&self->submitted, g_free);
+  g_clear_pointer (&self->submitted, pos_im_state_free);
   g_clear_pointer (&self->pending, pos_im_state_free);
   g_clear_pointer (&self->input_method, zwp_input_method_v2_destroy);
 
