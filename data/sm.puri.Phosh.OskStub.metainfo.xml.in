@@ -61,14 +61,14 @@
     <release version="0.31.0" date="2023-09-04">
       <description>
         <ul>
-          <li>Allow to prevent add menu key to shortcuts</li>
+          <li>Allow to add menu key to shortcuts</li>
         </ul>
       </description>
     </release>
     <release version="0.30.0" date="2023-08-01">
       <description>
         <ul>
-          <li>Allow to prevent automatic keyboard unfole based on app-id</li>
+          <li>Allow to prevent automatic keyboard unfold based on app-id</li>
         </ul>
       </description>
     </release>
