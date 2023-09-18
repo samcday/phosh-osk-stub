@@ -397,9 +397,17 @@ on_osk_popover_shown (PosInputSurface *self, GStrv *symbols, GtkWidget *osk_widg
 static void
 on_osk_popover_hidden (PosInputSurface *self)
 {
+  PosOskWidget *osk = POS_OSK_WIDGET (hdy_deck_get_visible_child (self->deck));
+
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
-  pos_vk_driver_set_overlay_keymap (self->keyboard_driver, NULL);
+  if (osk != POS_OSK_WIDGET (self->osk_terminal)) {
+    pos_vk_driver_set_keymap_symbols (self->keyboard_driver,
+                                      pos_osk_widget_get_layout_id (osk),
+                                      pos_osk_widget_get_symbols (osk));
+  } else {
+    pos_vk_driver_set_keymap (self->keyboard_driver, pos_osk_widget_get_layout_id (osk));
+  }
 }
 
 
@@ -562,17 +570,23 @@ select_layout_change_state (GSimpleAction *action,
 
 
 static void
-switch_language (PosInputSurface *self, const char *locale, const char *region, const char *layout_id)
+switch_language (PosInputSurface *self, PosOskWidget *osk)
 {
   gboolean success;
   g_autoptr (GError) err = NULL;
+  const char *locale, *region;
 
-  if (self->keyboard_driver)
-    pos_vk_driver_set_keymap (self->keyboard_driver, layout_id);
+  if (self->keyboard_driver) {
+    pos_vk_driver_set_keymap_symbols (self->keyboard_driver,
+                                      pos_osk_widget_get_layout_id (osk),
+                                      pos_osk_widget_get_symbols (osk));
+  }
 
   if (self->completer == NULL)
     return;
 
+  locale = pos_osk_widget_get_lang (osk);
+  region = pos_osk_widget_get_region (osk);
   g_debug ("Switching language, locale: '%s-%s'", locale, region);
   success = pos_completer_set_language (self->completer, locale, region, &err);
   if (success == FALSE) {
@@ -609,14 +623,10 @@ on_visible_child_changed (PosInputSurface *self)
   /* Remember last layout */
   self->last_layout = GTK_WIDGET (osk);
 
-  if (osk != POS_OSK_WIDGET (self->osk_terminal)) {
-    switch_language (self,
-                     pos_osk_widget_get_lang (osk),
-                     pos_osk_widget_get_region (osk),
-                     pos_osk_widget_get_layout_id (osk));
-  } else {
+  if (osk != POS_OSK_WIDGET (self->osk_terminal))
+    switch_language (self, osk);
+  else
     pos_vk_driver_set_keymap (self->keyboard_driver, pos_osk_widget_get_layout_id (osk));
-  }
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -728,10 +738,7 @@ pos_input_surface_set_completer (PosInputSurface *self, PosCompleter *completer)
                       "swapped-signal::update",
                       G_CALLBACK (on_completer_update), self,
                       NULL);
-    switch_language (self,
-                     pos_osk_widget_get_lang (POS_OSK_WIDGET (self->last_layout)),
-                     pos_osk_widget_get_region (POS_OSK_WIDGET (self->last_layout)),
-                     pos_osk_widget_get_layout_id (POS_OSK_WIDGET (self->last_layout)));
+    switch_language (self, POS_OSK_WIDGET (self->last_layout));
   } else {
     g_debug ("Removing completer");
   }
@@ -1464,8 +1471,9 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
 
   child = hdy_deck_get_visible_child (self->deck);
   if (self->keyboard_driver) {
-    pos_vk_driver_set_keymap (self->keyboard_driver,
-                              pos_osk_widget_get_layout_id (POS_OSK_WIDGET (child)));
+    pos_vk_driver_set_keymap_symbols (self->keyboard_driver,
+                                      pos_osk_widget_get_layout_id (POS_OSK_WIDGET (child)),
+                                      pos_osk_widget_get_symbols (POS_OSK_WIDGET (child)));
   }
 }
 
