@@ -1559,7 +1559,7 @@ pos_input_surface_init (PosInputSurface *self)
   g_settings_bind (self->osk_settings, "osk-features", self, "osk-features", G_SETTINGS_BIND_GET);
 
   pos_osk_widget_set_layout (POS_OSK_WIDGET (self->osk_terminal),
-                             "us",
+                             "terminal",
                              _("Terminal"),
                              "terminal",
                              NULL,
