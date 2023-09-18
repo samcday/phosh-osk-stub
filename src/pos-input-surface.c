@@ -385,6 +385,25 @@ on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_wi
 
 
 static void
+on_osk_popover_shown (PosInputSurface *self, GStrv *symbols, GtkWidget *osk_widget)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  g_return_if_fail (POS_IS_OSK_WIDGET (osk_widget));
+
+  pos_vk_driver_set_overlay_keymap (self->keyboard_driver, (const char * const *)symbols);
+}
+
+
+static void
+on_osk_popover_hidden (PosInputSurface *self)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+
+  pos_vk_driver_set_overlay_keymap (self->keyboard_driver, NULL);
+}
+
+
+static void
 clipboard_copy_activated (GSimpleAction *action,
                           GVariant      *parameter,
                           gpointer       data)
@@ -1222,6 +1241,8 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_mode_changed);
+  gtk_widget_class_bind_template_callback (widget_class, on_osk_popover_shown);
+  gtk_widget_class_bind_template_callback (widget_class, on_osk_popover_hidden);
   gtk_widget_class_bind_template_callback (widget_class, on_shortcut_activated);
   gtk_widget_class_bind_template_callback (widget_class, on_visible_child_changed);
 
@@ -1347,6 +1368,8 @@ insert_osk (PosInputSurface *self,
                     "swapped-signal::key-down", G_CALLBACK (on_osk_key_down), self,
                     "swapped-signal::key-symbol", G_CALLBACK (on_osk_key_symbol), self,
                     "swapped-signal::notify::mode", G_CALLBACK (on_osk_mode_changed), self,
+                    "swapped-signal::popover-shown", G_CALLBACK (on_osk_popover_shown), self,
+                    "swapped-signal::popover-hidden", G_CALLBACK (on_osk_popover_hidden), self,
                     NULL);
 
   hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);
@@ -1526,6 +1549,7 @@ pos_input_surface_init (PosInputSurface *self)
                              "terminal",
                              NULL,
                              NULL);
+
   if (test_layout) {
     PosOskWidget *osk_widget = insert_layout (self, "xkb", test_layout);
     hdy_deck_set_visible_child (self->deck, GTK_WIDGET (osk_widget));

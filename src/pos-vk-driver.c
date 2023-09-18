@@ -420,6 +420,77 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
 };
 
 
+static char *
+pos_vk_driver_build_keymap (PosVkDriver *driver, const char * const *symbols)
+{
+  char *keymap_str;
+  GString *keymap = g_string_new ("xkb_keymap {\n"
+                                  "  xkb_keycodes \"pos\" {\n"
+                                  "    minimum = 8;\n"
+                                  "    maximum = 255;\n");
+
+  for (int i = 0; symbols[i]; i++) {
+    /*
+     * Add a keycode for each UTF8 character. The keycodes are arbitrary but must match
+     * what we emit via `pos_vk_driver_key_down()`. Hence we use `KEY_A + 8 + i` `8` is
+     * the "usual" offset between xkb keycodes and evdev keycodes.
+     */
+    int keycode = KEY_A + 8 + i;
+    g_string_append_printf (keymap, "    <I%.2d>         = %d;\n", i + 1, keycode);
+  }
+  g_string_append (keymap,        "  };\n"
+                                  "  xkb_types \"pos\" {\n"
+                                  "    virtual_modifiers Pos;\n"
+                                  "    type \"ONE_LEVEL\" {\n"
+                                  "      modifiers= none;\n"
+                                  "      level_name[Level1]= \"Any\";\n"
+                                  "    };\n"
+                                  "    type \"TWO_LEVEL\" {\n"
+                                  "      level_name[Level1]= \"Base\";\n"
+                                  "    };\n"
+                                  "      type \"ALPHABETIC\" {\n"
+                                  "      level_name[Level1]= \"Base\";\n"
+                                  "    };\n"
+                                  "      type \"KEYPAD\" {\n"
+                                  "      level_name[Level1]= \"Base\";\n"
+                                  "    };\n"
+                                  "      type \"SHIFT+ALT\" {\n"
+                                  "      level_name[Level1]= \"Base\";\n"
+                                  "    };\n"
+                                  "  };\n"
+                                  "\n"
+                                  "  xkb_compatibility \"pos\" {\n"
+                                  "    interpret Any+AnyOf(all) {\n"
+                                  "       action= SetMods(modifiers=modMapMods,clearLocks);\n"
+                                  "     };\n"
+                                  "  };\n"
+                                  "\n"
+                                  "  xkb_symbols \"pos\" {\n"
+                                  "    name[group1]=\"English (US)\";\n");
+  for (int i = 0; symbols[i]; i++) {
+    gunichar val = g_utf8_get_char (symbols[i]);
+
+    /* Map each symbol as 'U<UCS4>' to the keycodes added above */
+    /* See /usr/include/X11/keysymdef.h */
+    if ((val >= 0x20 && val <= 0x7E) ||
+        (val >= 0xa0 && val <= 0x10ffff)) {
+      g_string_append_printf (keymap,
+                                  "    key <I%.2d> { [ U%.4X ] };\n", i+1, val);
+    } else {
+      g_warning ("Can't convert '%s' to keysym", symbols[i]);
+    }
+  }
+
+  g_string_append (keymap,        "  };\n"
+                                  "};\n");
+
+  keymap_str = g_string_free (keymap, FALSE);
+  g_debug("keymap: %s", keymap_str);
+
+  return keymap_str;
+}
+
+
 static void
 pos_vk_driver_update_keycodes (PosVkDriver *self, const char *layout_id)
 {
@@ -760,4 +831,42 @@ pos_vk_driver_set_keymap (PosVkDriver *self, const char *layout_id)
   set_xkb_keymap (self, layout, variant, xkb_options_string);
 
   pos_vk_driver_update_keycodes (self, layout_id);
+}
+
+/**
+ * pos_vk_driver_set_overlay_keymap:
+ * @self: The virtual keyboard driver
+ * @symbols: The symbols to create a keymap for or %NULL
+ *
+ * Installs a temporary overlay keymap with the given symbols. If called multiple times
+ * the current overlay keymap will be replaced. If `symbols` is `NULL` the overlay keymap
+ * will be removed and a keymap for `layout_id` is used again.
+ */
+void
+pos_vk_driver_set_overlay_keymap (PosVkDriver *self, const char *const *symbols)
+{
+  g_autofree char *keymap_str = NULL;
+
+  g_return_if_fail (POS_IS_VK_DRIVER (self));
+
+  if (symbols) {
+    keymap_str = pos_vk_driver_build_keymap (self, symbols);
+
+    g_clear_pointer (&self->keycodes, g_hash_table_destroy);
+    self->keycodes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+    for (int i = 0; symbols[i]; i++) {
+      PosKeycode *pos_keycode;
+      const char *symbol = symbols[i];
+
+      pos_keycode = g_new0 (PosKeycode, 1);
+      pos_keycode->keycode = KEY_A + i;
+      g_hash_table_insert (self->keycodes, g_strdup (symbol), pos_keycode);
+    }
+
+    pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap_str);
+  } else {
+    /* Reinstantiate old keymap */
+    g_autofree char *layout_id = g_steal_pointer (&self->layout_id);
+    pos_vk_driver_set_keymap (self, layout_id);
+  }
 }
