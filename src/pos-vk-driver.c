@@ -12,9 +12,6 @@
 
 #include "pos-vk-driver.h"
 
-#define GNOME_DESKTOP_USE_UNSTABLE_API
-#include <libgnome-desktop/gnome-xkb-info.h>
-
 #include <xkbcommon/xkbcommon.h>
 
 #include <linux/input-event-codes.h>
@@ -33,9 +30,6 @@ static GParamSpec *props[PROP_LAST_PROP];
  * using the wayland virtual keyboard protocol. The input
  * events can either be based on kernel input event codes
  * or GDK keycodes.
- *
- * This includes keeping the corresponding keymap in sync respecting
- * xkb options set in GNOME.
  */
 struct _PosVkDriver {
   GObject             parent;
@@ -44,9 +38,7 @@ struct _PosVkDriver {
   GHashTable         *gdk_keycodes;
   PosVirtualKeyboard *virtual_keyboard;
 
-  GnomeXkbInfo       *xkbinfo;
   char               *layout_id;
-  GSettings          *input_settings;
 };
 G_DEFINE_TYPE (PosVkDriver, pos_vk_driver, G_TYPE_OBJECT)
 
@@ -101,7 +93,7 @@ static const PosKeycode keycodes_common[] = {
   { "9", KEY_9, POS_KEYCODE_MODIFIER_NONE },
 };
 
-static const PosKeycode keycodes_us[] = {
+static const PosKeycode keycodes_terminal[] = {
   { "!", KEY_1, POS_KEYCODE_MODIFIER_SHIFT },
   { "#", KEY_3, POS_KEYCODE_MODIFIER_SHIFT },
   { "$", KEY_4, POS_KEYCODE_MODIFIER_SHIFT },
@@ -487,7 +479,7 @@ pos_vk_driver_build_keymap (PosVkDriver *self, PosKeysym extra_keysms[])
 static void
 pos_vk_driver_update_keycodes (PosVkDriver *self, const char *layout_id)
 {
-  const PosKeycode *keycodes = keycodes_us;
+  const PosKeycode *keycodes = keycodes_terminal;
 
   g_clear_pointer (&self->keycodes, g_hash_table_destroy);
 
@@ -524,87 +516,11 @@ pos_vk_driver_set_property (GObject      *object,
 
 
 static void
-pos_vk_driver_set_default_keymap (PosVkDriver *self)
-{
-  const char *keymap;
-
-  g_autoptr (GBytes) data = NULL;
-  gsize size;
-
-  data = g_resources_lookup_data ("/sm/puri/phosh/osk-stub/keymap.txt", 0, NULL);
-  g_assert (data);
-  keymap = (char*) g_bytes_get_data (data, &size);
-
-  pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap);
-}
-
-
-static void
-set_xkb_keymap (PosVkDriver *self,
-                const gchar *layout,
-                const gchar *variant,
-                const gchar *options)
-{
-  struct xkb_rule_names rules = { 0 };
-  struct xkb_context *context = NULL;
-  struct xkb_keymap *keymap = NULL;
-  g_autofree char *keymap_str = NULL;
-
-  rules.layout = layout;
-  rules.variant = variant;
-  rules.options = options;
-
-  context = xkb_context_new (XKB_CONTEXT_NO_FLAGS);
-  if (context == NULL) {
-    g_warning ("Cannot create XKB context");
-    goto out;
-  }
-
-  keymap = xkb_map_new_from_names (context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
-  if (keymap == NULL) {
-    g_warning ("Cannot create XKB keymap for %s %s %s", layout, variant, options);
-  }
-
-out:
-  if (context)
-    xkb_context_unref (context);
-
-  if (keymap == NULL) {
-    pos_vk_driver_set_default_keymap (self);
-    return;
-  }
-
-  keymap_str = xkb_keymap_get_as_string (keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
-  if (keymap_str) {
-    g_debug ("Loading keymap %s %s %s", layout, variant, variant);
-    pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap_str);
-  } else {
-    pos_vk_driver_set_default_keymap (self);
-  }
-
-  xkb_keymap_unref (keymap);
-}
-
-
-static void
-pos_vk_driver_constructed (GObject *object)
-{
-  PosVkDriver *self = POS_VK_DRIVER (object);
-
-  G_OBJECT_CLASS (pos_vk_driver_parent_class)->constructed (object);
-
-  self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
-}
-
-
-static void
 pos_vk_driver_finalize (GObject *object)
 {
   PosVkDriver *self = POS_VK_DRIVER (object);
 
   g_hash_table_destroy (self->keycodes);
-  g_clear_object (&self->input_settings);
-  g_clear_object (&self->xkbinfo);
   g_clear_pointer (&self->layout_id, g_free);
 
   G_OBJECT_CLASS (pos_vk_driver_parent_class)->finalize (object);
@@ -617,7 +533,6 @@ pos_vk_driver_class_init (PosVkDriverClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->set_property = pos_vk_driver_set_property;
-  object_class->constructed = pos_vk_driver_constructed;
   object_class->finalize = pos_vk_driver_finalize;
 
   props[PROP_VIRTUAL_KEYBOARD] =
@@ -632,8 +547,6 @@ pos_vk_driver_class_init (PosVkDriverClass *klass)
 static void
 pos_vk_driver_init (PosVkDriver *self)
 {
-  self->xkbinfo = gnome_xkb_info_new ();
-
   self->gdk_keycodes = g_hash_table_new (g_direct_hash, g_direct_equal);
   for (int i = 0; i < G_N_ELEMENTS (keycodes_gdk_us); i++)
     g_hash_table_insert (self->gdk_keycodes, GUINT_TO_POINTER (keycodes_gdk_us[i].gdk_keycode),
@@ -743,44 +656,33 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
 }
 
 /**
- * pos_vk_driver_set_keymap:
+ * pos_vk_driver_set_terminal_keymap:
  * @self: The vk driver
- * @id: The xkb layout id (e.g. `de`, `at`)
  *
  * Sets the given keymap honoring xkb-options set in GNOME. When possible send
  * keycodes matching that layout id.
  */
 void
-pos_vk_driver_set_keymap (PosVkDriver *self, const char *layout_id)
+pos_vk_driver_set_terminal_keymap (PosVkDriver *self)
 {
-  g_auto (GStrv) xkb_options = NULL;
-  g_autofree gchar *xkb_options_string = NULL;
-  const gchar *layout = NULL;
-  const gchar *variant = NULL;
+  const char *layout_id = "terminal";
+  const char *keymap;
+  g_autoptr (GBytes) data = NULL;
+  gsize size;
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
-  g_return_if_fail (G_IS_SETTINGS (self->input_settings));
-  g_return_if_fail (layout_id);
 
   if (g_strcmp0 (layout_id, self->layout_id) == 0)
     return;
 
+  g_debug ("Setting terminal keymap");
   g_clear_pointer (&self->layout_id, g_free);
-  xkb_options = g_settings_get_strv (self->input_settings, "xkb-options");
-  if (xkb_options) {
-    xkb_options_string = g_strjoinv (",", xkb_options);
-    g_debug ("Setting options %s", xkb_options_string);
-  }
-
-  if (!gnome_xkb_info_get_layout_info (self->xkbinfo, layout_id,
-                                       NULL, NULL, &layout, &variant)) {
-    g_debug ("Failed to get layout info for %s", layout_id);
-    return;
-  }
-
   self->layout_id = g_strdup (layout_id);
-  g_debug ("Switching to layout %s %s", layout, variant);
-  set_xkb_keymap (self, layout, variant, xkb_options_string);
+  data = g_resources_lookup_data ("/sm/puri/phosh/osk-stub/keymap.txt", 0, NULL);
+  g_assert (data);
+  keymap = (char*) g_bytes_get_data (data, &size);
+
+  pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap);
 
   pos_vk_driver_update_keycodes (self, layout_id);
 }
@@ -811,7 +713,6 @@ pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, cons
     { NULL, NULL } };
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
-  g_return_if_fail (G_IS_SETTINGS (self->input_settings));
   g_return_if_fail (layout_id);
   g_return_if_fail (symbols);
 

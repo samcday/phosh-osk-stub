@@ -406,7 +406,7 @@ on_osk_popover_hidden (PosInputSurface *self)
                                       pos_osk_widget_get_layout_id (osk),
                                       pos_osk_widget_get_symbols (osk));
   } else {
-    pos_vk_driver_set_keymap (self->keyboard_driver, pos_osk_widget_get_layout_id (osk));
+    pos_vk_driver_set_terminal_keymap (self->keyboard_driver);
   }
 }
 
@@ -626,7 +626,7 @@ on_visible_child_changed (PosInputSurface *self)
   if (osk != POS_OSK_WIDGET (self->osk_terminal))
     switch_language (self, osk);
   else
-    pos_vk_driver_set_keymap (self->keyboard_driver, pos_osk_widget_get_layout_id (osk));
+    pos_vk_driver_set_terminal_keymap (self->keyboard_driver);
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
