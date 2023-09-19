@@ -648,7 +648,18 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
     flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SUPER;
 
   key = GPOINTER_TO_UINT (g_hash_table_lookup (self->gdk_keycodes, GUINT_TO_POINTER (gdk_keycode)));
-  g_return_if_fail (key);
+
+  if (!key) {
+    GdkKeymap *gdk_keymap = gdk_keymap_get_for_display (gdk_display_get_default ());
+    g_autofree GdkKeymapKey *keys = NULL;
+    int n_keys = 0;
+
+    if (!gdk_keymap_get_entries_for_keyval (gdk_keymap, gdk_keycode, &keys, &n_keys)) {
+      g_warning ("Couldn't convert keycode %d", gdk_keycode);
+      return;
+    }
+    key = keys[0].keycode - 8;
+  }
 
   /* FIXME: preserve current modifiers */
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
