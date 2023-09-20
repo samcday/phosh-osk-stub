@@ -1420,6 +1420,7 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   const char *id = NULL;
   const char *type = NULL;
   gboolean first_set = FALSE;
+  GtkWidget *child;
 
   g_debug ("Setting changed, reloading input settings");
 
@@ -1459,6 +1460,12 @@ on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *set
   /* If nothing is left add a default */
   if (g_hash_table_size (self->osks) == 0) {
     insert_osk (self, "us", "us", "English (USA)", "us", NULL);
+  }
+
+  child = hdy_deck_get_visible_child (self->deck);
+  if (self->keyboard_driver) {
+    pos_vk_driver_set_keymap (self->keyboard_driver,
+                              pos_osk_widget_get_layout_id (POS_OSK_WIDGET (child)));
   }
 }
 

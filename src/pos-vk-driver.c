@@ -598,36 +598,6 @@ out:
 
 
 static void
-on_input_setting_changed (PosVkDriver *self, const char *key, GSettings *settings)
-{
-  g_autoptr (GVariant) sources = NULL;
-  GVariantIter iter;
-  g_autofree gchar *id = NULL;
-  g_autofree gchar *type = NULL;
-
-  g_debug ("Setting changed, reloading input settings");
-
-  sources = g_settings_get_value (settings, "sources");
-
-  g_variant_iter_init (&iter, sources);
-  g_variant_iter_next (&iter, "(ss)", &type, &id);
-
-  if (type == NULL) {
-    g_warning ("Failed to read keyboard layouts, setting default");
-    set_xkb_keymap (self, NULL, NULL, NULL);
-    return;
-  }
-
-  if (g_strcmp0 (type, "xkb")) {
-    g_debug ("Not a xkb layout: '%s' - ignoring", id);
-    return;
-  }
-
-  pos_vk_driver_set_keymap (self, id);
-}
-
-
-static void
 pos_vk_driver_constructed (GObject *object)
 {
   PosVkDriver *self = POS_VK_DRIVER (object);
@@ -635,13 +605,6 @@ pos_vk_driver_constructed (GObject *object)
   G_OBJECT_CLASS (pos_vk_driver_parent_class)->constructed (object);
 
   self->input_settings = g_settings_new ("org.gnome.desktop.input-sources");
-  g_object_connect (self->input_settings,
-                    "swapped-signal::changed::sources",
-                    G_CALLBACK (on_input_setting_changed), self,
-                    "swapped-signal::changed::xkb-options",
-                    G_CALLBACK (on_input_setting_changed), self,
-                    NULL);
-  on_input_setting_changed (self, NULL, self->input_settings);
 }
 
 
