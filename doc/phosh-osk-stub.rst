@@ -20,6 +20,24 @@ DESCRIPTION
 considered experimental. For a production ready on screen keyboard see
 ``squeekboard(1)``.
 
+
+``phosh-osk-stub`` has two modes of operation. If the application
+supports and uses ``text-input-unstable-v3`` the Wayland compositor
+will use the ``input-method-unstable-v2`` protocol to interact with
+the OSK. This allows it to
+
+- automatically unfold the keyboard
+- handle text prediction / correction via preedit and surrounding text
+- automatically switch to special layouts like to terminal by input
+  hints sent from the application
+
+This is the preferred mode of operation. For legacy applications like
+e.g. Electron applications the OSK falls back to a virtual keyboard mode
+(basically emulating key presses). This means that it e.g. can't unfold
+automatically or support completion. It will hence hide the completion bar
+in that mode of operation.
+
+
 OPTIONS
 -------
 
@@ -97,6 +115,14 @@ enabled configured via the `gsettings` command:
   gsettings set sm.puri.phosh.osk completion-mode "['manual','hint']"
   # Reset to default (off)
   gsettings reset sm.puri.phosh.osk completion-mode
+
+Note that completion is always disabled when
+
+- No usable completers are found on startup
+- Terminal or emoji layout is in use
+- The application doesn't support text-input so ``phosh-osk-stub`` is
+  falling back virtual-keyboard mode.
+
 
 AVAILABLE COMPLETERS
 ####################
