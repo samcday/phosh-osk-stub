@@ -1169,13 +1169,13 @@ xkb_symbols "(unnamed)" {
         name[group1]="English (US)";
 
         key <ESC>                {	[          Escape ] };
-        key <AE01>               {	[               1,          exclam ] };
-        key <AE02>               {	[               2,              at ] };
-        key <AE03>               {	[               3,      numbersign ] };
-        key <AE04>               {	[               4,          dollar ] };
-        key <AE05>               {	[               5,         percent ] };
-        key <AE06>               {	[               6,     asciicircum ] };
-        key <AE07>               {	[               7,       ampersand ] };
+        key <AE01>               {	[               1,          exclam, U2105 ] };
+        key <AE02>               {	[               2,              at, U00AE ] };
+        key <AE03>               {	[               3,      numbersign, U00A9 ] };
+        key <AE04>               {	[               4,          dollar, UAA02 ] };
+        key <AE05>               {	[               5,         percent, U20AC ] };
+        key <AE06>               {	[               6,     asciicircum, U00A5 ] };
+        key <AE07>               {	[               7,       ampersand, U2122 ] };
         key <AE08>               {	[               8,        asterisk ] };
         key <AE09>               {	[               9,       parenleft ] };
         key <AE10>               {	[               0,      parenright ] };

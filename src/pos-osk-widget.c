@@ -127,6 +127,8 @@ struct _PosOskWidget {
   GtkStyleContext     *key_context;
   PosOskWidgetLayer    layer;
   PosOskWidgetMode     mode;
+  /* Contains pointers to key symbols (keys have ownership) */
+  GPtrArray           *symbols;
 
   char                *name;
   char                *display_name;
@@ -440,7 +442,8 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
     }
 
     row->width += pos_osk_key_get_width (key);
-    g_ptr_array_insert (row->keys, -1, g_steal_pointer (&key));
+    g_ptr_array_add (self->symbols, (gpointer)pos_osk_key_get_symbol (key));
+    g_ptr_array_add (row->keys, g_steal_pointer (&key));
   }
 
   add_common_keys_pre (self, row, l, r);
@@ -616,6 +619,8 @@ parse_layout (PosOskWidget *self, const char *json, gsize size)
     return FALSE;
   }
   parse_layers (self, levels);
+
+  g_ptr_array_add (self->symbols, NULL);
 
   return TRUE;
 }
@@ -1298,6 +1303,7 @@ pos_osk_widget_finalize (GObject *object)
   g_clear_pointer (&self->lang, g_free);
   g_clear_pointer (&self->region, g_free);
   g_clear_pointer (&self->layout_id, g_free);
+  g_ptr_array_free (self->symbols, FALSE);
 
   G_OBJECT_CLASS (pos_osk_widget_parent_class)->finalize (object);
 }
@@ -1481,13 +1487,13 @@ pos_osk_widget_init (PosOskWidget *self)
 {
   /* TODO support PIN, number, etc */
   const char *purpose_class = "normal";
-
   g_autoptr (GtkWidgetPath) path = NULL;
   GtkStyleContext *key_context;
   GtkStyleContext *context;
 
   self->mode = POS_OSK_WIDGET_MODE_KEYBOARD;
   self->layer = POS_OSK_WIDGET_LAYER_NORMAL;
+  self->symbols = g_ptr_array_new ();
 
   gtk_widget_add_events (GTK_WIDGET (self), GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
@@ -1673,6 +1679,9 @@ pos_osk_widget_set_layout (PosOskWidget *self,
     return FALSE;
   }
 
+  g_ptr_array_free (self->symbols, TRUE);
+  self->symbols = g_ptr_array_new ();
+
   json = (char*) g_bytes_get_data (data, &size);
   ret = parse_layout (self, json, size);
 
@@ -1790,6 +1799,21 @@ pos_osk_widget_get_layout_id (PosOskWidget *self)
   g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
 
   return self->layout_id;
+}
+
+
+/**
+ * pos_osk_widget_get_symbols:
+ * @self: The osk widget
+ *
+ * Get the symbols on this OSK.
+ */
+const char * const *
+pos_osk_widget_get_symbols (PosOskWidget *self)
+{
+  g_return_val_if_fail (POS_IS_OSK_WIDGET (self), NULL);
+
+  return (const char * const *)self->symbols->pdata;
 }
 
 
