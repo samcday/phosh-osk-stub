@@ -194,20 +194,6 @@ typedef struct {
 } PosGdkKeycode;
 
 static const PosGdkKeycode keycodes_gdk_us[] = {
-  { GDK_KEY_Escape, KEY_ESC },
-  { GDK_KEY_F1, KEY_F1 },
-  { GDK_KEY_F2, KEY_F2 },
-  { GDK_KEY_F3, KEY_F3 },
-  { GDK_KEY_F4, KEY_F4 },
-  { GDK_KEY_F5, KEY_F5 },
-  { GDK_KEY_F6, KEY_F6 },
-  { GDK_KEY_F7, KEY_F7 },
-  { GDK_KEY_F8, KEY_F8 },
-  { GDK_KEY_F9, KEY_F9 },
-  { GDK_KEY_F10, KEY_F10 },
-  { GDK_KEY_F11, KEY_F11 },
-  { GDK_KEY_F12, KEY_F12 },
-
   { GDK_KEY_grave, KEY_GRAVE },
   { GDK_KEY_0, KEY_0 },
   { GDK_KEY_1, KEY_1 },
@@ -221,10 +207,7 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
   { GDK_KEY_9, KEY_9 },
   { GDK_KEY_minus, KEY_MINUS },
   { GDK_KEY_equal, KEY_EQUAL },
-  { GDK_KEY_BackSpace, KEY_BACKSPACE },
-  { GDK_KEY_Delete, KEY_DELETE },
 
-  { GDK_KEY_Tab, KEY_TAB },
   { GDK_KEY_q, KEY_Q },
   { GDK_KEY_w, KEY_W },
   { GDK_KEY_e, KEY_E },
@@ -250,7 +233,6 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
   { GDK_KEY_l, KEY_L },
   { GDK_KEY_semicolon, KEY_SEMICOLON },
   { GDK_KEY_apostrophe, KEY_APOSTROPHE },
-  { GDK_KEY_Return, KEY_ENTER },
 
   { GDK_KEY_z, KEY_Z },
   { GDK_KEY_x, KEY_X },
@@ -262,14 +244,7 @@ static const PosGdkKeycode keycodes_gdk_us[] = {
   { GDK_KEY_comma, KEY_COMMA },
   { GDK_KEY_period, KEY_DOT },
   { GDK_KEY_slash, KEY_SLASH },
-
-  /* The keymap maps <COMP> to Menu */
-  { GDK_KEY_Menu, KEY_COMPOSE },
   { GDK_KEY_space, KEY_SPACE },
-  { GDK_KEY_Left, KEY_LEFT },
-  { GDK_KEY_Right, KEY_RIGHT },
-  { GDK_KEY_Up, KEY_UP },
-  { GDK_KEY_Down, KEY_DOWN },
 };
 
 
@@ -648,7 +623,18 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
     flags |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SUPER;
 
   key = GPOINTER_TO_UINT (g_hash_table_lookup (self->gdk_keycodes, GUINT_TO_POINTER (gdk_keycode)));
-  g_return_if_fail (key);
+
+  if (!key) {
+    GdkKeymap *gdk_keymap = gdk_keymap_get_for_display (gdk_display_get_default ());
+    g_autofree GdkKeymapKey *keys = NULL;
+    int n_keys = 0;
+
+    if (!gdk_keymap_get_entries_for_keyval (gdk_keymap, gdk_keycode, &keys, &n_keys)) {
+      g_warning ("Couldn't convert keycode %d", gdk_keycode);
+      return;
+    }
+    key = keys[0].keycode - 8;
+  }
 
   /* FIXME: preserve current modifiers */
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
