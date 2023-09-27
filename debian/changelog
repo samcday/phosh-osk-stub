@@ -1,3 +1,98 @@
+phosh-osk-stub (0.32.0) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * build: Bump meson to 0.58.0.
+    Avoids warning due to str.replace usage
+  * build: Avoid get_pkgconfig_variable.
+    Silences another meson warning
+  * vk-driver: Add 'delete'
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/11
+  * Add varnam based completer.
+    The config is currently hardcoded and uses 'ml' as language.
+  * input-surface: Fix comment.
+    It was lacking the one most important word
+  * virtual-keyboard: Push keymap selection upwards into the vk-driver.
+    This allows us to sync it with the keycodes sent.
+  * vk-driver: Only update keymap when it changed
+  * osk-widget: Add xkb keymap layout-id.
+    This allows us to keep keymaps in sync
+  * input-surface: Switch keymap when switching layout.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/15
+  * input-surface: Add doc string for keyboard-driver
+  * vk-driver: Allow AltGr as modifier
+  * vk-driver: Don't hardcode us keycodes.
+    Set them based on the keymap.
+  * vk-driver: Add German layout.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/12
+  * input-surface: Scale up to 1024px.
+    This makes for less empty space on wider displays
+  * README: Mention varnam.
+    We'll expand on that after switching to govarnam
+    and landing more bits.
+  * docs: Mention varnam based completer
+  * key: Include enums.
+    Helps clang
+  * vk-driver: Allow to set an overlay keymap.
+    This creates a temporary keymap with the provided symbols.
+  * osk-widget: Emit signal when character popover is shown or hidden
+  * input-surface: Proxy popover symbols to vk driver.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/18
+  * vk-driver: Don't listen for input source changes.
+    Continuing from f5bb966b4b6cd33ed7661198beca8ea80359e13b where we pushed
+    listening to input-source changes from the virtual_keyboard to the
+    vk_driver we can now remove it there too and just invoke
+    pos_vk_driver_set_keymap().
+    This avoids listening for the same setting in two places and will also
+    allow us to pass more information from the osk in use.
+  * osk-widget: Allow to get symbols of the current layout
+  * vk-driver: Create keymaps on the fly.
+    The keymap is built on the fly avoiding keys that chromium thinks it can
+    interpret as evdev keycodes.
+    This way we can get more layouts to work in virtual keyboard mode like
+    Ukranian.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/19
+  * vk-driver: Drop handcrafted de layout.
+    We only keep the us layout for the moment as this is useful for the
+    terminal layout.
+  * input-surface: Use "terminal" as layout_id for the Termian layout.
+    This is basically the only reason why we keep the built in keymap.
+  * vk-driver: Use the built-in keymap for the terminal layout.
+    Instead of hoping for the best when switching keymaps use the built-in
+    keymap for the terminal layout. This decouple us completely from the
+    system keymaps.
+    We can look into generating this one as well at a later point.
+  * vk-driver: Add last missing symbols
+    ℅, ®, ©, ¢, €, ¥, and ™ are on the terminal layout but weren't in the keymap.
+  * input-surface: Split keymap and completion language setting.
+    This makes the code easier to follow and we also don't fail
+    to set an initial keymap.
+  * doc: Mention virtual keyboard mode.
+    Mention the limitations and advantages of using it as input-method.
+  * input-method: Free the full im state.
+    Otherwise we leak the surrounding text
+  * completers/hunspell: Don't leak completions
+  * osk-key: Don't leak symbols
+  * vk-driver: Try harder to get an event code.
+    If it's not in the table use GDK's reverse mapping function.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/21
+  * vk-driver: Minimize GDK mapping table.
+    We keep the regular letters to not e.g. swap Z and Y when the German
+    layout is active.
+
+  [ Kai Lüke ]
+  * layouts: Prefer capital eszett over double S as German capitalization.
+    The ezsett character didn't have a capitalization in fonts for long
+    time and thus double S was used instead. Since some years a proper
+    unicode capitalization is available and can be used instead (see
+    https://en.wikipedia.org/wiki/%C3%9F#Development_of_a_capital_form).
+    Prefer the new capital eszett but still offer the double S as second
+    alternative.
+
+  [ Subin Siby ]
+  * Use govarnam instead of deprecated libvarnam
+
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 27 Sep 2023 10:02:51 +0200
+
 phosh-osk-stub (0.31.0) experimental; urgency=medium
 
   * vk-driver: Add menu key.
