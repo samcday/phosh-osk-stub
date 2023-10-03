@@ -1,6 +1,23 @@
+phosh-osk-stub 0.32.0
+---------------------
+Released: September 2023
+* Initial support for Malayalam via Manglish using govarnam
+* Avoid margins on the left and right of the OSK on wider displays
+  (but don't grow over a certain width)
+* Generate keymaps for layouts on the fly. This allows us to support
+  non US layouts in virtual-keyboard mode.
+* Generate keymaps for character popovers on the fly. This allows us
+  to support non US layouts in virtual-keyboard mode.
+* Deduplicate listening for input method changes and more internal rework
+  for better vk-driver and completer support.
+* Contributors:
+    * Guido Günther
+    * Kai Lüke
+    * Subin Siby
+
 phosh-osk-stub 0.31.0
 ---------------------
-Released: Septemnber 2023
+Released: September 2023
 * Allow to add 'menu' key to the shortcuts toolbar
 * Contributors:
     * Guido Günther
