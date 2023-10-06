@@ -472,9 +472,8 @@ pos_vk_driver_update_keycodes (PosVkDriver *self, const char *layout_id)
   for (int i = 0; i < G_N_ELEMENTS (keycodes_common); i++)
     g_hash_table_insert (self->keycodes, keycodes_common[i].key,  (gpointer)&keycodes_common[i]);
 
-  if (g_strcmp0 (layout_id, "terminal")) {
-    g_warning ("Unknown layout id '%s', will use us layout", layout_id);
-  }
+  if (g_strcmp0 (layout_id, "terminal"))
+    g_warning ("Unknown layout id '%s', will use terminal layout", layout_id);
 
   for (int i = 0; keycodes[i].key != NULL; i++)
     g_hash_table_insert (self->keycodes, keycodes[i].key,  (gpointer)&keycodes[i]);
