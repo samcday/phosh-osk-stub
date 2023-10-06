@@ -739,6 +739,7 @@ pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, cons
   keymap_str = pos_vk_driver_build_keymap (self, extra_keysyms);
   pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap_str);
 
+  g_clear_pointer (&self->layout_id, g_free);
   self->layout_id = g_strdup (layout_id);
 }
 
