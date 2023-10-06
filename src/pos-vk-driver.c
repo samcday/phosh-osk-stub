@@ -694,7 +694,6 @@ void
 pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, const char * const *symbols)
 {
   g_autofree char *keymap_str = NULL;
-  int n;
   int keycode = KEY_1;
   /* Extra keysyms to add to each keymap */
   /* TODO: make dynamic */
@@ -718,7 +717,7 @@ pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, cons
   g_clear_pointer (&self->keycodes, g_hash_table_destroy);
   self->keycodes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
-  for (n = 0; symbols[n]; n++, keycode++) {
+  for (int n = 0; symbols[n]; n++, keycode++) {
     PosKeycode *pos_keycode = g_new0 (PosKeycode, 1);
     const char *symbol = symbols[n];
 
@@ -728,13 +727,13 @@ pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, cons
     g_hash_table_insert (self->keycodes, g_strdup (symbol), pos_keycode);
   }
 
-  for (int i = 0; extra_keysyms[i].key; i++, keycode++) {
+  for (int n = 0; extra_keysyms[n].key; n++, keycode++) {
     PosKeycode *pos_keycode = g_new0 (PosKeycode, 1);
 
     keycode = get_next_valid_keycode (keycode);
 
     pos_keycode->keycode = keycode;
-    g_hash_table_insert (self->keycodes, g_strdup (extra_keysyms[i].key), pos_keycode);
+    g_hash_table_insert (self->keycodes, g_strdup (extra_keysyms[n].key), pos_keycode);
   }
 
   keymap_str = pos_vk_driver_build_keymap (self, extra_keysyms);
