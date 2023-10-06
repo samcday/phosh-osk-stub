@@ -402,7 +402,7 @@ pos_vk_driver_build_keymap (PosVkDriver *self, PosKeysym extra_keysms[])
         g_warning ("Can't convert '%s' to keysym", symbol);
       }
     } else {
-      /* For non characters like cursor keys look up the keysum name */
+      /* For non characters like cursor keys look up the keysym name */
       const char *keysym;
 
       keysym = get_keysym (symbol, extra_keysms);
