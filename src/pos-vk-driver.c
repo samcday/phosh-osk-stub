@@ -757,18 +757,21 @@ void
 pos_vk_driver_set_overlay_keymap (PosVkDriver *self, const char *const *symbols)
 {
   g_autofree char *keymap_str = NULL;
+  int keycode = KEY_1;
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
   g_return_if_fail (symbols);
 
   g_clear_pointer (&self->keycodes, g_hash_table_destroy);
   self->keycodes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-  for (int i = 0; symbols[i]; i++) {
-    PosKeycode *pos_keycode;
-    const char *symbol = symbols[i];
 
-    pos_keycode = g_new0 (PosKeycode, 1);
-    pos_keycode->keycode = KEY_1 + i;
+  for (int n = 0; symbols[n]; n++, keycode++) {
+    PosKeycode *pos_keycode = g_new0 (PosKeycode, 1);
+    const char *symbol = symbols[n];
+
+    keycode = get_next_valid_keycode (keycode);
+
+    pos_keycode->keycode = keycode;
     g_hash_table_insert (self->keycodes, g_strdup (symbol), pos_keycode);
   }
   keymap_str = pos_vk_driver_build_keymap (self, NULL);
