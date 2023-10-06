@@ -425,7 +425,12 @@ on_osk_popover_hidden (PosInputSurface *self)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
-  set_keymap (self);
+  /*
+   * Add a slight delay before switching back the keymap. Otherwise an
+   * X11 client might apply the symbol sent to the popup to the new
+   * keymap.
+   */
+  g_timeout_add_once (25, (GSourceOnceFunc)set_keymap, self);
 }
 
 
