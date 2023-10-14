@@ -402,7 +402,7 @@ pos_vk_driver_build_keymap (PosVkDriver *self, PosKeysym extra_keysms[])
         g_warning ("Can't convert '%s' to keysym", symbol);
       }
     } else {
-      /* For non characters like cursor keys look up the keysum name */
+      /* For non characters like cursor keys look up the keysym name */
       const char *keysym;
 
       keysym = get_keysym (symbol, extra_keysms);
@@ -472,9 +472,8 @@ pos_vk_driver_update_keycodes (PosVkDriver *self, const char *layout_id)
   for (int i = 0; i < G_N_ELEMENTS (keycodes_common); i++)
     g_hash_table_insert (self->keycodes, keycodes_common[i].key,  (gpointer)&keycodes_common[i]);
 
-  if (g_strcmp0 (layout_id, "terminal")) {
-    g_warning ("Unknown layout id '%s', will use us layout", layout_id);
-  }
+  if (g_strcmp0 (layout_id, "terminal"))
+    g_warning ("Unknown layout id '%s', will use terminal layout", layout_id);
 
   for (int i = 0; keycodes[i].key != NULL; i++)
     g_hash_table_insert (self->keycodes, keycodes[i].key,  (gpointer)&keycodes[i]);
@@ -695,7 +694,6 @@ void
 pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, const char * const *symbols)
 {
   g_autofree char *keymap_str = NULL;
-  int n;
   int keycode = KEY_1;
   /* Extra keysyms to add to each keymap */
   /* TODO: make dynamic */
@@ -719,7 +717,7 @@ pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, cons
   g_clear_pointer (&self->keycodes, g_hash_table_destroy);
   self->keycodes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
-  for (n = 0; symbols[n]; n++, keycode++) {
+  for (int n = 0; symbols[n]; n++, keycode++) {
     PosKeycode *pos_keycode = g_new0 (PosKeycode, 1);
     const char *symbol = symbols[n];
 
@@ -729,18 +727,19 @@ pos_vk_driver_set_keymap_symbols (PosVkDriver *self, const char *layout_id, cons
     g_hash_table_insert (self->keycodes, g_strdup (symbol), pos_keycode);
   }
 
-  for (int i = 0; extra_keysyms[i].key; i++, keycode++) {
+  for (int n = 0; extra_keysyms[n].key; n++, keycode++) {
     PosKeycode *pos_keycode = g_new0 (PosKeycode, 1);
 
     keycode = get_next_valid_keycode (keycode);
 
     pos_keycode->keycode = keycode;
-    g_hash_table_insert (self->keycodes, g_strdup (extra_keysyms[i].key), pos_keycode);
+    g_hash_table_insert (self->keycodes, g_strdup (extra_keysyms[n].key), pos_keycode);
   }
 
   keymap_str = pos_vk_driver_build_keymap (self, extra_keysyms);
   pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap_str);
 
+  g_clear_pointer (&self->layout_id, g_free);
   self->layout_id = g_strdup (layout_id);
 }
 
@@ -759,18 +758,21 @@ void
 pos_vk_driver_set_overlay_keymap (PosVkDriver *self, const char *const *symbols)
 {
   g_autofree char *keymap_str = NULL;
+  int keycode = KEY_1;
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
   g_return_if_fail (symbols);
 
   g_clear_pointer (&self->keycodes, g_hash_table_destroy);
   self->keycodes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-  for (int i = 0; symbols[i]; i++) {
-    PosKeycode *pos_keycode;
-    const char *symbol = symbols[i];
 
-    pos_keycode = g_new0 (PosKeycode, 1);
-    pos_keycode->keycode = KEY_1 + i;
+  for (int n = 0; symbols[n]; n++, keycode++) {
+    PosKeycode *pos_keycode = g_new0 (PosKeycode, 1);
+    const char *symbol = symbols[n];
+
+    keycode = get_next_valid_keycode (keycode);
+
+    pos_keycode->keycode = keycode;
     g_hash_table_insert (self->keycodes, g_strdup (symbol), pos_keycode);
   }
   keymap_str = pos_vk_driver_build_keymap (self, NULL);
