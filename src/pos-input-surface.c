@@ -466,6 +466,39 @@ clipboard_paste_activated (GSimpleAction *action,
 
 /* Emoji picker */
 
+
+static void
+send_emoji_via_vk (PosInputSurface *self, const char *emoji)
+{
+  g_autoptr (GPtrArray) syms_array = g_ptr_array_new_with_free_func (g_free);
+  g_autofree gunichar *items = NULL;
+
+  /* To send an emoji via the vk driver we split it into unicode symbols… */
+  items = g_utf8_to_ucs4_fast (emoji, -1, NULL);
+  for (int i = 0; items[i]; i++) {
+    char *symbol = g_new0 (char, 7);
+
+    g_unichar_to_utf8 (items[i], symbol);
+    /* TODO: Can use g_strv_builder_take with glib 2.80 */
+    g_ptr_array_add (syms_array, symbol);
+  }
+  g_ptr_array_add (syms_array, NULL);
+
+  /* …add a keymap that contains the emoji, combining characters and emoji modifiers */
+  pos_vk_driver_set_overlay_keymap (self->keyboard_driver, (const char * const*)syms_array->pdata);
+
+  /* … and type each of these symbols one by one */
+  for (int i = 0; syms_array->pdata[i]; i++) {
+    const char *symbol = syms_array->pdata[i];
+
+    pos_vk_driver_key_down (self->keyboard_driver, symbol);
+    pos_vk_driver_key_up (self->keyboard_driver, symbol);
+  }
+
+  set_keymap_delayed (self);
+}
+
+
 static void
 on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji_picker)
 {
@@ -476,12 +509,7 @@ on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji
     pos_input_surface_submit_current_preedit (self);
     pos_input_method_send_string (self->input_method, emoji, TRUE);
   } else {
-    const char *symbols[] = { emoji , NULL };
-
-    pos_vk_driver_set_overlay_keymap (self->keyboard_driver, (const char * const*)symbols);
-    pos_vk_driver_key_down (self->keyboard_driver, emoji);
-    pos_vk_driver_key_up (self->keyboard_driver, emoji);
-    set_keymap_delayed (self);
+    send_emoji_via_vk (self, emoji);
   }
 
   pos_input_surface_notify_key_press (self);
