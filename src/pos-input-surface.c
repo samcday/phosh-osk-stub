@@ -397,6 +397,18 @@ set_keymap (PosInputSurface *self)
 
 
 static void
+set_keymap_delayed (PosInputSurface *self)
+{
+  /*
+   * Add a slight delay before switching back the keymap. Otherwise an
+   * X11 client might apply the symbol sent to the popup to the new
+   * keymap.
+   */
+  g_timeout_add_once (25, (GSourceOnceFunc)set_keymap, self);
+}
+
+
+static void
 on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_widget)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
@@ -425,12 +437,7 @@ on_osk_popover_hidden (PosInputSurface *self)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
-  /*
-   * Add a slight delay before switching back the keymap. Otherwise an
-   * X11 client might apply the symbol sent to the popup to the new
-   * keymap.
-   */
-  g_timeout_add_once (25, (GSourceOnceFunc)set_keymap, self);
+  set_keymap_delayed (self);
 }
 
 
@@ -465,8 +472,17 @@ on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_EMOJI_PICKER (emoji_picker));
 
-  pos_input_surface_submit_current_preedit (self);
-  pos_input_method_send_string (self->input_method, emoji, TRUE);
+  if (pos_input_method_get_active (self->input_method)) {
+    pos_input_surface_submit_current_preedit (self);
+    pos_input_method_send_string (self->input_method, emoji, TRUE);
+  } else {
+    const char *symbols[] = { emoji , NULL };
+
+    pos_vk_driver_set_overlay_keymap (self->keyboard_driver, (const char * const*)symbols);
+    pos_vk_driver_key_down (self->keyboard_driver, emoji);
+    pos_vk_driver_key_up (self->keyboard_driver, emoji);
+    set_keymap_delayed (self);
+  }
 
   pos_input_surface_notify_key_press (self);
 }
