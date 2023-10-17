@@ -112,6 +112,35 @@ on_btn_clicked (PosShortcutsBar *self, GtkButton *btn)
 }
 
 
+static char *
+we_know_better_than_gtk (PosShortcut *shortcut)
+{
+  char *label = NULL;
+
+  if (shortcut->modifiers)
+    return FALSE;
+
+  switch (shortcut->key) {
+  case GDK_KEY_Down:
+    label = "↓";
+    break;
+  case GDK_KEY_Up:
+    label = "↑";
+    break;
+  case GDK_KEY_Left:
+    label = "←";
+    break;
+  case GDK_KEY_Right:
+    label = "→";
+    break;
+  default:
+    return NULL;
+  }
+
+  return g_strdup (label);
+}
+
+
 static void
 on_shortcuts_changed (PosShortcutsBar *self,
                       const gchar     *key,
@@ -135,15 +164,17 @@ on_shortcuts_changed (PosShortcutsBar *self,
     GtkWidget *child;
 
     gtk_accelerator_parse (accelerators[i], &shortcut->key, &shortcut->modifiers);
-
-    if (gtk_accelerator_valid (shortcut->key, shortcut->modifiers) == FALSE) {
-      g_warning ("Invalid shortcut '%s'", accelerators[i]);
-      continue;
+    if (gtk_accelerator_valid (shortcut->key, shortcut->modifiers)) {
+      shortcut->name = gtk_accelerator_get_label (shortcut->key, shortcut->modifiers);
+    } else {
+      shortcut->name = we_know_better_than_gtk (shortcut);
+      if (!shortcut->name) {
+        g_warning ("Invalid shortcut '%s'", accelerators[i]);
+        continue;
+      }
     }
 
-    shortcut->name = gtk_accelerator_get_label (shortcut->key, shortcut->modifiers);
     g_debug ("Adding shortcut: '%s'", shortcut->name);
-
     btn = gtk_button_new_with_label (shortcut->name);
     child = gtk_flow_box_child_new ();
     g_object_set_data_full (G_OBJECT (btn), "pos-shortcut",
