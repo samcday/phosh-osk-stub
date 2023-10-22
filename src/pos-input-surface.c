@@ -397,6 +397,18 @@ set_keymap (PosInputSurface *self)
 
 
 static void
+set_keymap_delayed (PosInputSurface *self)
+{
+  /*
+   * Add a slight delay before switching back the keymap. Otherwise an
+   * X11 client might apply the symbol sent to the popup to the new
+   * keymap.
+   */
+  g_timeout_add_once (25, (GSourceOnceFunc)set_keymap, self);
+}
+
+
+static void
 on_osk_mode_changed (PosInputSurface *self, GParamSpec *pspec, GtkWidget *osk_widget)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
@@ -425,12 +437,7 @@ on_osk_popover_hidden (PosInputSurface *self)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
-  /*
-   * Add a slight delay before switching back the keymap. Otherwise an
-   * X11 client might apply the symbol sent to the popup to the new
-   * keymap.
-   */
-  g_timeout_add_once (25, (GSourceOnceFunc)set_keymap, self);
+  set_keymap_delayed (self);
 }
 
 
@@ -459,14 +466,51 @@ clipboard_paste_activated (GSimpleAction *action,
 
 /* Emoji picker */
 
+
+static void
+send_emoji_via_vk (PosInputSurface *self, const char *emoji)
+{
+  g_autoptr (GPtrArray) syms_array = g_ptr_array_new_with_free_func (g_free);
+  g_autofree gunichar *items = NULL;
+
+  /* To send an emoji via the vk driver we split it into unicode symbols… */
+  items = g_utf8_to_ucs4_fast (emoji, -1, NULL);
+  for (int i = 0; items[i]; i++) {
+    char *symbol = g_new0 (char, 7);
+
+    g_unichar_to_utf8 (items[i], symbol);
+    /* TODO: Can use g_strv_builder_take with glib 2.80 */
+    g_ptr_array_add (syms_array, symbol);
+  }
+  g_ptr_array_add (syms_array, NULL);
+
+  /* …add a keymap that contains the emoji, combining characters and emoji modifiers */
+  pos_vk_driver_set_overlay_keymap (self->keyboard_driver, (const char * const*)syms_array->pdata);
+
+  /* … and type each of these symbols one by one */
+  for (int i = 0; syms_array->pdata[i]; i++) {
+    const char *symbol = syms_array->pdata[i];
+
+    pos_vk_driver_key_down (self->keyboard_driver, symbol);
+    pos_vk_driver_key_up (self->keyboard_driver, symbol);
+  }
+
+  set_keymap_delayed (self);
+}
+
+
 static void
 on_emoji_picked (PosInputSurface *self, const char *emoji, PosEmojiPicker *emoji_picker)
 {
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_EMOJI_PICKER (emoji_picker));
 
-  pos_input_surface_submit_current_preedit (self);
-  pos_input_method_send_string (self->input_method, emoji, TRUE);
+  if (pos_input_method_get_active (self->input_method)) {
+    pos_input_surface_submit_current_preedit (self);
+    pos_input_method_send_string (self->input_method, emoji, TRUE);
+  } else {
+    send_emoji_via_vk (self, emoji);
+  }
 
   pos_input_surface_notify_key_press (self);
 }
