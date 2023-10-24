@@ -29,10 +29,6 @@
  * PosCompleterManager:
  *
  * Manages initialization and lookup of the different completion engines.
- *
- * TODO: take user configuration into account.
- *  - map keyboard variants to default completers
- *  - allow completers to have different config based on keyboard layout
  */
 
 enum {
