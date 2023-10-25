@@ -628,8 +628,8 @@ pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierTy
     g_autofree GdkKeymapKey *keys = NULL;
     int n_keys = 0;
 
-    if (!gdk_keymap_get_entries_for_keyval (gdk_keymap, gdk_keycode, &keys, &n_keys)) {
-      g_warning ("Couldn't convert keycode %d", gdk_keycode);
+    if (!gdk_keymap_get_entries_for_keyval (gdk_keymap, gdk_keycode, &keys, &n_keys) || !n_keys) {
+      g_warning ("Couldn't convert keycode 0x%x", gdk_keycode);
       return;
     }
     key = keys[0].keycode - 8;
