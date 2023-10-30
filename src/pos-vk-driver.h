@@ -16,8 +16,17 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (PosVkDriver, pos_vk_driver, POS, VK_DRIVER, GObject)
 
+typedef enum {
+  POS_KEYCODE_MODIFIER_NONE =  0,
+  POS_KEYCODE_MODIFIER_SHIFT = 1 << 0,
+  POS_KEYCODE_MODIFIER_CTRL =  1 << 1,
+  POS_KEYCODE_MODIFIER_ALTGR = 1 << 2,
+} PosKeycodeModifier;
+
 PosVkDriver *pos_vk_driver_new (PosVirtualKeyboard *virtual_keyboard);
-void pos_vk_driver_key_down (PosVkDriver *virtual_keyboard, const char *key);
+void         pos_vk_driver_key_down (PosVkDriver        *virtual_keyboard,
+                                     const char         *key,
+                                     PosKeycodeModifier  modifier);
 void pos_vk_driver_key_up (PosVkDriver *virtual_keyboard, const char *key);
 void pos_vk_driver_key_press_gdk (PosVkDriver *self, guint gdk_keycode, GdkModifierType modifiers);
 void pos_vk_driver_set_terminal_keymap (PosVkDriver *self);

@@ -390,7 +390,7 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
 
   /* virtual-keyboard, no input method */
   if (!pos_input_method_get_active (self->input_method)) {
-    pos_vk_driver_key_down (self->keyboard_driver, symbol);
+    pos_vk_driver_key_down (self->keyboard_driver, symbol, POS_KEYCODE_MODIFIER_NONE);
     pos_vk_driver_key_up (self->keyboard_driver, symbol);
     return;
   }
@@ -402,7 +402,7 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
   }
 
   if (g_str_has_prefix (symbol, "KEY_")) {
-    pos_vk_driver_key_down (self->keyboard_driver, symbol);
+    pos_vk_driver_key_down (self->keyboard_driver, symbol, POS_KEYCODE_MODIFIER_NONE);
     pos_vk_driver_key_up (self->keyboard_driver, symbol);
   } else {
     pos_input_method_send_string (self->input_method, symbol, TRUE);
@@ -491,8 +491,8 @@ clipboard_copy_activated (GSimpleAction *action,
 {
   PosInputSurface *self = POS_INPUT_SURFACE (data);
 
-  pos_vk_driver_key_down (self->keyboard_driver, "KEY_COPY");
-  pos_vk_driver_key_up (self->keyboard_driver, "KEY_COPY");
+  pos_vk_driver_key_down (self->keyboard_driver, "c", POS_KEYCODE_MODIFIER_CTRL);
+  pos_vk_driver_key_up (self->keyboard_driver, "c");
 }
 
 
@@ -503,8 +503,8 @@ clipboard_paste_activated (GSimpleAction *action,
 {
   PosInputSurface *self = POS_INPUT_SURFACE (data);
 
-  pos_vk_driver_key_down (self->keyboard_driver, "KEY_PASTE");
-  pos_vk_driver_key_up (self->keyboard_driver, "KEY_PASTE");
+  pos_vk_driver_key_down (self->keyboard_driver, "v", POS_KEYCODE_MODIFIER_CTRL);
+  pos_vk_driver_key_up (self->keyboard_driver, "v");
 }
 
 
@@ -545,7 +545,7 @@ send_emoji_via_vk (PosInputSurface *self, const char *emoji)
   for (int i = 0; syms_array->pdata[i]; i++) {
     const char *symbol = syms_array->pdata[i];
 
-    pos_vk_driver_key_down (self->keyboard_driver, symbol);
+    pos_vk_driver_key_down (self->keyboard_driver, symbol, POS_KEYCODE_MODIFIER_NONE);
     pos_vk_driver_key_up (self->keyboard_driver, symbol);
   }
 
