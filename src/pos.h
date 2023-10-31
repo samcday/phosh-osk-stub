@@ -11,6 +11,7 @@ G_BEGIN_DECLS
 
 #include "pos-main.h"
 #include "pos-activation-filter.h"
+#include "pos-clipboard-manager.h"
 #include "pos-completer-manager.h"
 #include "pos-hw-tracker.h"
 #include "pos-enums.h"

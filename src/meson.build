@@ -37,6 +37,8 @@ libpos_sources = files(
   'pos-activation-filter.c',
   'pos-char-popup.h',
   'pos-char-popup.c',
+  'pos-clipboard-manager.h',
+  'pos-clipboard-manager.c',
   'pos-completer.h',
   'pos-completer.c',
   'pos-completer-manager.h',
