@@ -91,11 +91,11 @@ For the keyboard to fold and unfold automatically make sure
 WORD COMPLETION
 ^^^^^^^^^^^^^^^
 
-``phosh-osk-stub`` has support for word completion via various
+``phosh-osk-stub`` has support for word completion and correction via various
 completers (see below). It has several modes of operation represented
 by flags that can be combined:
 
-- `off`: no completion
+- `off`: no word completion
 - `manual`: enable and disable completion via an option in the language popover
 - `hint`: enables and disables completion based on the text input's `completion`
   hint.
@@ -136,7 +136,7 @@ built. Available are currently at most
   - ``fzf``: completer based on fzf command line tool. Useful for experiments)
   - ``varnam``: completer using govarnam for Indic languages
 
-The default completer is selected via the
+The default word completer is selected via the
 ``sm.puri.phosh.osk.Completers`` ``default`` GSetting.
 
 ::
@@ -189,11 +189,22 @@ active. A commonly used executable is swipeGuess: https://git.sr.ht/~earboxer/sw
 TEXT COMPLETION USING VARNAM
 ****************************
 
-This completer feeds the current input word (preedit) to govarnam.
-Note that the completer is experimental and has Malayalam hardcoded.
+This completer feeds the current input word (preedit) to govarnam for easy
+input of Indic languages.
 
-For the completer to work it needs govarnam and the Malaylam schema files
-installed. Please refer to the govarnam documentation.
+For the completer to work it needs govarnam and the language schema
+files installed. Please refer to the govarnam documentation.
+
+Note that while you can enable govarnam as default completer this is
+not recommended. Instead enable it for a specific language via the
+`sources` gsettings:
+
+::
+
+  gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'us'), ('ibus', 'varnam:ml'), ('ibus', 'varnam:ta')]"
+
+The above would only enable govranam for Malayalam and Tamil while the
+English US layout would still use the default completer.
 
 TERMINAL SHORTCUTS
 ^^^^^^^^^^^^^^^^^^

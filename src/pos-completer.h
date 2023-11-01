@@ -56,6 +56,7 @@ struct _PosCompleterInterface
                                   const char    *lang,
                                   const char    *region,
                                   GError       **error);
+  char *         (*get_display_name) (PosCompleter *self);
 };
 
 /* Used by completion users */
@@ -73,5 +74,6 @@ gboolean       pos_completer_set_language (PosCompleter  *self,
                                            const char    *lang,
                                            const char    *region,
                                            GError       **error);
+char          *pos_completer_get_display_name (PosCompleter *self);
 
 G_END_DECLS

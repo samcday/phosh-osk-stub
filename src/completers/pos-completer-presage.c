@@ -193,7 +193,6 @@ pos_completer_presage_set_language (PosCompleter *completer,
   g_autofree char *dbdir = NULL;
   g_autofree char *dbfile = NULL;
   g_autofree char *dbpath = NULL;
-  g_auto (GStrv) parts = NULL;
   gboolean ret;
   presage_error_code_t result;
 
