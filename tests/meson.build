@@ -4,6 +4,7 @@ test_env = environment()
 test_env.set('G_DEBUG', 'gc-friendly,fatal-warnings')
 test_env.set('MALLOC_CHECK_','2')
 test_env.set('NO_AT_BRIDGE','1')
+test_env.set('GSETTINGS_BACKEND','memory')
 
 grab_word_test = executable('test-grab-word',
 			    'test-grab-word.c',
