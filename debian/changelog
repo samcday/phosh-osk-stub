@@ -62,7 +62,7 @@ phosh-osk-stub (0.33.0) experimental; urgency=medium
   * input-surface: Don't ignore errors when setting completion fallback
   * docs: Explain govarnam setting
 
--- Guido Günther <agx@sigxcpu.org>  Wed, 25 Oct 2023 18:46:00 +0200
+ -- Guido Günther <agx@sigxcpu.org>  Wed, 25 Oct 2023 18:46:00 +0200
 
 phosh-osk-stub (0.32.0) experimental; urgency=medium
 
