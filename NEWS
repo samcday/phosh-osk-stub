@@ -1,3 +1,18 @@
+phosh-osk-stub 0.33.0
+---------------------
+Released: October 2023
+* Allow to use per language completers. If set this is used instead
+  of the default completer. Can be used to e.g. complete different
+  Indic scripts with govarnam while using hunspell for English.
+* Better handle emojies and characters from popovers under XWayland
+* Be more robust when picking invalid keysyms for the shortcuts bar
+* Issues fixed:
+  https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/16
+  https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/22
+  https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/24
+* Contributors:
+    * Guido Günther
+
 phosh-osk-stub 0.32.0
 ---------------------
 Released: September 2023

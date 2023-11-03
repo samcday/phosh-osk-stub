@@ -58,6 +58,14 @@
   </screenshots>
 
   <releases>
+    <release version="0.33.0" date="2023-10-25">
+      <description>
+        <ul>
+          <li>Better support Emojis and popover characters on XWayland</li>
+          <li>Allow for per-language completers besides the default completer</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.32.0" date="2023-09-27">
       <description>
         <ul>
