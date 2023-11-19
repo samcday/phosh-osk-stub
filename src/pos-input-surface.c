@@ -54,6 +54,7 @@ typedef struct {
   gboolean show;
   double   progress;
   gint64   last_frame;
+  guint    id;
 } PosInputSurfaceAnimation;
 
 /**
@@ -1158,6 +1159,8 @@ pos_input_surface_finalize (GObject *object)
   g_signal_remove_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), self->clicked_id);
   self->clicked_id = 0;
 
+  g_clear_handle_id (&self->animation.id, g_source_remove);
+
   g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
   g_clear_object (&self->input_settings);
@@ -1755,11 +1758,28 @@ pos_input_surface_get_active (PosInputSurface *self)
 }
 
 
+static gboolean
+animation_timeout_cb (gpointer data)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+
+  if (self->animation.progress < 1.0) {
+    g_warning ("Animation did not finish in time: %f", self->animation.progress);
+    self->animation.progress = 1.0;
+    pos_input_surface_move (self);
+  }
+
+  self->animation.id = 0;
+  return FALSE;
+}
+
+
 void
 pos_input_surface_set_visible (PosInputSurface *self, gboolean visible)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
+  g_debug ("Showing keyboard: %d, %d", visible, self->surface_visible);
   if (visible == self->surface_visible)
     return;
 
@@ -1771,6 +1791,10 @@ pos_input_surface_set_visible (PosInputSurface *self, gboolean visible)
   self->animation.progress =
     reverse_ease_out_cubic (1.0 - hdy_ease_out_cubic (self->animation.progress));
 
+  if (self->animation.id)
+    g_source_remove (self->animation.id);
+
+  self->animation.id = g_timeout_add_seconds (1, animation_timeout_cb, self);
   gtk_widget_add_tick_callback (GTK_WIDGET (self), animate_cb, NULL, NULL);
 }
 
