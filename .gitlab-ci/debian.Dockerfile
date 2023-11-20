@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 RUN export DEBIAN_FRONTEND=noninteractive \
    && apt-get -y update \
@@ -6,5 +6,5 @@ RUN export DEBIAN_FRONTEND=noninteractive \
    && eatmydata apt-get -y update \
    && cd /home/user/app \
    && eatmydata apt-get --no-install-recommends -y build-dep . \
-   && eatmydata apt-get --no-install-recommends -y install build-essential git wget gcovr locales \
+   && eatmydata apt-get --no-install-recommends -y install build-essential git wget gcovr locales uncrustify \
    && eatmydata apt-get clean
