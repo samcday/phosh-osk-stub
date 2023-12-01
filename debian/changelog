@@ -1,3 +1,41 @@
+phosh-osk-stub (0.34.0) experimental; urgency=medium
+
+  * tests: Use memory gsettings backend.
+    This avoids test failures when running in a restricted environment
+  * ci: Switch to trixie
+  * ci: Make it simple to rebuild the image
+  * ci: Modernize by using meson where easily possible
+  * ci: Switch to trixie
+  * ci: Make sure docker image is current.
+    We pull gir-docgen from sid to work around an RC bug
+  * ci: Add uncrustify config and checker.
+    Based on what we added to phoc recently. We copy it in here so users
+    don't have to get any extra submodules or similar to run these locally.
+  * ci: Run style checks on merge requests.
+    We move ci-fairy to the new stage too as it checks commit message style.
+  * doc: Be a bit more specific which entry to select
+  * input-surface: Add callback to finish animation.
+    When we blank and the screen lock kicks in the GTK's frame clock stops
+    ticking. Finish the animation in that case.
+    This will become superfluous when we switch to compositor driven
+    animations via the draggable layer surface.
+  * input-surface: Make it simple to check for language layouts.
+    This makes it simple to distinguish "language" layouts from
+    "special" layouts like emoji or terminal.
+  * input-surface: Make it simple to check for terminal layouts.
+    This makes it simple to distinguish the terminal layout from
+    language or other layouts.
+  * input-surface: Ignore "special" layouts when remembering last layout.
+    This allows us to switch back to the last language layout. The only
+    special layout is currently the terminal layout but there will be more
+    like PIN.
+    Helps: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/14
+  * data: Add some terminal keyboard shortcuts.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/10
+  * schema: Ignore OSK activation for gnome-calculator.
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 01 Dec 2023 12:41:00 +0100
+
 phosh-osk-stub (0.33.0) experimental; urgency=medium
 
   * vk-driver: Make the two loops more alike.  No need to use different loop
