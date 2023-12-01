@@ -64,11 +64,14 @@ SETUP
 
 In order to be used by Phosh as OSK, phosh-osk-stub needs to be started from
 the `/usr/share/applications/sm.puri.OSK0.desktop` desktop file. On Debian
-systems this can be achieved via
+systems this can be achieved by running
 
 ::
 
    update-alternatives --config Phosh-OSK
+
+as root and selecting the entry ending in ``sm.puri.Phosh.OskStub.desktop``.
+
 
 CONFIGURATION
 -------------

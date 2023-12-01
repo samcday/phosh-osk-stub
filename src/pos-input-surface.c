@@ -35,6 +35,24 @@
 
 #include <glib/gi18n-lib.h>
 
+/**
+ * POS_INPUT_SURFACE_IS_LANG_LAYOUT:
+ * @layout: The layout to check
+ *
+ * Is this widget a "regular" language layout (not emoji, not terminal, …)?
+ */
+#define POS_INPUT_SURFACE_IS_LANG_LAYOUT(widget) \
+  (POS_IS_OSK_WIDGET ((widget)) && GTK_WIDGET ((widget)) != self->osk_terminal)
+
+/**
+ * POS_INPUT_SURFACE_IS_TERMINAL_LAYOUT:
+ * @layout: The layout to check
+ *
+ * Is this widget a terminal layout?
+ */
+#define POS_INPUT_SURFACE_IS_TERMINAL_LAYOUT(widget) \
+  (POS_IS_OSK_WIDGET ((widget)) && GTK_WIDGET ((widget)) == self->osk_terminal)
+
 enum {
   PROP_0,
   PROP_INPUT_METHOD,
@@ -54,6 +72,7 @@ typedef struct {
   gboolean show;
   double   progress;
   gint64   last_frame;
+  guint    id;
 } PosInputSurfaceAnimation;
 
 /**
@@ -148,7 +167,7 @@ pos_input_surface_toggle_shortcuts_bar (PosInputSurface *self)
   child = hdy_deck_get_visible_child (self->deck);
 
   /* shortcuts bar is only for terminal and when we have shortcuts defined */
-  if (child == self->osk_terminal)
+  if (POS_INPUT_SURFACE_IS_TERMINAL_LAYOUT (child))
     shortcuts_visible = !!pos_shortcuts_bar_get_num_shortcuts (self->shortcuts_bar);
 
   gtk_widget_set_visible (GTK_WIDGET (self->shortcuts_bar), shortcuts_visible);
@@ -712,12 +731,13 @@ on_visible_child_changed (PosInputSurface *self)
   g_debug ("Switched to layout '%s'", pos_osk_widget_get_display_name (osk));
   pos_osk_widget_set_layer (osk, POS_OSK_WIDGET_LAYER_NORMAL);
 
-  /* Remember last layout */
-  self->last_layout = GTK_WIDGET (osk);
-
   set_keymap (self);
-  if (osk != POS_OSK_WIDGET (self->osk_terminal))
+
+  /* Remember last layout */
+  if (POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk)) {
     pos_input_surface_switch_completion (self, osk);
+    self->last_layout = GTK_WIDGET (osk);
+  }
 
   /* Recheck completion bar visibility */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
@@ -977,6 +997,7 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
 {
   GtkWidget *osk_widget = NULL;
   PosOskWidgetLayer layer = POS_OSK_WIDGET_LAYER_NORMAL;
+  PosInputMethodPurpose purpose;
 
   g_assert (POS_IS_INPUT_SURFACE (self));
   g_assert (POS_IS_INPUT_METHOD (im));
@@ -984,7 +1005,8 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
   /* We only have completer active on `normal` input purpose */
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETER_ACTIVE]);
 
-  switch (pos_input_method_get_purpose (im)) {
+  purpose = pos_input_method_get_purpose (im);
+  switch (purpose) {
   case POS_INPUT_METHOD_PURPOSE_ALPHA:
   case POS_INPUT_METHOD_PURPOSE_EMAIL:
   case POS_INPUT_METHOD_PURPOSE_NAME:
@@ -1011,10 +1033,13 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
 
   if (osk_widget == NULL) {
     osk_widget = hdy_deck_get_visible_child (self->deck);
-    /* Debug surface and emoji don't have layers */
-    if (POS_IS_OSK_WIDGET (osk_widget) == FALSE)
+    /* If no "special" layout, Switch back to the last language layer */
+    if (!POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk_widget))
       osk_widget = self->last_layout;
   }
+  g_debug ("Layout: %s, purpose: %d",
+           pos_osk_widget_get_name (POS_OSK_WIDGET (osk_widget)),
+           purpose);
   hdy_deck_set_visible_child (self->deck, osk_widget);
 
   pos_osk_widget_set_layer (POS_OSK_WIDGET (osk_widget), layer);
@@ -1157,6 +1182,8 @@ pos_input_surface_finalize (GObject *object)
 
   g_signal_remove_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), self->clicked_id);
   self->clicked_id = 0;
+
+  g_clear_handle_id (&self->animation.id, g_source_remove);
 
   g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
@@ -1512,7 +1539,7 @@ insert_osk (PosInputSurface   *self,
   hdy_deck_insert_child_after (self->deck, GTK_WIDGET (osk_widget), NULL);
   g_hash_table_insert (self->osks, g_strdup (name), osk_widget);
 
-  if (self->last_layout == NULL)
+  if (self->last_layout == NULL && POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk_widget))
     self->last_layout = GTK_WIDGET (osk_widget);
 
   return osk_widget;
@@ -1755,11 +1782,28 @@ pos_input_surface_get_active (PosInputSurface *self)
 }
 
 
+static gboolean
+animation_timeout_cb (gpointer data)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+
+  if (self->animation.progress < 1.0) {
+    g_warning ("Animation did not finish in time: %f", self->animation.progress);
+    self->animation.progress = 1.0;
+    pos_input_surface_move (self);
+  }
+
+  self->animation.id = 0;
+  return FALSE;
+}
+
+
 void
 pos_input_surface_set_visible (PosInputSurface *self, gboolean visible)
 {
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
+  g_debug ("Showing keyboard: %d, %d", visible, self->surface_visible);
   if (visible == self->surface_visible)
     return;
 
@@ -1771,6 +1815,10 @@ pos_input_surface_set_visible (PosInputSurface *self, gboolean visible)
   self->animation.progress =
     reverse_ease_out_cubic (1.0 - hdy_ease_out_cubic (self->animation.progress));
 
+  if (self->animation.id)
+    g_source_remove (self->animation.id);
+
+  self->animation.id = g_timeout_add_seconds (1, animation_timeout_cb, self);
   gtk_widget_add_tick_callback (GTK_WIDGET (self), animate_cb, NULL, NULL);
 }
 
@@ -1816,7 +1864,7 @@ pos_input_surface_is_completer_active (PosInputSurface *self)
     return FALSE;
 
   /* Completion should only be used on "regular" layouts */
-  if (POS_IS_OSK_WIDGET (child) == FALSE || child == self->osk_terminal)
+  if (!POS_INPUT_SURFACE_IS_LANG_LAYOUT (child))
     return FALSE;
 
   /* We only complete input purpose `normal` */
