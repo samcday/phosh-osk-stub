@@ -58,6 +58,14 @@
   </screenshots>
 
   <releases>
+    <release version="0.34.0" date="2023-12-04">
+      <description>
+        <ul>
+          <li>Improve layout switching</li>
+          <li>Add some default shortcuts to the terminal layout</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.33.0" date="2023-10-25">
       <description>
         <ul>
