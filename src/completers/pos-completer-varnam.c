@@ -283,6 +283,7 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   varray *suggestions;
   int ret;
   int transliteration_id = 1;
+  char *last = NULL;
 
   g_return_val_if_fail (self->varnam_handle_id >= 0, FALSE);
 
@@ -311,7 +312,14 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   g_ptr_array_add (completions, g_strdup (self->preedit->str));
   for (int i = 0; i < varray_length (suggestions) && i < self->max_completions - 1; i++) {
     Suggestion *sug = varray_get (suggestions, i);
+
+    /* Varnam often returns the same word multiple times in a row. Skip over these */
+    /* https://github.com/varnamproject/govarnam/issues/59 */
+    if (g_strcmp0 (sug->Word, last) == 0)
+      continue;
+
     g_ptr_array_add (completions, g_strdup (sug->Word));
+    last = sug->Word;
   }
   g_ptr_array_add (completions, NULL);
 
