@@ -1,3 +1,11 @@
+phosh-osk-stub (0.35.0) experimental; urgency=medium
+
+  * varnam: Skip over identical words.
+    Govarnam often gives us the same word multiple times in a row. Skip over
+    these.
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 01 Jan 2024 15:18:58 +0100
+
 phosh-osk-stub (0.34.0) experimental; urgency=medium
 
   * tests: Use memory gsettings backend.

@@ -1,3 +1,10 @@
+phosh-osk-stub 0.35.0
+---------------------
+Released: January 2024
+* Drop duplicate completions returned by govarnam
+* Contributors:
+    * Guido Günther
+
 phosh-osk-stub 0.34.0
 ---------------------
 Released: December 2023
