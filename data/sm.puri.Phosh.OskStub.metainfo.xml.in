@@ -58,6 +58,13 @@
   </screenshots>
 
   <releases>
+    <release version="0.35.0" date="2024-01-01">
+      <description>
+        <ul>
+          <li>Drop duplicate completions when using varnam completer</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.34.0" date="2023-12-04">
       <description>
         <ul>
