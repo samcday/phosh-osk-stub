@@ -392,11 +392,16 @@ pos_completer_add_preedit (PosCompleter *self, GString *preedit, const char *sym
     return FALSE;
   }
 
+  /*
+   * Return/Enter is special as we want it to submit the preedit but
+   * can't just append '\n' as lots of programs listen to the key event
+   * to toggle actions
+   */
   if (g_strcmp0 (symbol, "KEY_ENTER") == 0) {
-    g_string_append (preedit, "\n");
     return TRUE;
   }
 
+  /* Ignore all other special keys */
   if (g_str_has_prefix (symbol, "KEY_"))
     return FALSE;
 

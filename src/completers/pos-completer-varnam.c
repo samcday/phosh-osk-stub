@@ -290,6 +290,11 @@ pos_completer_varnam_feed_symbol (PosCompleter *iface, const char *symbol)
   if (pos_completer_add_preedit (POS_COMPLETER (self), self->preedit, symbol)) {
     g_signal_emit_by_name (self, "commit-string", self->preedit->str);
     pos_completer_varnam_set_preedit (POS_COMPLETER (self), NULL);
+
+    /* Make sure enter is processed as raw keystroke */
+    if (g_strcmp0 (symbol, "KEY_ENTER") == 0)
+      return FALSE;
+
     return TRUE;
   }
 
