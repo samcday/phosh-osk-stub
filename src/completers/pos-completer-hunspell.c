@@ -89,9 +89,9 @@ pos_completer_hunspell_set_preedit (PosCompleter *iface, const char *preedit)
     return;
 
   g_string_truncate (self->preedit, 0);
-  if (preedit)
+  if (preedit) {
     g_string_append (self->preedit, preedit);
-  else {
+  } else {
     pos_completer_hunspell_take_completions (POS_COMPLETER (self), NULL);
   }
 
@@ -101,9 +101,9 @@ pos_completer_hunspell_set_preedit (PosCompleter *iface, const char *preedit)
 
 static void
 pos_completer_hunspell_set_property (GObject      *object,
-                                guint         property_id,
-                                const GValue *value,
-                                GParamSpec   *pspec)
+                                     guint         property_id,
+                                     const GValue *value,
+                                     GParamSpec   *pspec)
 {
   PosCompleterHunspell *self = POS_COMPLETER_HUNSPELL (object);
 
@@ -120,9 +120,9 @@ pos_completer_hunspell_set_property (GObject      *object,
 
 static void
 pos_completer_hunspell_get_property (GObject    *object,
-                                guint       property_id,
-                                GValue     *value,
-                                GParamSpec *pspec)
+                                     guint       property_id,
+                                     GValue     *value,
+                                     GParamSpec *pspec)
 {
   PosCompleterHunspell *self = POS_COMPLETER_HUNSPELL (object);
 
