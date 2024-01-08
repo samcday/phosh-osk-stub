@@ -113,7 +113,7 @@ on_btn_clicked (PosShortcutsBar *self, GtkButton *btn)
 
 
 static char *
-we_know_better_than_gtk (PosShortcut *shortcut)
+pos_accelerator_get_label (PosShortcut *shortcut)
 {
   char *label = NULL;
 
@@ -133,6 +133,12 @@ we_know_better_than_gtk (PosShortcut *shortcut)
   case GDK_KEY_Right:
     label = "→";
     break;
+  case GDK_KEY_Page_Up:
+    label = "PgUp";
+    break;
+  case GDK_KEY_Page_Down:
+    label = "PgDn";
+    break;
   default:
     return NULL;
   }
@@ -146,7 +152,7 @@ on_shortcuts_changed (PosShortcutsBar *self,
                       const gchar     *key,
                       GSettings       *settings)
 {
-  g_auto(GStrv) accelerators = NULL;
+  g_auto (GStrv) accelerators = NULL;
   guint n_shortcuts;
 
   g_return_if_fail (POS_IS_SHORTCUTS_BAR (self));
@@ -164,11 +170,11 @@ on_shortcuts_changed (PosShortcutsBar *self,
     GtkWidget *child;
 
     gtk_accelerator_parse (accelerators[i], &shortcut->key, &shortcut->modifiers);
-    if (gtk_accelerator_valid (shortcut->key, shortcut->modifiers)) {
-      shortcut->name = gtk_accelerator_get_label (shortcut->key, shortcut->modifiers);
-    } else {
-      shortcut->name = we_know_better_than_gtk (shortcut);
-      if (!shortcut->name) {
+    shortcut->name = pos_accelerator_get_label (shortcut);
+    if (!shortcut->name) {
+      if (gtk_accelerator_valid (shortcut->key, shortcut->modifiers)) {
+        shortcut->name = gtk_accelerator_get_label (shortcut->key, shortcut->modifiers);
+      } else {
         g_warning ("Invalid shortcut '%s'", accelerators[i]);
         continue;
       }
