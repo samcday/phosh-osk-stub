@@ -377,7 +377,16 @@ pos_completer_set_language (PosCompleter *self,
  * @preedit: The current preedit
  * @symbol: the symbol to add
  *
- * Adds the current symbol to preedit.
+ * Processes a symbol and appends it to preedit if possible and
+ * indicates whether the resulting `preedit` should be submitted.
+ *
+ * If `symbol` is `KEY_BACKSPACE` the last character of the the
+ * preedit is automatically deleted.
+ *
+ * Since `KEY_ENTER` is often used to toggle actions like "submit" we
+ * handle it in a special way: `TRUE` is returned since but no `\n`
+ * appended so the completer can submit the raw `KEY_ENTER` and
+ * actions can still trigger.
  *
  * Returns: %TRUE if preedit should be submitted as is. %FALSE otherwise.
  */
@@ -398,11 +407,7 @@ pos_completer_add_preedit (PosCompleter *self, GString *preedit, const char *sym
     return FALSE;
   }
 
-  /*
-   * Return/Enter is special as we want it to submit the preedit but
-   * can't just append '\n' as lots of programs listen to the key event
-   * to toggle actions
-   */
+  /* Return/Enter is special, see above. */
   if (g_strcmp0 (symbol, "KEY_ENTER") == 0) {
     return TRUE;
   }
