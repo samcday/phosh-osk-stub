@@ -14,6 +14,8 @@
 #include "pos-completer-priv.h"
 #include "util.h"
 
+#include <ctype.h>
+
 /**
  * PosCompleter:
  *
@@ -36,9 +38,13 @@
 
 G_DEFINE_INTERFACE (PosCompleter, pos_completer, G_TYPE_OBJECT)
 
-/* TODO: all the brackets, also language dependent, tab, etc */
+/* TODO: all the brackets, also language dependent */
 static const char * const completion_end_symbols[] = {
+  /* whitespace */
   " ",
+  "\t",
+  "\n",
+  /* non-whitespace */
   ".",
   ",",
   ";",
@@ -442,13 +448,21 @@ pos_completer_get_display_name (PosCompleter *self)
  * Returns: %TRUE if the sumbol is a word separator. %FALSE otherwise.
  */
 gboolean
-pos_completer_symbol_is_word_separator (const char *symbol,
-                                        gboolean   *is_ws)
+pos_completer_symbol_is_word_separator (const char *symbol, gboolean *is_ws)
 {
-  /* TODO: use hash table - or rather just use is_alnum? */
-  for (int i = 0; i < g_strv_length ((GStrv)completion_end_symbols); i++) {
+  static int nl = -1;
+
+  if (nl < 0) {
+    for (nl = 0; completion_end_symbols[nl]; nl++) {
+      if (!isspace (completion_end_symbols[nl][0]))
+        break;
+    }
+  }
+
+  /* TODO: use hash table - or rather just use isalnum? */
+  for (int i = 0; completion_end_symbols[i]; i++) {
     if (strcmp (symbol, completion_end_symbols[i]) == 0) {
-      if (i == 0 && is_ws != NULL)
+      if (i < nl && is_ws != NULL)
         *is_ws = TRUE;
       return TRUE;
     }
