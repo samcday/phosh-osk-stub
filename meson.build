@@ -106,7 +106,7 @@ libhandy_dep = dependency('libhandy-1',
   fallback: ['libhandy', 'libhandy_dep'],
   default_options: ['introspection=disabled']
 			 )
-libsystemd_dep = dependency('libsystemd', version: '>= 241')
+libsystemd_dep = dependency('libsystemd', 'libelogind', version: '>= 241')
 wayland_client_dep = dependency('wayland-client', version: '>=1.14')
 wayland_protos_dep = dependency('wayland-protocols', version: '>=1.12')
 xkbcommon_dep = dependency('xkbcommon')
