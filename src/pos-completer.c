@@ -458,6 +458,8 @@ pos_completer_symbol_is_word_separator (const char *symbol, gboolean *is_ws)
         break;
     }
   }
+  if (is_ws != NULL)
+    *is_ws = FALSE;
 
   /* TODO: use hash table - or rather just use isalnum? */
   for (int i = 0; completion_end_symbols[i]; i++) {
