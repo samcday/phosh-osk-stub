@@ -77,7 +77,8 @@ pos_completer_presage_set_completions (PosCompleter *iface, GStrv completions)
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (iface);
 
   g_strfreev (self->completions);
-  self->completions = g_strdupv (completions);
+  self->completions = pos_completer_capitalize_by_template (self->preedit->str,
+                                                            completions);
 
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_COMPLETIONS]);
 }

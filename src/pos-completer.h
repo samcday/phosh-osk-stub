@@ -75,5 +75,7 @@ gboolean       pos_completer_set_language (PosCompleter  *self,
                                            const char    *region,
                                            GError       **error);
 char          *pos_completer_get_display_name (PosCompleter *self);
+GStrv          pos_completer_capitalize_by_template (const char *template,
+                                                     const GStrv completions);
 
 G_END_DECLS

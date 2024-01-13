@@ -500,3 +500,65 @@ pos_completer_grab_last_word (const char *text, char **new_text, char **word)
 
   return TRUE;
 }
+
+/**
+ * pos_completer_capitalize_by_template:
+ * @template: String with some characters in upper case
+ * @completions: List of completion strings
+ *
+ * Returns a copy of completions with the capitalization of the strings set to
+ * match the capitalization in the template. Use with the preedit as template
+ * with completers which return only lower case completions.
+ *
+ * Returns: (transfer full): copy of completions with changed capitalization
+ */
+GStrv
+pos_completer_capitalize_by_template (const char *template, const GStrv completions)
+{
+  int i;
+  gboolean has_caps;
+  glong templ_len;
+  g_autoptr (GStrvBuilder) builder = NULL;
+  g_autofree gunichar *utemplate = NULL;
+
+  if (completions == NULL || STR_IS_NULL_OR_EMPTY (template))
+    return g_strdupv (completions);
+
+  utemplate = g_utf8_to_ucs4_fast (template, -1, &templ_len);
+
+  has_caps = FALSE;
+  for (i = 0; i < templ_len; i++) {
+    if (g_unichar_isupper (utemplate[i])) {
+      has_caps = TRUE;
+      break;
+    }
+  }
+  if (!has_caps)
+    return g_strdupv (completions);
+
+  builder = g_strv_builder_new ();
+
+  for (i = 0; i < g_strv_length (completions); i++) {
+    glong read_len, compl_len, read, written;
+    g_autofree gunichar *ucompletion = NULL;
+    g_autofree gchar *new_completion = NULL;
+    g_autoptr (GError) err = NULL;
+
+    ucompletion = g_utf8_to_ucs4 (completions[i], -1, &read_len, &compl_len, &err);
+    if (ucompletion == NULL && err != NULL) {
+      g_warning ("Failed to convert '%s': %s", completions[i], err->message);
+      g_strv_builder_add (builder, completions[i]);
+      continue;
+    }
+
+    for (int c = 0; c < MIN (templ_len, compl_len); c++) {
+      if (g_unichar_isupper (utemplate[c]))
+        ucompletion[c] = g_unichar_toupper (ucompletion[c]);
+    }
+
+    new_completion = g_ucs4_to_utf8 (ucompletion, compl_len, &read, &written, NULL);
+    g_strv_builder_add (builder, new_completion);
+  }
+
+  return g_strv_builder_end (builder);
+}
