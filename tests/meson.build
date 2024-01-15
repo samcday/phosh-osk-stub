@@ -20,4 +20,11 @@ load_layouts_test = executable('test-load-layouts',
 )
 test ('load-layouts', load_layouts_test, env: test_env)
 
+capitalize_by_template_test = executable('test-capitalize-by-template',
+			       'test-capitalize-by-template.c',
+			       pie: true,
+			       dependencies : libpos_dep
+)
+test ('capitalize-by-template', capitalize_by_template_test, env: test_env)
+
 endif
