@@ -1582,6 +1582,12 @@ insert_ibus_layout (PosInputSurface *self, const char *type, const char *id)
     g_warning ("ibus layout '%s' not parsable - ignoring", id);
     return NULL;
   }
+
+  if (g_strv_length (parts) < 2) {
+    g_warning ("ibus layout '%s' has no language - ignoring", id);
+    return NULL;
+  }
+
   engine_name = parts[0];
   lang = parts[1];
 
