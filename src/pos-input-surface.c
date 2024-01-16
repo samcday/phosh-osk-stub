@@ -1180,6 +1180,7 @@ pos_input_surface_finalize (GObject *object)
 
   g_clear_handle_id (&self->animation.id, g_source_remove);
 
+  g_clear_object (&self->keyboard_driver);
   g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
   g_clear_object (&self->input_settings);
