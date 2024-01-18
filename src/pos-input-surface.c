@@ -129,6 +129,9 @@ struct _PosInputSurface {
   gboolean                 completion_enabled;
   PhoshOskCompletionModeFlags completion_mode;
 
+  /* Swipe gesture */
+  GtkGesture              *swipe_down;
+
   /* emission hook for clicks */
   gulong                   clicked_id;
 };
@@ -142,6 +145,24 @@ G_DEFINE_TYPE_WITH_CODE (PosInputSurface, pos_input_surface, PHOSH_TYPE_LAYER_SU
                          G_IMPLEMENT_INTERFACE (G_TYPE_ACTION_MAP, pos_input_surface_action_map_iface_init)
   )
 
+#define MIN_Y_VELOCITY 100
+
+static void
+on_swipe (GtkGestureSwipe *swipe, double velocity_x, double velocity_y, gpointer data)
+{
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+
+  g_return_if_fail (GTK_IS_GESTURE_SWIPE (swipe));
+
+  g_debug ("swipe with v_x: %f, v_y: %f", velocity_x, velocity_y);
+
+  if (velocity_y > MIN_Y_VELOCITY && velocity_y > 2.0 * ABS (velocity_x)) {
+    g_debug ("Hiding the keyboard on swipe down");
+    pos_input_surface_set_visible (self, FALSE);
+  } else {
+    g_debug ("Swipe not downwards");
+  }
+}
 
 static void
 on_shortcut_activated (PosInputSurface *self, PosShortcut *shortcut, PosShortcutsBar *bar)
@@ -1207,6 +1228,7 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->css_provider);
   g_clear_object (&self->completer);
   g_clear_object (&self->completer_manager);
+  g_clear_object (&self->swipe_down);
   g_clear_pointer (&self->theme_name, g_free);
   g_clear_pointer (&self->osks, g_hash_table_destroy);
 
@@ -1790,6 +1812,13 @@ pos_input_surface_init (PosInputSurface *self)
 
   /* Disable swipe gestures to change layouts by default */
   pos_input_surface_set_layout_swipe (self, FALSE);
+
+  self->swipe_down = g_object_new (GTK_TYPE_GESTURE_SWIPE,
+                                   "widget", self,
+                                   "propagation-phase", GTK_PHASE_CAPTURE,
+                                   "touch-only", TRUE,
+                                   NULL);
+  g_signal_connect (self->swipe_down, "swipe", G_CALLBACK (on_swipe), self);
 }
 
 
