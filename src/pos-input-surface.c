@@ -11,7 +11,6 @@
 #include "pos-config.h"
 
 #include "phosh-osk-enums.h"
-#include "pos-debug-widget.h"
 #include "pos-emoji-picker.h"
 #include "pos-input-method.h"
 #include "pos-completer.h"
@@ -109,9 +108,6 @@ struct _PosInputSurface {
   GtkWidget               *last_layout;
   PosShortcutsBar         *shortcuts_bar;
   PhoshOskFeatures         osk_features;
-
-  /* The debug surface */
-  PosDebugWidget          *debug_widget;
 
   /* TODO: this should be an interface for different keyboard drivers */
   PosVkDriver             *keyboard_driver;
@@ -928,7 +924,6 @@ pos_input_surface_set_property (GObject      *object,
   switch (property_id) {
   case PROP_INPUT_METHOD:
     self->input_method = g_value_dup_object (value);
-    pos_debug_widget_set_input_method (self->debug_widget, self->input_method);
     break;
   case PROP_COMPLETER_MANAGER:
     pos_input_surface_set_completer_manager (self, g_value_get_object (value));
@@ -1356,7 +1351,6 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   pos_init ();
 
   g_type_ensure (POS_TYPE_COMPLETION_BAR);
-  g_type_ensure (POS_TYPE_DEBUG_WIDGET);
   g_type_ensure (POS_TYPE_EMOJI_PICKER);
   g_type_ensure (POS_TYPE_OSK_WIDGET);
   g_type_ensure (POS_TYPE_SHORTCUTS_BAR);
@@ -1364,7 +1358,6 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class,
                                                "/sm/puri/phosh/osk-stub/ui/input-surface.ui");
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, completion_bar);
-  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, debug_widget);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, emoji_picker);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);

@@ -40,8 +40,6 @@ libpos_sources = files(
   'pos-completer-manager.c',
   'pos-completion-bar.h',
   'pos-completion-bar.c',
-  'pos-debug-widget.h',
-  'pos-debug-widget.c',
   'pos-emoji-picker.h',
   'pos-emoji-picker.c',
   'pos-enums.h',

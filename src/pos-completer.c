@@ -14,6 +14,8 @@
 #include "pos-completer-priv.h"
 #include "util.h"
 
+#include <ctype.h>
+
 /**
  * PosCompleter:
  *
@@ -36,9 +38,13 @@
 
 G_DEFINE_INTERFACE (PosCompleter, pos_completer, G_TYPE_OBJECT)
 
-/* TODO: all the brackets, also language dependent, tab, etc */
+/* TODO: all the brackets, also language dependent */
 static const char * const completion_end_symbols[] = {
+  /* whitespace */
   " ",
+  "\t",
+  "\n",
+  /* non-whitespace */
   ".",
   ",",
   ";",
@@ -371,7 +377,16 @@ pos_completer_set_language (PosCompleter *self,
  * @preedit: The current preedit
  * @symbol: the symbol to add
  *
- * Adds the current symbol to preedit.
+ * Processes a symbol and appends it to preedit if possible and
+ * indicates whether the resulting `preedit` should be submitted.
+ *
+ * If `symbol` is `KEY_BACKSPACE` the last character of the the
+ * preedit is automatically deleted.
+ *
+ * Since `KEY_ENTER` is often used to toggle actions like "submit" we
+ * handle it in a special way: `TRUE` is returned since but no `\n`
+ * appended so the completer can submit the raw `KEY_ENTER` and
+ * actions can still trigger.
  *
  * Returns: %TRUE if preedit should be submitted as is. %FALSE otherwise.
  */
@@ -392,11 +407,12 @@ pos_completer_add_preedit (PosCompleter *self, GString *preedit, const char *sym
     return FALSE;
   }
 
+  /* Return/Enter is special, see above. */
   if (g_strcmp0 (symbol, "KEY_ENTER") == 0) {
-    g_string_append (preedit, "\n");
     return TRUE;
   }
 
+  /* Ignore all other special keys */
   if (g_str_has_prefix (symbol, "KEY_"))
     return FALSE;
 
@@ -437,13 +453,23 @@ pos_completer_get_display_name (PosCompleter *self)
  * Returns: %TRUE if the sumbol is a word separator. %FALSE otherwise.
  */
 gboolean
-pos_completer_symbol_is_word_separator (const char *symbol,
-                                        gboolean   *is_ws)
+pos_completer_symbol_is_word_separator (const char *symbol, gboolean *is_ws)
 {
-  /* TODO: use hash table - or rather just use is_alnum? */
-  for (int i = 0; i < g_strv_length ((GStrv)completion_end_symbols); i++) {
+  static int nl = -1;
+
+  if (nl < 0) {
+    for (nl = 0; completion_end_symbols[nl]; nl++) {
+      if (!isspace (completion_end_symbols[nl][0]))
+        break;
+    }
+  }
+  if (is_ws != NULL)
+    *is_ws = FALSE;
+
+  /* TODO: use hash table - or rather just use isalnum? */
+  for (int i = 0; completion_end_symbols[i]; i++) {
     if (strcmp (symbol, completion_end_symbols[i]) == 0) {
-      if (i == 0 && is_ws != NULL)
+      if (i < nl && is_ws != NULL)
         *is_ws = TRUE;
       return TRUE;
     }

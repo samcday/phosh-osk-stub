@@ -58,6 +58,8 @@ struct _PosCompleterPresage {
   char                 *presage_future;
 
   char                 *lang;
+
+  gboolean              updating_preedit;
 };
 
 
@@ -164,7 +166,7 @@ pos_completer_presage_set_surrounding_text (PosCompleter *iface,
   self->after_text = g_strdup (after_text);
 
   g_free (self->before_text);
-  if (pos_completer_grab_last_word (before_text, &new_before, &word)) {
+  if (!self->updating_preedit && pos_completer_grab_last_word (before_text, &new_before, &word)) {
     self->before_text = g_steal_pointer (&new_before);
     g_string_prepend (self->preedit, word);
 
@@ -429,11 +431,22 @@ pos_completer_presage_feed_symbol (PosCompleter *iface, const char *symbol)
   g_autofree char *preedit = g_strdup (self->preedit->str);
 
   if (pos_completer_add_preedit (POS_COMPLETER (self), self->preedit, symbol)) {
+    self->updating_preedit = TRUE;
+
     g_signal_emit_by_name (self, "commit-string", self->preedit->str);
     pos_completer_presage_set_preedit (POS_COMPLETER (self), NULL);
+    /* Make sure enter is processed as raw keystroke */
+    if (g_strcmp0 (symbol, "KEY_ENTER") == 0) {
+      /* updating_preedit stays active until we feed the next symbol to avoid
+         surrounding text and preedit getting out of sync */
+      return FALSE;
+    }
+
+    self->updating_preedit = FALSE;
     return TRUE;
   }
 
+  self->updating_preedit = FALSE;
   /* preedit didn't change and wasn't committed so we didn't handle it */
   if (g_strcmp0 (self->preedit->str, preedit) == 0)
     return FALSE;
