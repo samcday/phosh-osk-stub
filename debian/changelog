@@ -1,3 +1,43 @@
+phosh-osk-stub (0.36.0) experimental; urgency=medium
+
+  [ Anna “CyberTailor” ]
+  * build: Allow elogind to be used on systems without SystemD
+
+  [ Teemu Ikonen ]
+  * shortcutsbar: Add shorter labels for Page_Up and Page_Down.
+    Rename we_know_better_than_gtk() to pos_accelerator_get_label() and
+    refactor setting shortcut->name so that the name from there takes
+    precedence.
+  * presage: Capitalize completions accoording to preedit
+  * presage: Add tests for capitalize_by_template()
+  * completer: Don't assume the out value is inited to FALSE
+
+  [ Guido Günther ]
+  * hunspell: Fix indent.
+    Fix some harmless indent glitches. No functional change.
+    Gbp-dch: Ignore
+  * debug-widget: Drop it.
+    We've not used it since ages and overly long surrounding text can mess
+    up the keyboard widgets.
+  * completer: Special case Enter/Return.
+    Return/Enter is special as we want it to submit the preedit but can't
+    just append '\n' as lots of programs listen to the key event to toggle
+    actions.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/27
+  * completer: Add more characters to word separators
+  * completer: Improve documentation of pos_completer_add_preedit
+  * presage: Guard last word grabbing against preedit changes.
+    We only want to grab the last word when preedit isn't beeing updated.
+    Otherwise we might mix the preedit with the last word and Enter/Return
+    being ignored.
+  * input-surface: Don't crash on ibus layouts without a language.
+    E.g. `typing-booster` only has ('ibus', 'typing-booster').
+  * input-surface: Don't forget to cleanup vk-driver
+  * vk-driver: Don't forget to free virtual keyboard
+  * osk-widget: Don't forget to free symbols
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 02 Feb 2024 10:32:21 +0100
+
 phosh-osk-stub (0.35.0) experimental; urgency=medium
 
   * varnam: Skip over identical words.

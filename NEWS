@@ -1,3 +1,16 @@
+phosh-osk-stub 0.36.0
+---------------------
+Released: February 2024
+* presage: Allow to completer to capitalize words based on input
+* Various fixes including better support for Enter/Return in Firefox
+  and other search fields
+* Issues fixed:
+  - https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/27
+* Contributors:
+    * Anna “CyberTailor”
+    * Guido Günther
+    * Teemu Ikonen
+
 phosh-osk-stub 0.35.0
 ---------------------
 Released: January 2024
