@@ -1303,7 +1303,7 @@ pos_osk_widget_finalize (GObject *object)
   g_clear_pointer (&self->lang, g_free);
   g_clear_pointer (&self->region, g_free);
   g_clear_pointer (&self->layout_id, g_free);
-  g_ptr_array_free (self->symbols, FALSE);
+  g_ptr_array_free (self->symbols, TRUE);
 
   G_OBJECT_CLASS (pos_osk_widget_parent_class)->finalize (object);
 }

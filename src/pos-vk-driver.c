@@ -506,6 +506,7 @@ pos_vk_driver_finalize (GObject *object)
 
   g_hash_table_destroy (self->keycodes);
   g_clear_pointer (&self->layout_id, g_free);
+  g_clear_object (&self->virtual_keyboard);
 
   G_OBJECT_CLASS (pos_vk_driver_parent_class)->finalize (object);
 }
