@@ -56,7 +56,7 @@ static struct wl_seat *_seat;
 static struct zwlr_layer_shell_v1 *_layer_shell;
 static struct zwp_input_method_manager_v2 *_input_method_manager;
 static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
-struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
+static struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
 
 PosDebugFlags _debug_flags;
 PosOskDbus *_osk_dbus;
