@@ -5,10 +5,11 @@
       <default>[]</default>
       <summary>When to enable the on screen keyboard's text completion</summary>
       <description>
-        Text completion can be disabled. It can be enabled when text
-        input's request and/or manually.
+        Text completion can be disabled, only enabled when a text
+        inputs request or always enabled.
       </description>
     </key>
+
     <key name="osk-features" flags="sm.puri.phosh.osk.PhoshOskFeatures">
       <default>[]</default>
       <summary>Features to enable on all layouts</summary>
