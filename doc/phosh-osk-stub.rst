@@ -236,6 +236,17 @@ button in Phosh). To determine an applications app-id you can use the
   gsettings set sm.puri.phosh.osk ignore-activation "['org.gnome.Calculator']"
 
 
+HARDWARE KEYBOARDS
+^^^^^^^^^^^^^^^^^^
+
+By default the on screen keyboard will now show if it detects a
+connected hardware keyboard. To make it show nevertheless use
+
+::
+
+   gsettings set sm.puri.phosh.osk ignore-hw-keyboards false
+
+
 ENVIRONMENT VARIABLES
 ---------------------
 

@@ -12,12 +12,15 @@
 
 #include "pos-hw-tracker.h"
 
+#include <gio/gio.h>
+
+#define IGNORE_HW_KEYBOARDS_KEY "ignore-hw-keyboards"
+
 /**
  * PosHwTracker:
  *
  * Track connected hardware state (e.g. connected keyboards)
  */
-
 enum {
   PROP_0,
   PROP_DEVICE_STATE,
@@ -31,6 +34,9 @@ struct _PosHwTracker {
 
   struct zphoc_device_state_v1 *device_state;
   gboolean                      has_hw_kb;
+
+  GSettings                    *settings;
+  gboolean                      ignore_hw_kb;
 };
 G_DEFINE_TYPE (PosHwTracker, pos_hw_tracker, G_TYPE_OBJECT)
 
@@ -67,6 +73,20 @@ pos_hw_tracker_set_device_state (PosHwTracker *self,
 {
   self->device_state = device_state;
   zphoc_device_state_v1_add_listener (self->device_state, &device_state_listener, self);
+}
+
+
+static void
+on_ignore_hw_keyboard_changed (PosHwTracker *self)
+{
+  gboolean ignore_hw_kb;
+
+  ignore_hw_kb = g_settings_get_boolean (self->settings, IGNORE_HW_KEYBOARDS_KEY);
+  if (self->ignore_hw_kb == ignore_hw_kb)
+    return;
+
+  self->ignore_hw_kb = ignore_hw_kb;
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_ALLOW_ACTIVE]);
 }
 
 
@@ -116,6 +136,8 @@ pos_hw_tracker_finalize (GObject *object)
 {
   PosHwTracker *self = POS_HW_TRACKER (object);
 
+  g_clear_object (&self->settings);
+
   G_OBJECT_CLASS (pos_hw_tracker_parent_class)->finalize (object);
 }
 
@@ -145,6 +167,12 @@ pos_hw_tracker_class_init (PosHwTrackerClass *klass)
 static void
 pos_hw_tracker_init (PosHwTracker *self)
 {
+  self->settings = g_settings_new ("sm.puri.phosh.osk");
+
+  g_signal_connect_swapped (self->settings, "changed::" IGNORE_HW_KEYBOARDS_KEY,
+                            G_CALLBACK (on_ignore_hw_keyboard_changed),
+                            self);
+  on_ignore_hw_keyboard_changed (self);
 }
 
 
@@ -161,6 +189,9 @@ gboolean
 pos_hw_tracker_get_allow_active (PosHwTracker *self)
 {
   g_assert (POS_IS_HW_TRACKER (self));
+
+  if (self->ignore_hw_kb)
+    return TRUE;
 
   return !self->has_hw_kb;
 }

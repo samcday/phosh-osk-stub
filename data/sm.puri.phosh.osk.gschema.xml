@@ -27,6 +27,15 @@
         in these applications and the user must unfold the OSK via other means.
       </description>
     </key>
+
+    <key name="ignore-hw-keyboards" type='b'>
+      <default>false</default>
+      <summary>Whether to ignore attached hardware keyboards</summary>
+      <description>
+        The OSK doesn't show when it detects an attached hardware keyboard. This setting
+        disables this detection.
+      </description>
+    </key>
   </schema>
 
   <schema id='sm.puri.phosh.osk.EmojiPicker'
