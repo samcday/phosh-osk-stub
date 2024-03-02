@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021 Purism SPC
+ *               2022-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -1124,6 +1125,8 @@ static void on_input_setting_changed (PosInputSurface *self, const char *key, GS
 static void
 pos_input_surface_constructed (GObject *object)
 {
+  static gboolean input_serial_sent = FALSE;
+
   PosInputSurface *self = POS_INPUT_SURFACE (object);
   const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
 
@@ -1154,6 +1157,13 @@ pos_input_surface_constructed (GObject *object)
                     NULL);
 
   set_keymap (self);
+
+  /* Work around https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/5628 by
+     sending at least one key press so we have a serial */
+  if (!input_serial_sent) {
+    pos_vk_driver_key_press_gdk (self->keyboard_driver, GDK_KEY_BackSpace, 0);
+    input_serial_sent = TRUE;
+  }
 }
 
 
