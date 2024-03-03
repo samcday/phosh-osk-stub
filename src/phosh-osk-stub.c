@@ -237,6 +237,13 @@ on_screen_keyboard_enabled_changed (PosInputSurface *input_surface)
   pos_input_surface_set_visible (input_surface, enabled);
 }
 
+static void
+on_hw_tracker_allow_active_changed (PosHwTracker *hw_tracker, GParamSpec *pspec, PosInputMethod *im)
+{
+  /* Revalidate whether to show the OSK when attached hw changed */
+  g_object_notify (G_OBJECT (im), "active");
+}
+
 
 static void on_input_surface_gone (gpointer data, GObject *unused);
 static void on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused);
@@ -308,6 +315,12 @@ create_input_surface (struct wl_seat                         *seat,
                                NULL,
                                _input_surface,
                                NULL);
+
+  g_signal_connect_object (_hw_tracker, "notify::allow-active",
+                           G_CALLBACK (on_hw_tracker_allow_active_changed),
+                           im,
+                           G_CONNECT_DEFAULT);
+
   if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW) {
     pos_input_surface_set_visible (_input_surface, TRUE);
   } else {
