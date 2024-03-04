@@ -58,6 +58,14 @@
   </screenshots>
 
   <releases>
+    <release version="0.37.0" date="2024-03-05">
+      <description>
+        <ul>
+          <li>Support presage 2's trie based predictor</li>
+          <li>Update emoji data</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.36.0" date="2024-02-02">
       <description>
         <ul>
