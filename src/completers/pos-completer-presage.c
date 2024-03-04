@@ -22,8 +22,17 @@
 #include <locale.h>
 
 #define MAX_COMPLETIONS 3
-#define CONFIG_NGRM_PREDICTOR_DBFILE "Presage.Predictors.DefaultSmoothedNgramPredictor.DBFILENAME"
-#define CONFIG_NGRM_PREDICTOR_USER_DBFILE "Presage.Predictors.UserSmoothedNgramPredictor.DBFILENAME"
+
+#ifdef POS_HAVE_PRESAGE2
+  #define CONFIG_NGRM_PREDICTOR "DefaultSmoothedNgramTriePredictor"
+  #define CONFIG_NGRM_PREDICTOR_DBFILE "Presage.Predictors.DefaultSmoothedNgramTriePredictor.DBFILENAME"
+#else
+  #define CONFIG_NGRM_PREDICTOR "DefaultSmoothedNgramPredictor"
+  #define CONFIG_NGRM_PREDICTOR_DBFILE "Presage.Predictors.DefaultSmoothedNgramPredictor.DBFILENAME"
+#endif
+#define CONFIG_USER_PREDICTOR "UserSmoothedNgramPredictor"
+#define CONFIG_USER_PREDICTOR_DBFILE "Presage.Predictors.UserSmoothedNgramPredictor.DBFILENAME"
+#define CONFIG_PREDICTORS (CONFIG_NGRM_PREDICTOR " " CONFIG_USER_PREDICTOR " DefaultRecencyPredictor")
 
 enum {
   PROP_0,
@@ -207,7 +216,11 @@ pos_completer_presage_set_language (PosCompleter *completer,
 
   g_debug ("Switching to language '%s'", lang);
 
+#ifdef POS_HAVE_PRESAGE2
+  dbfile = g_strdup_printf ("database_%s", lang);
+#else
   dbfile = g_strdup_printf ("database_%s.db", lang);
+#endif
   dbpath = g_build_path (G_DIR_SEPARATOR_S, PRESAGE_DICT_DIR, dbfile, NULL);
 
   if (g_file_test (dbpath, G_FILE_TEST_EXISTS) == FALSE) {
@@ -224,6 +237,7 @@ pos_completer_presage_set_language (PosCompleter *completer,
                  "Failed to set db %s", dbpath);
     return FALSE;
   }
+  g_debug ("System dbpath is %s", dbpath);
 
   g_clear_pointer (&dbfile, g_free);
   g_clear_pointer (&dbpath, g_free);
@@ -238,13 +252,14 @@ pos_completer_presage_set_language (PosCompleter *completer,
                  "Failed to set user db %s: %s", dbpath, g_strerror (ret));
   }
 
-  result = presage_config_set (self->presage, CONFIG_NGRM_PREDICTOR_USER_DBFILE, dbpath);
+  result = presage_config_set (self->presage, CONFIG_USER_PREDICTOR_DBFILE, dbpath);
   if (result != PRESAGE_OK) {
     g_set_error (error,
                  POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_LANG_INIT,
                  "Failed to set user db %s", dbpath);
     return FALSE;
   }
+  g_debug ("User dbpath is %s", dbpath);
 
   g_free (self->lang);
   self->lang = g_strdup (lang);
@@ -366,7 +381,6 @@ pos_completer_presage_get_future_stream (void *data)
   return "";
 }
 
-
 static gboolean
 pos_completer_presage_initable_init (GInitable    *initable,
                                      GCancellable *cancelable,
@@ -375,6 +389,7 @@ pos_completer_presage_initable_init (GInitable    *initable,
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (initable);
   presage_error_code_t result;
   g_autofree char *max = NULL;
+  g_autofree char *confvar = NULL;
 
   /* FIXME: presage gets confused otherwise and doesn't predict */
   setlocale (LC_NUMERIC, "C.UTF-8");
@@ -389,6 +404,19 @@ pos_completer_presage_initable_init (GInitable    *initable,
                  POS_COMPLETER_ERROR, POS_COMPLETER_ERROR_ENGINE_INIT,
                  "Failed to init presage engine");
     return FALSE;
+  }
+
+  /* Set the necessary predictors, if they are not in user config */
+  result = presage_config (self->presage,
+                           "Presage.PredictorRegistry.PREDICTORS", &confvar);
+  if (result != PRESAGE_OK
+      || !g_strrstr (confvar, CONFIG_NGRM_PREDICTOR)
+      || !g_strrstr (confvar, CONFIG_USER_PREDICTOR)) {
+    g_debug ("Presage config is missing predictors we need, "
+             "setting PREDICTORS to '%s'", CONFIG_PREDICTORS);
+    presage_config_set (self->presage,
+                        "Presage.PredictorRegistry.PREDICTORS",
+                        CONFIG_PREDICTORS);
   }
 
   max = g_strdup_printf ("%d", self->max_completions);
