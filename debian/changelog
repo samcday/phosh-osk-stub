@@ -1,3 +1,30 @@
+phosh-osk-stub (0.37.0) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * input-surface: Make sure we have an input serial.
+    This works around the lack of input serials on touch only systems. See
+    https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/5628
+  * emoji: Update emoji data to CLDR v43.
+    This corresponds to GTK commit
+      5a8a0814f7 ("emoji: Update data to CLDR v43")
+    Based on emojibase v15.2.0
+  * ci: Use plain trixie.
+    The gi-docgen issue is long fixed
+
+  [ Teemu Ikonen ]
+  * build: Define POS_HAVE_PRESAGE2 if presage version 2 is found.
+    Presage version 2 is maintained by the sailfish-keyboard project at
+    https://github.com/sailfish-keyboard/presage
+  * presage: Use the libmarisa trie predictor if POS_HAVE_PRESAGE2.
+    Set the required predictors in presage config if they are missing from
+    the user-supplied configuration.
+    The trie databases for some languages can be found at
+    https://github.com/sailfish-keyboard/presage-database
+    See presage 2 README on how to create a database with your own corpus:
+    https://github.com/sailfish-keyboard/presage/blob/master/README.md
+
+ -- Guido Günther <agx@sigxcpu.org>  Mon, 04 Mar 2024 18:01:45 +0100
+
 phosh-osk-stub (0.36.0) experimental; urgency=medium
 
   [ Anna “CyberTailor” ]

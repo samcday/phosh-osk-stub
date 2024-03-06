@@ -1,3 +1,14 @@
+phosh-osk-stub 0.37.0
+---------------------
+Released: March 2024
+* Support Presage 2 / trie predictor
+* Update emoji data
+* Add temporary workaround for phosh splashs timing out
+  until GTK is fixed.
+* Contributors:
+    * Guido Günther
+    * Teemu Ikonen
+
 phosh-osk-stub 0.36.0
 ---------------------
 Released: February 2024
