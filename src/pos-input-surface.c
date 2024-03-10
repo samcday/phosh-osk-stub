@@ -1122,6 +1122,14 @@ on_im_active_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *
 static PosOskWidget *insert_xkb_layout (PosInputSurface *self, const char *type, const char *id);
 static void on_input_setting_changed (PosInputSurface *self, const char *key, GSettings *settings);
 
+
+static void
+delayed_init (PosInputSurface *self)
+{
+  pos_vk_driver_key_press_gdk (self->keyboard_driver, GDK_KEY_BackSpace, 0);
+}
+
+
 static void
 pos_input_surface_constructed (GObject *object)
 {
@@ -1159,9 +1167,9 @@ pos_input_surface_constructed (GObject *object)
   set_keymap (self);
 
   /* Work around https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/5628 by
-     sending at least one key press so we have a serial */
+     sending at least one key press to the shell so we have a serial */
   if (!input_serial_sent) {
-    pos_vk_driver_key_press_gdk (self->keyboard_driver, GDK_KEY_BackSpace, 0);
+    g_timeout_add_seconds_once (1, (GSourceOnceFunc)delayed_init, self);
     input_serial_sent = TRUE;
   }
 }
