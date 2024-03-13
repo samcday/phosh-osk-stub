@@ -93,7 +93,7 @@ pos-char-popup button:active {
  */
 pos-completion-bar button {
   color: @pos_fg_color;
-  background: @pos_bg_color;
+  background: none;
   padding-left: 10px;
   padding-right: 10px;
   border: none;
