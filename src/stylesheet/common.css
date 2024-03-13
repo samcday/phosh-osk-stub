@@ -1,7 +1,7 @@
 pos-osk-widget {
   font-family: cantarell, sans-serif;
 
-  color: @theme_fg_color;
+  color: @pos_fg_color;
   background-color: @pos_bg_color;
 }
 
