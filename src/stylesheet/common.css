@@ -2,7 +2,7 @@ pos-osk-widget {
   font-family: cantarell, sans-serif;
 
   color: @theme_fg_color;
-  background-color: @theme_bg_color;
+  background-color: @pos_bg_color;
 }
 
 /* A regular (e.g. character, number) key */
