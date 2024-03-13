@@ -1,3 +1,7 @@
+pos-input-surface {
+  background-color: @pos_bg_color;
+}
+
 pos-osk-widget {
   font-family: cantarell, sans-serif;
 
