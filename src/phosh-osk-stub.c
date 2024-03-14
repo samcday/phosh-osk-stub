@@ -14,7 +14,9 @@
 
 #include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include "input-method-unstable-v2-client-protocol.h"
+#include "phoc-device-state-unstable-v1-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
+
 
 #include <gio/gio.h>
 #include <glib-unix.h>
@@ -53,15 +55,16 @@ static PosInputSurface *_input_surface;
 static struct wl_display *_display;
 static struct wl_registry *_registry;
 static struct wl_seat *_seat;
+static struct zphoc_device_state_v1 *_phoc_device_state;
 static struct zwlr_layer_shell_v1 *_layer_shell;
 static struct zwp_input_method_manager_v2 *_input_method_manager;
 static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
-struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
+static struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
 
 PosDebugFlags _debug_flags;
 PosOskDbus *_osk_dbus;
 PosActivationFilter *_activation_filter;
-
+PosHwTracker *_hw_tracker;
 
 /* TODO:
  *  - allow to force virtual-keyboard instead of input-method
@@ -209,6 +212,9 @@ set_surface_prop_surface_visible (GBinding     *binding,
   if (_activation_filter && !pos_activation_filter_allow_active (_activation_filter))
     enabled = FALSE;
 
+  if (_hw_tracker && !pos_hw_tracker_get_allow_active (_hw_tracker))
+    enabled = FALSE;
+
   g_debug ("active: %d, enabled: %d", visible, enabled);
   if (enabled == FALSE)
     visible = FALSE;
@@ -229,6 +235,13 @@ on_screen_keyboard_enabled_changed (PosInputSurface *input_surface)
 
   enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
   pos_input_surface_set_visible (input_surface, enabled);
+}
+
+static void
+on_hw_tracker_allow_active_changed (PosHwTracker *hw_tracker, GParamSpec *pspec, PosInputMethod *im)
+{
+  /* Revalidate whether to show the OSK when attached hw changed */
+  g_object_notify (G_OBJECT (im), "active");
 }
 
 
@@ -302,6 +315,12 @@ create_input_surface (struct wl_seat                         *seat,
                                NULL,
                                _input_surface,
                                NULL);
+
+  g_signal_connect_object (_hw_tracker, "notify::allow-active",
+                           G_CALLBACK (on_hw_tracker_allow_active_changed),
+                           im,
+                           G_CONNECT_DEFAULT);
+
   if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW) {
     pos_input_surface_set_visible (_input_surface, TRUE);
   } else {
@@ -371,10 +390,15 @@ registry_handle_global (void               *data,
   } else if (!strcmp (interface, zwp_virtual_keyboard_manager_v1_interface.name)) {
     _virtual_keyboard_manager = wl_registry_bind (registry, name,
                                                   &zwp_virtual_keyboard_manager_v1_interface, 1);
+  } else if (!strcmp (interface, zphoc_device_state_v1_interface.name)) {
+    _phoc_device_state = wl_registry_bind (registry, name,
+                                           &zphoc_device_state_v1_interface,
+                                           MIN (2, version));
+    _hw_tracker = pos_hw_tracker_new (_phoc_device_state);
   }
 
   if (_seat && _input_method_manager && _layer_shell && _virtual_keyboard_manager &&
-      _foreign_toplevel_manager && !_input_surface) {
+      _foreign_toplevel_manager && _hw_tracker && !_input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
     create_input_surface (_seat, _virtual_keyboard_manager,
                           _input_method_manager,
@@ -502,6 +526,7 @@ main (int argc, char *argv[])
     dispose_input_surface (_input_surface);
   g_clear_object (&_osk_dbus);
   g_clear_object (&_activation_filter);
+  g_clear_object (&_hw_tracker);
 
   pos_uninit ();
 

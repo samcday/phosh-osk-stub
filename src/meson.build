@@ -47,6 +47,8 @@ libpos_sources = files(
   'pos-input-method.c',
   'pos-input-surface.h',
   'pos-input-surface.c',
+  'pos-hw-tracker.h',
+  'pos-hw-tracker.c',
   'pos-main.c',
   'pos-main.h',
   'pos-osk-dbus.h',

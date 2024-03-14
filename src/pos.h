@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Guido Günther
+ * Copyright (C) 2022-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3-or-later
  */
@@ -12,6 +12,7 @@ G_BEGIN_DECLS
 #include "pos-main.h"
 #include "pos-activation-filter.h"
 #include "pos-completer-manager.h"
+#include "pos-hw-tracker.h"
 #include "pos-enums.h"
 #include "pos-osk-dbus.h"
 #include "pos-input-method.h"
@@ -20,4 +21,3 @@ G_BEGIN_DECLS
 #include "pos-virtual-keyboard.h"
 
 G_END_DECLS
-

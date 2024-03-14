@@ -5,10 +5,11 @@
       <default>[]</default>
       <summary>When to enable the on screen keyboard's text completion</summary>
       <description>
-        Text completion can be disabled. It can be enabled when text
-        input's request and/or manually.
+        Text completion can be disabled, only enabled when a text
+        inputs request or always enabled.
       </description>
     </key>
+
     <key name="osk-features" flags="sm.puri.phosh.osk.PhoshOskFeatures">
       <default>[]</default>
       <summary>Features to enable on all layouts</summary>
@@ -24,6 +25,15 @@
         A list of application-ids that are ignored when they request an input method.
         This means that the OSK doesn't unfold automatically on e.g. text inputs fields
         in these applications and the user must unfold the OSK via other means.
+      </description>
+    </key>
+
+    <key name="ignore-hw-keyboards" type='b'>
+      <default>false</default>
+      <summary>Whether to ignore attached hardware keyboards</summary>
+      <description>
+        The OSK doesn't show when it detects an attached hardware keyboard. This setting
+        disables this detection.
       </description>
     </key>
   </schema>
