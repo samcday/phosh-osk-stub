@@ -1486,6 +1486,8 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
                         G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
+
+  gtk_widget_class_set_css_name (widget_class, "pos-input-surface");
 }
 
 

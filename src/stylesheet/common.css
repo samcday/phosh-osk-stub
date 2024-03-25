@@ -1,8 +1,12 @@
+pos-input-surface {
+  background-color: @pos_bg_color;
+}
+
 pos-osk-widget {
   font-family: cantarell, sans-serif;
 
-  color: @theme_fg_color;
-  background-color: @theme_bg_color;
+  color: @pos_fg_color;
+  background-color: @pos_bg_color;
 }
 
 /* A regular (e.g. character, number) key */
@@ -89,7 +93,7 @@ pos-char-popup button:active {
  */
 pos-completion-bar button {
   color: @pos_fg_color;
-  background: @pos_bg_color;
+  background: none;
   padding-left: 10px;
   padding-right: 10px;
   border: none;

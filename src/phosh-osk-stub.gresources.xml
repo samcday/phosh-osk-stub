@@ -13,7 +13,7 @@
     <file compressed="true">stylesheet/common.css</file>
     <!-- from gnome-shell -->
     <file preprocess="json-stripblanks">layouts/ara.json</file>
-    <file preprocess="json-stripblanks">layouts/be.json</file>    
+    <file preprocess="json-stripblanks">layouts/be.json</file>
     <file preprocess="json-stripblanks">layouts/bg.json</file>
     <file preprocess="json-stripblanks">layouts/by.json</file>
     <file preprocess="json-stripblanks">layouts/ca.json</file>
