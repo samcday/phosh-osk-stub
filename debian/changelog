@@ -1,3 +1,41 @@
+phosh-osk-stub (0.38.0) experimental; urgency=medium
+
+  * osk-stub: Make protocol static.
+    No need to have it visible in other compilation units
+  * protocols: Add device-state.
+    This will allow us to detect connected hw keyboards and disable the OSK.
+  * README: Document new features
+  * hw-tracker: Track connected keyboards and allow to prevent unfold.
+    Usually when a hardware keyboard is attached one doesn't want to show
+    the OSK as this takes up screen space.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/37
+  * hw-tracker: Add setting to ignore hw-keyboards.
+    This helps in situations where people want an OSK and a hardware
+    keyboard.
+  * osk-stub: Revalidate whether to show the OSK when attached hw changed.
+    This allows to show/hide the OSK immediately on hw changes (and not
+    delay that decision until the next activation).
+  * pos-input-surface: Delay initial key submission.
+    Wait until phosh is hopefully up.
+    Improves 353e39a86 ("input-surface: Make sure we have an input serial")
+  * input-surface: Set a style class.
+    This allows us to style the area outside of the osk widget
+  * osk-widget: Use a osk specific background color in all variants
+    @pos_bg_color was already used for the completion bar but undefined.
+    This fixes unreadable completion bar text in high contrast mode and
+    also gives us an easy way to change the default background color
+    for the osk-widget and input-surface.
+  * style: Introduce our own fg color.
+    We can use that wherever @theme_fg_color would be used. For all
+    themes we currently handle there's no visible change.
+  * input-surface: Use our theme bg color.
+    So far the surface defaulted to whatever the theme used. This allows
+    us to override it.
+  * completion-bar: Avoid button background.
+    We want it to be colored like the completion bar's background.
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 02 Apr 2024 13:29:34 +0200
+
 phosh-osk-stub (0.37.0) experimental; urgency=medium
 
   [ Guido Günther ]
