@@ -8,8 +8,5 @@ RUN export DEBIAN_FRONTEND=noninteractive \
    && cd /home/user/app \
    && eatmydata apt-get --no-install-recommends -y build-dep . \
    && eatmydata apt-get --no-install-recommends -y install build-essential git wget gcovr locales uncrustify \
-   && eatmydata apt-get --no-install-recommends -y install python3-lxml \
-   && wget https://snapshot.debian.org/archive/debian/20240130T090818Z/pool/main/g/gcovr/gcovr_7.0-1_all.deb \
-   && dpkg -i gcovr_7.0-1_all.deb && rm -f gcovr_7.0-1_all.deb \
    && eatmydata apt-get clean
 
