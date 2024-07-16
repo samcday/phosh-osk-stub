@@ -1161,7 +1161,7 @@ render_icon (cairo_t            *cr,
 
 
 static void
-draw_key (PosOskWidget *self, PosOskKey *key, cairo_t *cr, double col, double row)
+draw_key (PosOskWidget *self, PosOskKey *key, cairo_t *cr)
 {
   GdkRGBA fg_color;
   GtkStateFlags state;
@@ -1276,12 +1276,10 @@ pos_osk_widget_draw (GtkWidget *widget, cairo_t *cr)
   for (int r = 0; r < self->layout.n_rows; r++) {
     PosOskWidgetRow *row = pos_osk_widget_get_row (self, r);
 
-    double col_num = row->offset_x;
     for (int k = 0; k < pos_osk_widget_row_get_num_keys (row); k++) {
       PosOskKey *key = pos_osk_widget_row_get_key (row, k);
 
-      draw_key (self, key, cr, col_num, r);
-      col_num += pos_osk_key_get_width (key);
+      draw_key (self, key, cr);
     }
   }
 
