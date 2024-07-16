@@ -741,10 +741,11 @@ pos_osk_widget_locate_key (PosOskWidget *self, double x, double y)
   PosOskKey *key = NULL;
   double pos_x;
   PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_current_layer (self);
+  guint off_y = self->height - (layer->n_rows * layer->key_height);
 
   pos_x = x - layer->offset_x;
 
-  row_num = (int)(y / layer->key_height);
+  row_num = (int)((y - off_y) / layer->key_height);
   g_return_val_if_fail (row_num < self->layout.n_rows, NULL);
 
   row = pos_osk_widget_get_row (self, row_num);
@@ -1230,9 +1231,12 @@ pos_osk_widget_size_allocate (GtkWidget *widget, GdkRectangle *allocation)
 
   for (int l = 0; l <= POS_OSK_WIDGET_LAST_LAYER; l++) {
     PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_keyboard_layer (self, l);
+    guint off_y;
+
     layer->key_width = self->width / layer->width;
     layer->key_height = KEY_HEIGHT;
     layer->offset_x = 0.5 * (self->width - (layer->width * layer->key_width));
+    off_y = self->height - (layer->n_rows * layer->key_height);
 
     /* Precalc all key positions */
     for (int r = 0; r < self->layout.n_rows; r++) {
@@ -1244,7 +1248,7 @@ pos_osk_widget_size_allocate (GtkWidget *widget, GdkRectangle *allocation)
         GdkRectangle box;
 
         box.x = c * layer->key_width;
-        box.y = r * layer->key_height;
+        box.y = off_y + r * layer->key_height;
         box.width = pos_osk_key_get_width (key) * layer->key_width;
         box.height = layer->key_height;
         pos_osk_key_set_box (key, &box);

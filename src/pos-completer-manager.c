@@ -149,7 +149,7 @@ on_default_completer_changed (PosCompleterManager *self)
   if (default_ == NULL)
     default_ = init_completer (self, POS_DEFAULT_COMPLETER, &err);
   if (default_ == NULL) {
-    g_critical ("Failed to init default completer '%s': %s", POS_DEFAULT_COMPLETER,
+    g_warning ("Failed to init default completer '%s': %s", POS_DEFAULT_COMPLETER,
                 err ? err->message : "Completer does not exist");
     g_clear_error (&err);
   }
