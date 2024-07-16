@@ -204,10 +204,12 @@ set_surface_prop_surface_visible (GBinding     *binding,
   PosInputSurface *input_surface = POS_INPUT_SURFACE (user_data);
   gboolean enabled, visible = g_value_get_boolean (from_value);
 
-  if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW)
-    enabled = TRUE;
-  else
-    enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+  if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW) {
+    g_value_set_boolean (to_value, TRUE);
+    return TRUE;
+  }
+
+  enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
 
   if (_activation_filter && !pos_activation_filter_allow_active (_activation_filter))
     enabled = FALSE;
