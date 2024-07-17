@@ -134,21 +134,27 @@ test-layouts:
     apt-get -y update &&
     apt-get -y install $PKGS
   script:
-    - XDG_RUNTIME_DIR=$PWD WLR_RENDERER=pixman dbus-launch tools/screenshot-all-layouts.py
+    - XDG_RUNTIME_DIR=$PWD
+      WLR_RENDERER=pixman
+      NO_AT_BRIDGE=1
+      dbus-launch tools/screenshot-all-layouts.py
   artifacts:
+    expose_as: 'Layouts'
     paths:
       - _build/screenshots/
-  only:
-    changes:
-      # Only run when layouts change…
-      - src/layouts/*.json
-      # …or the code handling them…
-      - src/pos-osk-widget.c
-      - src/pos-osk-key.c
-      # …or the stylesheets…
-      - src/stylesheet/
-      # …or we're building a release…
-      - NEWS
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          # Only run when layouts change…
+          - src/layouts/*.json
+          # …or the code handling them…
+          - src/pos-osk-widget.c
+          - src/pos-osk-key.c
+          # …or the stylesheets…
+          - src/stylesheet/
+          # …or we're building a release…
+          - NEWS
 
 build:native-alpinelinux-edge:
   stage: build

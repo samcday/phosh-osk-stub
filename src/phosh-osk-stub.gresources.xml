@@ -18,6 +18,8 @@
     <file preprocess="json-stripblanks">layouts/bg.json</file>
     <file preprocess="json-stripblanks">layouts/by.json</file>
     <file preprocess="json-stripblanks">layouts/ca.json</file>
+    <file preprocess="json-stripblanks">layouts/ch.json</file>
+    <file preprocess="json-stripblanks">layouts/ch+fr.json</file>
     <file preprocess="json-stripblanks">layouts/cz.json</file>
     <file preprocess="json-stripblanks">layouts/de.json</file>
     <file preprocess="json-stripblanks">layouts/dk.json</file>
@@ -27,6 +29,7 @@
     <file preprocess="json-stripblanks">layouts/es+cat.json</file>
     <file preprocess="json-stripblanks">layouts/fi.json</file>
     <file preprocess="json-stripblanks">layouts/fr.json</file>
+    <file preprocess="json-stripblanks">layouts/gb.json</file>
     <file preprocess="json-stripblanks">layouts/ge.json</file>
     <file preprocess="json-stripblanks">layouts/gr.json</file>
     <file preprocess="json-stripblanks">layouts/hr.json</file>
