@@ -12,6 +12,7 @@
     <file compressed="true">stylesheet/adwaita-hc-light.css</file>
     <file compressed="true">stylesheet/common.css</file>
     <!-- from gnome-shell -->
+    <file preprocess="json-stripblanks">layouts/am.json</file>
     <file preprocess="json-stripblanks">layouts/ara.json</file>
     <file preprocess="json-stripblanks">layouts/be.json</file>
     <file preprocess="json-stripblanks">layouts/bg.json</file>
@@ -21,18 +22,31 @@
     <file preprocess="json-stripblanks">layouts/de.json</file>
     <file preprocess="json-stripblanks">layouts/dk.json</file>
     <file preprocess="json-stripblanks">layouts/ee.json</file>
+    <file preprocess="json-stripblanks">layouts/epo.json</file>
     <file preprocess="json-stripblanks">layouts/es.json</file>
+    <file preprocess="json-stripblanks">layouts/es+cat.json</file>
     <file preprocess="json-stripblanks">layouts/fi.json</file>
     <file preprocess="json-stripblanks">layouts/fr.json</file>
     <file preprocess="json-stripblanks">layouts/ge.json</file>
     <file preprocess="json-stripblanks">layouts/gr.json</file>
     <file preprocess="json-stripblanks">layouts/hr.json</file>
+    <file preprocess="json-stripblanks">layouts/hu.json</file>
+    <file preprocess="json-stripblanks">layouts/id.json</file>
     <file preprocess="json-stripblanks">layouts/il.json</file>
     <file preprocess="json-stripblanks">layouts/in+bolnagri.json</file>
     <file preprocess="json-stripblanks">layouts/in+mal.json</file>
+    <file preprocess="json-stripblanks">layouts/ir.json</file>
+    <file preprocess="json-stripblanks">layouts/is.json</file>
     <file preprocess="json-stripblanks">layouts/it.json</file>
+    <file preprocess="json-stripblanks">layouts/ke.json</file>
+    <file preprocess="json-stripblanks">layouts/kg.json</file>
+    <file preprocess="json-stripblanks">layouts/kh.json</file>
+    <file preprocess="json-stripblanks">layouts/la.json</file>
+    <file preprocess="json-stripblanks">layouts/latam.json</file>
     <file preprocess="json-stripblanks">layouts/lt.json</file>
     <file preprocess="json-stripblanks">layouts/lv.json</file>
+    <file preprocess="json-stripblanks">layouts/mk.json</file>
+    <file preprocess="json-stripblanks">layouts/mn.json</file>
     <file preprocess="json-stripblanks">layouts/my.json</file>
     <file preprocess="json-stripblanks">layouts/nl.json</file>
     <file preprocess="json-stripblanks">layouts/no.json</file>
@@ -45,11 +59,13 @@
     <file preprocess="json-stripblanks">layouts/se.json</file>
     <file preprocess="json-stripblanks">layouts/si.json</file>
     <file preprocess="json-stripblanks">layouts/sk.json</file>
+    <file preprocess="json-stripblanks">layouts/th.json</file>
     <file preprocess="json-stripblanks">layouts/tr.json</file>
     <file preprocess="json-stripblanks">layouts/ua.json</file>
     <file preprocess="json-stripblanks">layouts/us.json</file>
     <file preprocess="json-stripblanks">layouts/vn.json</file>
     <file preprocess="json-stripblanks">layouts/za.json</file>
+
     <!-- handcrafted -->
     <file preprocess="json-stripblanks" >layouts/terminal.json</file>
     <!-- emoji -->
