@@ -1,7 +1,7 @@
 project('phosh-osk-stub', 'c',
           version: '0.38.0',
           license: 'GPLv3+',
-    meson_version: '>= 0.58.0',
+    meson_version: '>= 0.60.0',
   default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
 )
 
@@ -96,6 +96,8 @@ gnome_desktop_dep = dependency('gnome-desktop-3.0', version: '>=3.26')
 gsettings_desktop_schemas_dep = dependency('gsettings-desktop-schemas')
 gtk_dep = dependency('gtk+-3.0', version: '>=3.22')
 gtk_wayland_dep = dependency('gtk+-wayland-3.0', version: '>=3.22')
+gdk_dep = dependency('gdk-3.0', version: '>=3.22')
+gdk_wayland_dep = dependency('gdk-wayland-3.0', version: '>=3.22')
 json_glib_dep =  dependency('json-glib-1.0')
 libfeedback_dep = dependency('libfeedback-0.0',
   fallback: ['libfeedback', 'libfeedback_dep'],

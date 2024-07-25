@@ -11,6 +11,8 @@ libpos_deps = [
   gnome_desktop_dep,
   gtk_dep,
   gtk_wayland_dep,
+  gdk_dep,
+  gdk_wayland_dep,
   json_glib_dep,
   libfeedback_dep,
   libhandy_dep,

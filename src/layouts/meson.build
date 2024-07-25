@@ -1,6 +1,6 @@
 json_glib_utils = find_program('json-glib-validate', required: false)
 
-layouts = files(
+layouts = [
   'ara.json',
   'be.json',
   'bg.json',
@@ -42,13 +42,13 @@ layouts = files(
   'za.json',
   # custom lauouts
   'terminal.json',
-)
+]
 
 if json_glib_utils.found()
   foreach layout : layouts
     test('Validate layout @0@'.format(layout),
-	 json_glib_utils, args: layout)
+	 json_glib_utils, args: meson.current_source_dir() / layout)
   endforeach		 
 endif
 
-p
+
