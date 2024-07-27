@@ -1,27 +1,44 @@
 json_glib_utils = find_program('json-glib-validate', required: false)
 
 layouts = [
+  'am.json',
   'ara.json',
   'be.json',
   'bg.json',
   'by.json',
   'ca.json',
+  'ch.json',
+  'ch+fr.json',
   'cz.json',
   'de.json',
   'dk.json',
   'ee.json',
+  'epo.json',
+  'es+cat.json',
   'es.json',
   'fi.json',
   'fr.json',
+  'gb.json',
   'ge.json',
   'gr.json',
   'hr.json',
+  'hu.json',
+  'id.json',
   'il.json',
   'in+bolnagri.json',
   'in+mal.json',
+  'ir.json',
+  'is.json',
   'it.json',
+  'ke.json',
+  'kg.json',
+  'kh.json',
+  'la.json',
+  'latam.json',
   'lt.json',
   'lv.json',
+  'mk.json',
+  'mn.json',
   'my.json',
   'nl.json',
   'no.json',
@@ -34,9 +51,9 @@ layouts = [
   'se.json',
   'si.json',
   'sk.json',
+  'th.json',
   'tr.json',
   'ua.json',
-  'uk.json',
   'us.json',
   'vn.json',
   'za.json',
@@ -48,7 +65,5 @@ if json_glib_utils.found()
   foreach layout : layouts
     test('Validate layout @0@'.format(layout),
 	 json_glib_utils, args: meson.current_source_dir() / layout)
-  endforeach		 
+  endforeach
 endif
-
-

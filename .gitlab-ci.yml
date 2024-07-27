@@ -123,6 +123,39 @@ doc:
     variables:
       - $PKG_ONLY == "1"
 
+test-layouts:
+  image: ${DEBIAN_IMAGE}
+  stage: test+docs
+  variables:
+    PKGS: phoc swaybg grim imagemagick phosh-wallpapers dbus-x11
+  needs:
+    - build:native-debian-trixie
+  before_script:
+    apt-get -y update &&
+    apt-get -y install $PKGS
+  script:
+    - XDG_RUNTIME_DIR=$PWD
+      WLR_RENDERER=pixman
+      NO_AT_BRIDGE=1
+      dbus-launch tools/screenshot-all-layouts.py
+  artifacts:
+    expose_as: 'Layouts'
+    paths:
+      - _build/screenshots/
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          # Only run when layouts change…
+          - src/layouts/*.json
+          # …or the code handling them…
+          - src/pos-osk-widget.c
+          - src/pos-osk-key.c
+          # …or the stylesheets…
+          - src/stylesheet/
+          # …or we're building a release…
+          - NEWS
+
 build:native-alpinelinux-edge:
   stage: build
   image: alpine:edge

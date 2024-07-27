@@ -27,7 +27,7 @@
 
 /* Default us layout */
 #define LAYOUT_COLS 10
-#define LAYOUT_ROWS 4
+#define LAYOUT_MAX_ROWS 5
 
 #define MINIMUM_WIDTH 360
 
@@ -80,12 +80,13 @@ typedef struct {
  * Describes the character layout of one layer of keys.
  */
 typedef struct {
-  PosOskWidgetRow rows[LAYOUT_ROWS];
+  PosOskWidgetRow rows[LAYOUT_MAX_ROWS];
   double          width;
 
   int             offset_x;
   double          key_width;
   double          key_height;
+  guint           n_rows;
 } PosOskWidgetKeyboardLayer;
 
 /**
@@ -232,7 +233,7 @@ pos_osk_widget_get_layer_row (PosOskWidget *self, PosOskWidgetLayer layer, guint
 {
   PosOskWidgetKeyboardLayer *l;
 
-  g_return_val_if_fail (row < self->layout.n_rows, 0);
+  g_return_val_if_fail (row < LAYOUT_MAX_ROWS, 0);
 
   l = pos_osk_widget_get_keyboard_layer (self, layer);
   return &l->rows[row];
@@ -286,12 +287,11 @@ pos_osk_widget_layout_free (PosOskWidgetLayout *layout)
 
 
 static void
-add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
+add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum, guint max_rows)
 {
   PosOskKey *key;
 
-  switch (rownum) {
-  case 2:
+  if (rownum == max_rows - 1) {
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "use", POS_OSK_KEY_USE_DELETE,
                         "symbol", "KEY_BACKSPACE",
@@ -301,8 +301,7 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, -1, key);
-    break;
-  case 3:
+  } else if (rownum == max_rows - 2) {
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "symbol", "KEY_ENTER",
                         "icon", "keyboard-enter-symbolic",
@@ -311,23 +310,21 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, -1, key);
-    break;
-  case 0:
-  case 1:
-  default:
-    break;
   }
 }
 
 
 static void
-add_common_keys_pre (PosOskWidget *self, PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum)
+add_common_keys_pre (PosOskWidget      *self,
+                     PosOskWidgetRow   *row,
+                     PosOskWidgetLayer  layer,
+                     gint               rownum,
+                     guint              max_rows)
 {
   PosOskKey *key;
   const char *label;
 
-  switch (rownum) {
-  case 2:
+  if (rownum == max_rows - 2) {
     /* Only add a shift key to the normal layer if we have a caps layer */
     if (layer != POS_OSK_WIDGET_LAYER_NORMAL ||
         self->layout.layers[POS_OSK_WIDGET_LAYER_CAPS].width > 0.0) {
@@ -341,8 +338,7 @@ add_common_keys_pre (PosOskWidget *self, PosOskWidgetRow *row, PosOskWidgetLayer
       row->width += pos_osk_key_get_width (key);
       g_ptr_array_insert (row->keys, 0, key);
     }
-    break;
-  case 3:
+  } else if (rownum == max_rows - 1) {
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "use", POS_OSK_KEY_USE_MENU,
                         "icon", "layout-menu-symbolic",
@@ -362,11 +358,6 @@ add_common_keys_pre (PosOskWidget *self, PosOskWidgetRow *row, PosOskWidgetLayer
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, 0, key);
-    break;
-  case 0:
-  case 1:
-  default:
-    break;
   }
 }
 
@@ -413,7 +404,12 @@ parse_symbols (JsonArray *array)
 
 
 static void
-parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidgetLayer l, guint r)
+parse_row (PosOskWidget      *self,
+           PosOskWidgetRow   *row,
+           JsonArray         *arow,
+           PosOskWidgetLayer  l,
+           guint              r,
+           guint              max_rows)
 {
   gsize num_keys;
 
@@ -446,8 +442,8 @@ parse_row (PosOskWidget *self, PosOskWidgetRow *row, JsonArray *arow, PosOskWidg
     g_ptr_array_add (row->keys, g_steal_pointer (&key));
   }
 
-  add_common_keys_pre (self, row, l, r);
-  add_common_keys_post (row, l, r);
+  add_common_keys_pre (self, row, l, r, max_rows);
+  add_common_keys_post (row, l, r, max_rows);
 }
 
 
@@ -460,6 +456,8 @@ parse_rows (PosOskWidget *self, PosOskWidgetKeyboardLayer *layer, JsonArray *row
   gdouble max_width = 0.0;
 
   num_rows = json_array_get_length (rows);
+  layer->n_rows = num_rows;
+
   for (int r = 0; r < num_rows; r++) {
     PosOskWidgetRow *row;
     JsonArray *arow;
@@ -471,7 +469,7 @@ parse_rows (PosOskWidget *self, PosOskWidgetKeyboardLayer *layer, JsonArray *row
       ret = FALSE;
       continue;
     }
-    parse_row (self, row, arow, l, r);
+    parse_row (self, row, arow, l, r, layer->n_rows);
 
     max_width = MAX (row->width, max_width);
   }
@@ -521,9 +519,7 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
   JsonArray *rows;
   gboolean ret = FALSE;
   double width = 0.0;
-
-  /* TODO: make dynamic */
-  self->layout.n_rows = LAYOUT_ROWS;
+  guint max_rows = 0;
 
   len = json_array_get_length (layers);
   for (int l = len-1; l >= 0; l--) {
@@ -569,10 +565,13 @@ parse_layers (PosOskWidget *self, JsonArray *layers)
     layer = pos_osk_widget_get_keyboard_layer (self, ltype);
     parse_rows (self, layer, rows, ltype);
     width = MAX (layer->width, width);
+
+    max_rows = MAX (max_rows, layer->n_rows);
   }
 
   self->layout.n_layers = len;
   self->layout.n_cols = ceil (width);
+  self->layout.n_rows = max_rows;
 
   g_debug ("Using %ux%u layout, %d layers", self->layout.n_cols, self->layout.n_rows, self->layout.n_layers);
 
@@ -742,10 +741,11 @@ pos_osk_widget_locate_key (PosOskWidget *self, double x, double y)
   PosOskKey *key = NULL;
   double pos_x;
   PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_current_layer (self);
+  guint off_y = self->height - (layer->n_rows * layer->key_height);
 
   pos_x = x - layer->offset_x;
 
-  row_num = (int)(y / layer->key_height);
+  row_num = (int)((y - off_y) / layer->key_height);
   g_return_val_if_fail (row_num < self->layout.n_rows, NULL);
 
   row = pos_osk_widget_get_row (self, row_num);
@@ -1161,7 +1161,7 @@ render_icon (cairo_t            *cr,
 
 
 static void
-draw_key (PosOskWidget *self, PosOskKey *key, cairo_t *cr, double col, double row)
+draw_key (PosOskWidget *self, PosOskKey *key, cairo_t *cr)
 {
   GdkRGBA fg_color;
   GtkStateFlags state;
@@ -1231,9 +1231,12 @@ pos_osk_widget_size_allocate (GtkWidget *widget, GdkRectangle *allocation)
 
   for (int l = 0; l <= POS_OSK_WIDGET_LAST_LAYER; l++) {
     PosOskWidgetKeyboardLayer *layer = pos_osk_widget_get_keyboard_layer (self, l);
+    guint off_y;
+
     layer->key_width = self->width / layer->width;
     layer->key_height = KEY_HEIGHT;
     layer->offset_x = 0.5 * (self->width - (layer->width * layer->key_width));
+    off_y = self->height - (layer->n_rows * layer->key_height);
 
     /* Precalc all key positions */
     for (int r = 0; r < self->layout.n_rows; r++) {
@@ -1245,7 +1248,7 @@ pos_osk_widget_size_allocate (GtkWidget *widget, GdkRectangle *allocation)
         GdkRectangle box;
 
         box.x = c * layer->key_width;
-        box.y = r * layer->key_height;
+        box.y = off_y + r * layer->key_height;
         box.width = pos_osk_key_get_width (key) * layer->key_width;
         box.height = layer->key_height;
         pos_osk_key_set_box (key, &box);
@@ -1276,12 +1279,10 @@ pos_osk_widget_draw (GtkWidget *widget, cairo_t *cr)
   for (int r = 0; r < self->layout.n_rows; r++) {
     PosOskWidgetRow *row = pos_osk_widget_get_row (self, r);
 
-    double col_num = row->offset_x;
     for (int k = 0; k < pos_osk_widget_row_get_num_keys (row); k++) {
       PosOskKey *key = pos_osk_widget_row_get_key (row, k);
 
-      draw_key (self, key, cr, col_num, r);
-      col_num += pos_osk_key_get_width (key);
+      draw_key (self, key, cr);
     }
   }
 
@@ -1314,7 +1315,9 @@ pos_osk_widget_get_preferred_height (GtkWidget       *widget,
                                      gint            *minimum_height,
                                      gint            *natural_height)
 {
-  *minimum_height = *natural_height = KEY_HEIGHT * LAYOUT_ROWS;
+  PosOskWidget *self = POS_OSK_WIDGET (widget);
+
+  *minimum_height = *natural_height = KEY_HEIGHT * self->layout.n_rows;
 
 }
 
