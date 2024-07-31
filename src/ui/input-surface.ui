@@ -81,7 +81,7 @@
         </child>
         <child>
           <object class="GtkHSeparator">
-            <property name="visible" bind-source="word_completion_btn" bind-property="visible" bind-flags="sync-create"/>
+            <property name="visible">1</property>
           </object>
         </child>
         <child>
@@ -93,6 +93,16 @@
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">Word completion</property>
                 <property name="action-name">win.word-completion</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Keyboard Settings</property>
+                <property name="action-name">win.settings</property>
+                <style>
+                  <class name="menu"/>
+                </style>
               </object>
             </child>
           </object>

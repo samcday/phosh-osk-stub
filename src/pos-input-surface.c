@@ -18,8 +18,10 @@
 #include "pos-completer-manager.h"
 #include "pos-completion-bar.h"
 #include "pos-input-surface.h"
+#include "pos-logind-session.h"
 #include "pos-main.h"
 #include "pos-osk-widget.h"
+#include "pos-settings-panel.h"
 #include "pos-shortcuts-bar.h"
 #include "pos-vk-driver.h"
 #include "pos-virtual-keyboard.h"
@@ -98,7 +100,9 @@ struct _PosInputSurface {
   GSettings               *osk_settings;
   GnomeXkbInfo            *xkbinfo;
 
-  /* wayland input-method */
+  PosLogindSession        *logind_session;
+
+  /* Wayland input-method */
   PosInputMethod          *input_method;
 
   /* OSK */
@@ -501,8 +505,15 @@ clipboard_paste_activated (GSimpleAction *action,
   pos_vk_driver_key_up (self->keyboard_driver, "KEY_PASTE");
 }
 
-/* Emoji picker */
 
+static void
+settings_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
+{
+  pos_open_settings_panel ("osk");
+}
+
+
+/* Emoji picker */
 
 static void
 send_emoji_via_vk (PosInputSurface *self, const char *emoji)
@@ -1219,6 +1230,7 @@ pos_input_surface_finalize (GObject *object)
 
   g_clear_handle_id (&self->animation.id, g_source_remove);
 
+  g_clear_object (&self->logind_session);
   g_clear_object (&self->keyboard_driver);
   g_clear_object (&self->input_method);
   g_clear_object (&self->a11y_settings);
@@ -1744,6 +1756,7 @@ static GActionEntry entries[] =
 {
   { .name = "clipboard-copy", .activate = clipboard_copy_activated },
   { .name = "clipboard-paste", .activate = clipboard_paste_activated },
+  { .name = "settings", .activate = settings_activated },
   { .name = "select-layout", .parameter_type = "s", .state = "\"terminal\"",
     .change_state = select_layout_change_state },
   { .name = "menu", .parameter_type = "(ii)", .activate = menu_activated },
@@ -1756,6 +1769,7 @@ pos_input_surface_init (PosInputSurface *self)
   GtkSettings *gtk_settings;
   g_autoptr (GPropertyAction) completion_action = NULL;
   g_autoptr (GError) err = NULL;
+  GAction *action;
 
   gtk_widget_init_template (GTK_WIDGET (self));
 
@@ -1819,6 +1833,12 @@ pos_input_surface_init (PosInputSurface *self)
                                    "touch-only", TRUE,
                                    NULL);
   g_signal_connect (self->swipe_down, "swipe", G_CALLBACK (on_swipe), self);
+
+  self->logind_session = pos_logind_session_new ();
+  action = g_action_map_lookup_action (G_ACTION_MAP (self->action_map), "settings");
+  g_object_bind_property (self->logind_session, "locked",
+                          action, "enabled",
+                          G_BINDING_SYNC_CREATE | G_BINDING_INVERT_BOOLEAN);
 }
 
 
