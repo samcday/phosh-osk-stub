@@ -15,6 +15,7 @@
 
 #include <gio/gio.h>
 
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-prototypes"
 #include <libgovarnam.h>
 #pragma GCC diagnostic pop

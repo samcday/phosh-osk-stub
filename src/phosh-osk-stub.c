@@ -61,10 +61,10 @@ static struct zwp_input_method_manager_v2 *_input_method_manager;
 static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
 static struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
 
-PosDebugFlags _debug_flags;
-PosOskDbus *_osk_dbus;
-PosActivationFilter *_activation_filter;
-PosHwTracker *_hw_tracker;
+static PosDebugFlags _debug_flags;
+static PosOskDbus *_osk_dbus;
+static PosActivationFilter *_activation_filter;
+static PosHwTracker *_hw_tracker;
 
 /* TODO:
  *  - allow to force virtual-keyboard instead of input-method
