@@ -1,4 +1,7 @@
 include:
+ - project: 'guidog/meta-phosh'
+   ref: 'ebb7aef58c96e3d586157f265e14d386ad8766fc'
+   file: '/ci/phosh-common-jobs.yml'
  - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/34039cd573a2df832d465bc9e4c5f543571f5241/templates/ci-fairy.yml'
 
 stages:
@@ -61,6 +64,10 @@ variables:
     - ${XVFB_RUN} meson test --print-errorlogs -C _build
     - ninja  -C _build coverage-html
 
+check-consistency:
+  stage: test+docs
+  extends: .phosh-check-consistency
+
 # Sanity checks of MR settings and commit logs
 sanity:
   extends:
@@ -72,7 +79,7 @@ sanity:
     reports:
       junit: commit-message-junit-report.xml
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME'
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 build:native-debian-trixie:
   stage: build
