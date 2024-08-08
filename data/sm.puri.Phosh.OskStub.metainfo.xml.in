@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="inputmethod">
   <id>sm.puri.phosh.osk-stub</id>
-  <name>Phosh Osk Stub</name>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
+  <name>Phosh OSK</name>
+  <summary>An experimental On Screen Keyboard for Phosh</summary>
   <description>
     <p>
-      Phosh-osk-stub is an <em>experimental</em> on screen keyboard with these features:
+      The on screen keyboard has the following features:
     </p>
     <ul>
       <li>Character popovers</li>
@@ -18,13 +19,12 @@
       <li>Configurable short cuts in terminal layout</li>
     </ul>
     <p>
-      It acts a Wayland input-method or virtual keyboard.
+      It acts as a Wayland input-method or virtual keyboard.
     </p>
     <p>
-      Phosh-osk-stub is still in development. <em>Use with care</em>.
+      This keyboard is still in development. <em>Use with care</em>.
     </p>
   </description>
-  <summary>An experimental On Screen Keyboard for Phosh</summary>
 
   <keywords>
     <keyword>input-method</keyword>
@@ -43,8 +43,8 @@
     <control>touch</control>
   </recommends>
 
-  <url type="homepage">https://gitlab.gnome.org//guidog/phosh-osk-stub</url>
-  <url type="bugtracker">https://gitlab.gnome.org//guidog/phosh-osk-stub</url>
+  <url type="homepage">https://gitlab.gnome.org/guidog/phosh-osk-stub</url>
+  <url type="bugtracker">https://gitlab.gnome.org/guidog/phosh-osk-stub</url>
 
   <screenshots>
     <screenshot type="default">

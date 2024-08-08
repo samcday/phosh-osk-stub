@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=On-screen keyboard stub
-Comment=On-screen keyboard stub
+Name=On-screen keyboard
+Comment=On-screen keyboard
 Exec=@bindir@/phosh-osk-stub --allow-replacement
 Categories=System;GNOME;Core;
 OnlyShowIn=Phosh;
