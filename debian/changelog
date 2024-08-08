@@ -1,3 +1,46 @@
+phosh-osk-stub (0.41.0~rc1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * build: Bump minimum meson requirement.
+    Fixes the
+      * 0.60.0: {'dependency with more than one name'}
+    build warning
+  * build: Don't pass file() element to str.format()
+    Silences a build warning
+  * build: Add explicit gdk{-wayland} dependencies.
+    Instead of relying that `gtk3.0.pc` will do the right thing add an
+    explicit dependency as we use it's functions.
+  * osk-stub: Short circuit checks when force-show is true.
+    Short circuit all other visibility checks as otherwise e.g. a hardware
+    keyboard breaks showing the OSK.
+  * widget: Drop unused parameters in draw
+  * osk-widget: Make number of rows dynamic.
+    Don't hard code the maximum number of keyboard rows that can be parsed
+    but rather set an upper limit. Adjust the common keys placement based on
+    that.
+  * osk-widget: Bottom align layouts
+  * layouts: Add more layouts.
+    Fixes: 187aea18a ("layouts: Add more layouts")
+  * layouts/ir: Remove duplicate space (0x20) key.
+    Both use the same ASCII code.
+  * tools: Robustify layout screenshots.
+    Rewrite in Python, exit on criticals.
+  * ci: Screenshot layouts
+  * layouts: Make layout names match xkb names.
+    E.g. xkb is `gb`. Also add those to the resources.
+  * osk-stub: Mark globals as static.
+    We only use them from this module
+  * completer: Don't forget to pragma push.
+    We pop right afterwards
+  * logind-session: New class to handle logind interaction.
+    We currently use it to get the `LockedHint` to figure out if the user
+    session is locked.
+
+  [ Teemu Ikonen ]
+  * input-surface: Hide keyboard on swipe down
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 08 Aug 2024 10:39:36 +0200
+
 phosh-osk-stub (0.38.0) experimental; urgency=medium
 
   * osk-stub: Make protocol static.
