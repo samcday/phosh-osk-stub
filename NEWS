@@ -1,5 +1,5 @@
-phosh-osk-stub 0.41.0~rc1
--------------------------
+phosh-osk-stub 0.41.0
+---------------------
 Released August 2024
 * Allow to swipe close the keyboard
 * Allow for more rows to support e.g. Thai layouts
