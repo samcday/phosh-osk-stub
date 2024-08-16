@@ -291,7 +291,7 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
 {
   PosOskKey *key;
 
-  if (rownum == max_rows - 1) {
+  if (rownum == max_rows - 2) {
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "use", POS_OSK_KEY_USE_DELETE,
                         "symbol", "KEY_BACKSPACE",
@@ -301,7 +301,7 @@ add_common_keys_post (PosOskWidgetRow *row, PosOskWidgetLayer layer, gint rownum
                         NULL);
     row->width += pos_osk_key_get_width (key);
     g_ptr_array_insert (row->keys, -1, key);
-  } else if (rownum == max_rows - 2) {
+  } else if (rownum == max_rows - 1) {
     key = g_object_new (POS_TYPE_OSK_KEY,
                         "symbol", "KEY_ENTER",
                         "icon", "keyboard-enter-symbolic",
