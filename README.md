@@ -59,7 +59,7 @@ The quickest way to get going is to do the following:
 
 ```sh
 meson setup -Dgtk_doc=false _build
-meson build -C _build
+meson compile -C _build
 meson test -C _build
 ```
 
