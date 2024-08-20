@@ -1,3 +1,15 @@
+phosh-osk-stub (0.41.1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * osk-widget: Unswap enter and backspace.
+    Fixes: 627395651 ("osk-widget: Make number of rows dynamic")
+
+  [ undef ]
+  * readme: Fix meson compile command.
+  * input-surface: Don't hide keyboard on small downswipes.
+
+ -- Guido Günther <agx@sigxcpu.org>  Tue, 20 Aug 2024 08:31:55 +0200
+
 phosh-osk-stub (0.41.0) experimental; urgency=medium
 
   * data: Drop "stub" from user visible names.
