@@ -1,3 +1,13 @@
+phosh-osk-stub 0.41.1
+---------------------
+Released August 2024
+* Prevent accidental keyboard closing by requiring a higher
+  velocity
+* Unswap Backspace and Enter
+* Contributors:
+    * Guido Günther
+    * undef
+
 phosh-osk-stub 0.41.0
 ---------------------
 Released August 2024
