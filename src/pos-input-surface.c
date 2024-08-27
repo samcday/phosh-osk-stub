@@ -251,7 +251,7 @@ pos_input_surface_is_completion_mode (PosInputSurface *self)
 static void
 on_completion_selected (PosInputSurface *self, const char *completion)
 {
-  g_autofree gchar *send = NULL;
+  g_autofree char *send = NULL;
 
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
   g_return_if_fail (completion != NULL);
@@ -1252,7 +1252,7 @@ pos_input_surface_finalize (GObject *object)
 }
 
 
-static gchar **
+static char **
 pos_input_surface_list_actions (GActionGroup *group)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (group);
@@ -1266,7 +1266,7 @@ pos_input_surface_list_actions (GActionGroup *group)
 
 static gboolean
 pos_input_surface_query_action (GActionGroup        *group,
-                                const gchar         *action_name,
+                                const char          *action_name,
                                 gboolean            *enabled,
                                 const GVariantType **parameter_type,
                                 const GVariantType **state_type,
@@ -1285,7 +1285,7 @@ pos_input_surface_query_action (GActionGroup        *group,
 
 static void
 pos_input_surface_activate_action (GActionGroup *group,
-                                   const gchar  *action_name,
+                                   const char   *action_name,
                                    GVariant     *parameter)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (group);
@@ -1299,7 +1299,7 @@ pos_input_surface_activate_action (GActionGroup *group,
 
 static void
 pos_input_surface_change_action_state (GActionGroup *group,
-                                       const gchar  *action_name,
+                                       const char   *action_name,
                                        GVariant     *state)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (group);
@@ -1322,7 +1322,7 @@ pos_input_surface_action_group_iface_init (GActionGroupInterface *iface)
 
 
 static GAction *
-pos_input_surface_lookup_action (GActionMap  *action_map, const gchar *action_name)
+pos_input_surface_lookup_action (GActionMap  *action_map, const char *action_name)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -1344,7 +1344,7 @@ pos_input_surface_add_action (GActionMap *action_map, GAction *action)
 }
 
 static void
-pos_input_surface_remove_action (GActionMap *action_map, const gchar *action_name)
+pos_input_surface_remove_action (GActionMap *action_map, const char *action_name)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (action_map);
 
@@ -1602,9 +1602,9 @@ static PosOskWidget *
 insert_xkb_layout (PosInputSurface *self, const char *type, const char *layout_id)
 {
   g_autofree char *name = NULL;
-  const gchar *layout = NULL;
-  const gchar *variant = NULL;
-  const gchar *display_name = NULL;
+  const char *layout = NULL;
+  const char *variant = NULL;
+  const char *display_name = NULL;
 
   if (g_strcmp0 (type, "xkb")) {
     g_debug ("Not a xkb layout: '%s' - ignoring", layout_id);

@@ -567,7 +567,7 @@ pos_completer_capitalize_by_template (const char *template, const GStrv completi
   for (i = 0; i < g_strv_length (completions); i++) {
     glong read_len, compl_len, read, written;
     g_autofree gunichar *ucompletion = NULL;
-    g_autofree gchar *new_completion = NULL;
+    g_autofree char *new_completion = NULL;
     g_autoptr (GError) err = NULL;
 
     ucompletion = g_utf8_to_ucs4 (completions[i], -1, &read_len, &compl_len, &err);

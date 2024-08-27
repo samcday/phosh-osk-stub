@@ -124,7 +124,7 @@ pos_char_popup_new (GtkWidget *relative_to, GStrv symbols)
 static void
 on_button_clicked (PosCharPopup *self, GtkButton *btn)
 {
-  const gchar *symbol;
+  const char *symbol;
 
   symbol = gtk_button_get_label (btn);
 
