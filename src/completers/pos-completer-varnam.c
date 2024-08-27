@@ -346,6 +346,16 @@ pos_completer_varnam_get_display_name (PosCompleter *iface)
 
 
 static void
+pos_completer_varnam_learn_accepted (PosCompleter *iface, const char *word)
+{
+  PosCompleterVarnam *self = POS_COMPLETER_VARNAM (iface);
+
+  g_debug ("Learning %s", word);
+  varnam_learn (self->varnam_handle_id, g_strdup (word), 0);
+}
+
+
+static void
 pos_completer_varnam_interface_init (PosCompleterInterface *iface)
 {
   iface->get_name = pos_completer_varnam_get_name;
@@ -354,6 +364,7 @@ pos_completer_varnam_interface_init (PosCompleterInterface *iface)
   iface->set_preedit = pos_completer_varnam_set_preedit;
   iface->set_language = pos_completer_varnam_set_language;
   iface->get_display_name = pos_completer_varnam_get_display_name;
+  iface->learn_accepted = pos_completer_varnam_learn_accepted;
 }
 
 
