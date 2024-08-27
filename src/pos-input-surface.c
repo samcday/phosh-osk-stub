@@ -260,8 +260,11 @@ on_completion_selected (PosInputSurface *self, const char *completion)
 
   pos_input_method_send_string (self->input_method, send, TRUE);
 
-  if (pos_input_surface_is_completer_active (self))
+  if (pos_input_surface_is_completer_active (self)) {
+    pos_completer_learn_accepted (self->completer, send);
     pos_completer_set_preedit (self->completer, NULL);
+  }
+
 }
 
 

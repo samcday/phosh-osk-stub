@@ -427,6 +427,7 @@ pos_completer_add_preedit (PosCompleter *self, GString *preedit, const char *sym
   return FALSE;
 }
 
+
 char *
 pos_completer_get_display_name (PosCompleter *self)
 {
@@ -439,6 +440,21 @@ pos_completer_get_display_name (PosCompleter *self)
     return NULL;
 
   return iface->get_display_name (self);
+}
+
+
+void
+pos_completer_learn_accepted (PosCompleter *self, const char *word)
+{
+  PosCompleterInterface *iface;
+
+  g_return_if_fail (POS_IS_COMPLETER (self));
+
+  iface = POS_COMPLETER_GET_IFACE (self);
+  if (iface->get_display_name == NULL)
+    return;
+
+  return iface->learn_accepted (self, word);
 }
 
 /**

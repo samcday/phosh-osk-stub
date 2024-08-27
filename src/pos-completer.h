@@ -57,6 +57,7 @@ struct _PosCompleterInterface
                                   const char    *region,
                                   GError       **error);
   char *         (*get_display_name) (PosCompleter *self);
+  void           (*learn_accepted) (PosCompleter *self, const char *word);
 };
 
 /* Used by completion users */
@@ -75,6 +76,8 @@ gboolean       pos_completer_set_language (PosCompleter  *self,
                                            const char    *region,
                                            GError       **error);
 char          *pos_completer_get_display_name (PosCompleter *self);
+void           pos_completer_learn_accepted (PosCompleter *self, const char *word);
+
 GStrv          pos_completer_capitalize_by_template (const char *template,
                                                      const GStrv completions);
 
