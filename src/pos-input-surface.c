@@ -29,7 +29,6 @@
 #include "util.h"
 
 #include <handy.h>
-#define LIBFEEDBACK_USE_UNSTABLE_API
 #include <libfeedback.h>
 
 #define GNOME_DESKTOP_USE_UNSTABLE_API

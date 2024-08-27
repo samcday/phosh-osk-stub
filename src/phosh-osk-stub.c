@@ -24,7 +24,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkwayland.h>
 
-#define LIBFEEDBACK_USE_UNSTABLE_API
 #include <libfeedback.h>
 
 #include <math.h>

@@ -24,6 +24,7 @@ glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
 glib_ver_cmp = '>=@0@'.format(glib_ver)
 
 add_project_arguments([
+  '-DLIBFEEDBACK_USE_UNSTABLE_API',
   '-DGLIB_VERSION_MIN_REQUIRED=@0@'.format(glib_ver_str),
   '-DGLIB_VERSION_MAX_REQUIRED=@0@'.format(glib_ver_str),
   '-DG_LOG_USE_STRUCTURED',
