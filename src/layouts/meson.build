@@ -67,3 +67,16 @@ if json_glib_utils.found()
 	 json_glib_utils, args: meson.current_source_dir() / layout)
   endforeach
 endif
+
+info_builder = find_program(meson.project_source_root() / 'tools' / 'write-layout-info.py')
+build_info = custom_target('build-info',
+  output: 'layouts.json',
+  command: [info_builder,
+	    '--layouts=@0@'.format(meson.current_source_dir()),
+	    '--out=@OUTPUT@',
+            varnam_dep.found() ? '--varnam' : '--no-varnam',
+	   ],
+  depend_files: [layouts, info_builder.full_path()],
+  install: true,
+  install_dir: pkgdatadir,
+)
