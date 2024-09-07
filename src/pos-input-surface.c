@@ -509,6 +509,10 @@ clipboard_paste_activated (GSimpleAction *action,
 static void
 settings_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
 {
+  PosInputSurface *self = POS_INPUT_SURFACE (data);
+
+  /* popdown popover right away to avoid flicker when OSK goes away */
+  gtk_popover_popdown (self->menu_popup);
   pos_open_settings_panel ("osk");
 }
 
