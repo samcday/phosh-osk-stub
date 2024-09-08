@@ -288,9 +288,7 @@ pos_completer_manager_get_default_completer (PosCompleterManager *self)
  * a given language.
  *
  * Given the engine name and a language fills in the necessary
- * information and initializes the completion engine. The returned
- * object can be used with [type@PosCompletionManagre.set_from_info]
- * to select the given completer for completion.
+ * information and initializes the completion engine.
  *
  * Returns: (transfer full)(nullable): The completer information or %NULL on error.
  */
