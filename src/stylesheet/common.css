@@ -100,6 +100,10 @@ pos-completion-bar button {
   font-weight: bold;
 }
 
+pos-completion-bar button:disabled {
+  color: mix(@pos_fg_color, @pos_bg_color, 0.5);
+}
+
 pos-completion-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
