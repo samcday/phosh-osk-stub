@@ -8,6 +8,7 @@ libpos_enum_sources = gnome.mkenums_simple(
 
 libpos_deps = [
   gio_dep,
+  gmobile_dep,
   gnome_desktop_dep,
   gtk_dep,
   gtk_wayland_dep,

@@ -9,6 +9,7 @@ Build-Depends:
  libfeedback-dev,
  gi-docgen <!nodoc>,
  gobject-introspection <!nodoc>,
+ libgmobile-dev,
  libgnome-desktop-3-dev,
  libgirepository1.0-dev <!nodoc>,
  libgtk-3-dev,

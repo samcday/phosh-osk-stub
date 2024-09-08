@@ -28,6 +28,7 @@ add_project_arguments([
   '-DGLIB_VERSION_MIN_REQUIRED=@0@'.format(glib_ver_str),
   '-DGLIB_VERSION_MAX_REQUIRED=@0@'.format(glib_ver_str),
   '-DG_LOG_USE_STRUCTURED',
+  '-DGMOBILE_USE_UNSTABLE_API',
 ], language: 'c')
 
 root_inc = include_directories('.')
@@ -93,6 +94,7 @@ i18n  = import('i18n')
 glib_dep = dependency('glib-2.0', version: glib_ver_cmp)
 gio_dep = dependency('gio-2.0', version: glib_ver_cmp)
 gobject_dep = dependency('gobject-2.0', version: glib_ver_cmp)
+gmobile_dep = dependency('gmobile', version: '>=0.2.0')
 gnome_desktop_dep = dependency('gnome-desktop-3.0', version: '>=3.26')
 gsettings_desktop_schemas_dep = dependency('gsettings-desktop-schemas')
 gtk_dep = dependency('gtk+-3.0', version: '>=3.22')

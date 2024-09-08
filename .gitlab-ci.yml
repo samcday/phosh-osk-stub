@@ -42,6 +42,7 @@ variables:
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
                     gtk+3.0-dev libhandy1-dev meson musl-dev ninja json-glib-dev
                     elogind-dev wayland-dev wayland-protocols ttf-dejavu presage-dev
+                    gmobile-dev
 
 .trixie_vars: &trixie_vars
   variables:
