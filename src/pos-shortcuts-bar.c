@@ -27,7 +27,7 @@ static guint signals[N_SIGNALS];
 
 typedef struct _PosShortcut
 {
-  gchar          *name;
+  char           *name;
   guint           key;
   GdkModifierType modifiers;
 } PosShortcut;
@@ -149,7 +149,7 @@ pos_accelerator_get_label (PosShortcut *shortcut)
 
 static void
 on_shortcuts_changed (PosShortcutsBar *self,
-                      const gchar     *key,
+                      const char      *key,
                       GSettings       *settings)
 {
   g_auto (GStrv) accelerators = NULL;

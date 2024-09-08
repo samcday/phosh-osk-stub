@@ -70,7 +70,7 @@ pos_completion_bar_new (void)
 static void
 on_button_clicked (PosCompletionBar *self, GtkButton *btn)
 {
-  const gchar *completion;
+  const char *completion;
 
   g_assert (POS_IS_COMPLETION_BAR (self));
   g_assert (GTK_IS_BUTTON (btn));

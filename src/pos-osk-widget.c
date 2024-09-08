@@ -426,7 +426,7 @@ parse_row (PosOskWidget      *self,
     key_node = json_array_get_element (arow, i);
     if (JSON_NODE_HOLDS (key_node, JSON_NODE_ARRAY)) {
       JsonArray *all_symbols = json_array_get_array_element (arow, i);
-      const gchar *symbol = json_array_get_string_element (all_symbols, 0);
+      const char *symbol = json_array_get_string_element (all_symbols, 0);
 
       symbols = parse_symbols (all_symbols);
       key = get_key (self, symbol, symbols, NULL, NULL, num_keys);
@@ -1137,7 +1137,7 @@ static void
 render_icon (cairo_t            *cr,
              GtkStyleContext    *context,
              GtkIconTheme       *icon_theme,
-             const gchar        *icon,
+             const char         *icon,
              const GdkRectangle *box,
              int                 scale)
 {
