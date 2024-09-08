@@ -269,8 +269,10 @@ pos_logind_session_new (void)
 {
   if (manager_object != NULL)
     g_object_ref (manager_object);
-  else
+  else {
     manager_object = g_object_new (POS_TYPE_LOGIND_SESSION, NULL);
+    g_object_add_weak_pointer (G_OBJECT (manager_object), (gpointer *)&manager_object);
+  }
 
   return POS_LOGIND_SESSION (manager_object);
 }
