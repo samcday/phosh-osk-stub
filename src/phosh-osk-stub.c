@@ -12,10 +12,11 @@
 #include "pos-config.h"
 #include "pos.h"
 
-#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include "input-method-unstable-v2-client-protocol.h"
 #include "phoc-device-state-unstable-v1-client-protocol.h"
 #include "virtual-keyboard-unstable-v1-client-protocol.h"
+#include "wlr-data-control-unstable-v1-client-protocol.h"
+#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 
 
 #include <gio/gio.h>
@@ -55,6 +56,7 @@ static struct wl_display *_display;
 static struct wl_registry *_registry;
 static struct wl_seat *_seat;
 static struct zphoc_device_state_v1 *_phoc_device_state;
+static struct zwlr_data_control_manager_v1 *_wlr_data_control_manager;
 static struct zwlr_layer_shell_v1 *_layer_shell;
 static struct zwp_input_method_manager_v2 *_input_method_manager;
 static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
@@ -264,12 +266,14 @@ create_input_surface (struct wl_seat                         *seat,
                       struct zwp_virtual_keyboard_manager_v1 *virtual_keyboard_manager,
                       struct zwp_input_method_manager_v2     *im_manager,
                       struct zwlr_layer_shell_v1             *layer_shell,
+                      struct zwlr_data_control_manager_v1    *data_control_manager,
                       PosOskDbus                             *osk_dbus)
 {
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
   g_autoptr (PosInputMethod) im = NULL;
   g_autoptr (PosCompleterManager) completer_manager = NULL;
+  g_autoptr (PosClipboardManager) clipboard_manager = NULL;
   gboolean force_completion;
 
   g_assert (seat);
@@ -281,6 +285,7 @@ create_input_surface (struct wl_seat                         *seat,
   virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
   completer_manager = pos_completer_manager_new ();
+  clipboard_manager = pos_clipboard_manager_new (data_control_manager, seat);
 
   im = pos_input_method_new (im_manager, seat);
 
@@ -301,6 +306,7 @@ create_input_surface (struct wl_seat                         *seat,
                                  "keyboard-driver", vk_driver,
                                  "completer-manager", completer_manager,
                                  "completion-enabled", force_completion,
+                                 "clipboard-manager", clipboard_manager,
                                  NULL);
 
   g_object_bind_property (_input_surface,
@@ -344,7 +350,7 @@ on_input_surface_gone (gpointer data, GObject *unused)
   g_debug ("Input surface gone, recreating");
 
   create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
-                        _osk_dbus);
+                        _wlr_data_control_manager, _osk_dbus);
 }
 
 
@@ -362,7 +368,7 @@ on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused)
   } else if (_input_surface == NULL) {
     if (_seat && _virtual_keyboard_manager && _input_method_manager && _layer_shell) {
       create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
-                            dbus);
+                            _wlr_data_control_manager, dbus);
     } else {
       g_warning ("Wayland globals not yet read");
     }
@@ -396,14 +402,19 @@ registry_handle_global (void               *data,
                                            &zphoc_device_state_v1_interface,
                                            MIN (2, version));
     _hw_tracker = pos_hw_tracker_new (_phoc_device_state);
+  } else if (!strcmp (interface, zwlr_data_control_manager_v1_interface.name)) {
+    _wlr_data_control_manager = wl_registry_bind (registry, name,
+                                                  &zwlr_data_control_manager_v1_interface, 1);
   }
 
-  if (_seat && _input_method_manager && _layer_shell && _virtual_keyboard_manager &&
-      _foreign_toplevel_manager && _hw_tracker && !_input_surface) {
+  if (_foreign_toplevel_manager && _hw_tracker && _seat && _input_method_manager &&
+      _layer_shell && _virtual_keyboard_manager && _wlr_data_control_manager &&
+      !_input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
     create_input_surface (_seat, _virtual_keyboard_manager,
                           _input_method_manager,
                           _layer_shell,
+                          _wlr_data_control_manager,
                           _osk_dbus);
   }
 }

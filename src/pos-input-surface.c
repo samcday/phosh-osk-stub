@@ -14,6 +14,7 @@
 #include "phosh-osk-enums.h"
 #include "pos-emoji-picker.h"
 #include "pos-input-method.h"
+#include "pos-clipboard-manager.h"
 #include "pos-completer.h"
 #include "pos-completer-manager.h"
 #include "pos-completion-bar.h"
@@ -27,6 +28,8 @@
 #include "pos-virtual-keyboard.h"
 #include "pos-vk-driver.h"
 #include "util.h"
+
+#include <gmobile.h>
 
 #include <handy.h>
 #include <libfeedback.h>
@@ -59,6 +62,7 @@ enum {
   PROP_INPUT_METHOD,
   PROP_COMPLETER,
   PROP_COMPLETER_MANAGER,
+  PROP_CLIPBOARD_MANAGER,
   PROP_SCREEN_KEYBOARD_ENABLED,
   PROP_KEYBOARD_DRIVER,
   PROP_SURFACE_VISIBLE,
@@ -131,6 +135,9 @@ struct _PosInputSurface {
   GtkWidget               *completion_bar;
   gboolean                 completion_enabled;
   PhoshOskCompletionModeFlags completion_mode;
+
+  /* Clipboard */
+  PosClipboardManager    *clipboard_manager;
 
   /* Swipe gesture */
   GtkGesture              *swipe_down;
@@ -502,9 +509,22 @@ clipboard_paste_activated (GSimpleAction *action,
                            gpointer       data)
 {
   PosInputSurface *self = POS_INPUT_SURFACE (data);
+  const char *text;
 
-  pos_vk_driver_key_down (self->keyboard_driver, "v", POS_KEYCODE_MODIFIER_CTRL);
-  pos_vk_driver_key_up (self->keyboard_driver, "v");
+  text = pos_clipboard_manager_get_text (self->clipboard_manager);
+  if (gm_str_is_null_or_empty (text))
+    return;
+
+  if (pos_input_method_get_active (self->input_method)) {
+    pos_input_surface_submit_current_preedit (self);
+    pos_input_method_send_string (self->input_method, text, TRUE);
+  } else {
+    /* TODO */
+    g_warning_once ("Pasting via vk-driver not yet supported");
+  }
+
+  /* Close popover in case we pasted from there */
+  gtk_popover_popdown (self->menu_popup);
 }
 
 
@@ -906,6 +926,26 @@ pos_input_surface_set_completer_manager (PosInputSurface     *self,
 }
 
 
+static void
+pos_input_surface_set_clipboard_manager (PosInputSurface     *self,
+                                         PosClipboardManager *clipboard_manager)
+{
+  GAction *paste_action;
+
+  if (self->clipboard_manager == clipboard_manager)
+    return;
+
+  g_set_object (&self->clipboard_manager, clipboard_manager);
+
+  paste_action = g_action_map_lookup_action (G_ACTION_MAP (self), "clipboard-paste");
+  g_assert (paste_action);
+
+  g_object_bind_property (clipboard_manager, "has-text",
+                          paste_action, "enabled",
+                          G_BINDING_SYNC_CREATE);
+}
+
+
 static double
 reverse_ease_out_cubic (double t)
 {
@@ -967,6 +1007,9 @@ pos_input_surface_set_property (GObject      *object,
   case PROP_COMPLETER_MANAGER:
     pos_input_surface_set_completer_manager (self, g_value_get_object (value));
     break;
+  case PROP_CLIPBOARD_MANAGER:
+    pos_input_surface_set_clipboard_manager (self, g_value_get_object (value));
+    break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     pos_screen_keyboard_set_enabled (self, g_value_get_boolean (value));
     break;
@@ -1003,6 +1046,9 @@ pos_input_surface_get_property (GObject    *object,
     break;
   case PROP_COMPLETER_MANAGER:
     g_value_set_object (value, self->completer_manager);
+    break;
+  case PROP_CLIPBOARD_MANAGER:
+    g_value_set_object (value, self->clipboard_manager);
     break;
   case PROP_SCREEN_KEYBOARD_ENABLED:
     g_value_set_boolean (value, pos_input_surface_get_screen_keyboard_enabled (self));
@@ -1172,7 +1218,6 @@ static void
 pos_input_surface_constructed (GObject *object)
 {
   static gboolean input_serial_sent = FALSE;
-
   PosInputSurface *self = POS_INPUT_SURFACE (object);
   const char *test_layout = g_getenv ("POS_TEST_LAYOUT");
 
@@ -1244,6 +1289,7 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->osk_settings);
   g_clear_object (&self->xkbinfo);
   g_clear_object (&self->css_provider);
+  g_clear_object (&self->clipboard_manager);
   g_clear_object (&self->completer);
   g_clear_object (&self->completer_manager);
   g_clear_object (&self->swipe_down);
@@ -1466,6 +1512,16 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   props[PROP_COMPLETER_MANAGER] =
     g_param_spec_object ("completer-manager", "", "",
                          POS_TYPE_COMPLETER_MANAGER,
+                         G_PARAM_READWRITE |
+                         G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosInputSurface:clipboard-manager:
+   *
+   * A clipboard manager to use. The clipboard manager is used to get text to paste.
+   */
+  props[PROP_CLIPBOARD_MANAGER] =
+    g_param_spec_object ("clipboard-manager", "", "",
+                         POS_TYPE_CLIPBOARD_MANAGER,
                          G_PARAM_READWRITE |
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
   /**
