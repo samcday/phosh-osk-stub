@@ -19,7 +19,7 @@ systemddir = join_paths(prefix, 'lib/systemd')
 systemduserdir = join_paths(systemddir, 'user')
 schemasdir = datadir / 'glib-2.0' / 'schemas'
 
-glib_ver = '2.66'
+glib_ver = '2.80'
 glib_ver_str = 'GLIB_VERSION_@0@'.format(glib_ver.replace('.','_'))
 glib_ver_cmp = '>=@0@'.format(glib_ver)
 
