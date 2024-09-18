@@ -11,8 +11,10 @@ wl_protos = [
   ['input-method-unstable-v2.xml'],
   ['phoc-device-state-unstable-v1.xml'],
   ['virtual-keyboard-unstable-v1.xml'],
+  ['wlr-data-control-unstable-v1.xml'],
   ['wlr-foreign-toplevel-management-unstable-v1.xml'],
   ['wlr-layer-shell-unstable-v1.xml'],
+
 ]
 
 wl_proto_sources = []

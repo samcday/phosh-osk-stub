@@ -42,13 +42,6 @@ struct _PosVkDriver {
 };
 G_DEFINE_TYPE (PosVkDriver, pos_vk_driver, G_TYPE_OBJECT)
 
-typedef enum {
-  POS_KEYCODE_MODIFIER_NONE =  0,
-  POS_KEYCODE_MODIFIER_SHIFT = 1 << 0,
-  POS_KEYCODE_MODIFIER_CTRL =  1 << 1,
-  POS_KEYCODE_MODIFIER_ALTGR = 1 << 2,
-} PosKeycodeModifier;
-
 typedef struct {
   char *key;
   guint keycode;
@@ -77,8 +70,6 @@ static const PosKeycode keycodes_common[] = {
   { "KEY_F10", KEY_F10, POS_KEYCODE_MODIFIER_NONE },
   { "KEY_F11", KEY_F11, POS_KEYCODE_MODIFIER_NONE },
   { "KEY_F12", KEY_F12, POS_KEYCODE_MODIFIER_NONE },
-  { "KEY_COPY", KEY_C, POS_KEYCODE_MODIFIER_CTRL },
-  { "KEY_PASTE", KEY_V, POS_KEYCODE_MODIFIER_CTRL },
   /* common keys */
   { " ", KEY_SPACE, POS_KEYCODE_MODIFIER_NONE},
   { "0", KEY_0, POS_KEYCODE_MODIFIER_NONE },
@@ -549,28 +540,40 @@ pos_vk_driver_new (PosVirtualKeyboard *virtual_keyboard)
                                       NULL));
 }
 
-
+/**
+ * pos_vk_driver_new_down:
+ * @self: The virtual keyboard driver
+ * @key: The key to press
+ * @modifiers: Additional modifiers
+ *
+ * Submits a key via the virtual keyboard protocol. This handles
+ * capital letters implicitly by adding the correctmodifier. Same is true for several
+ * special letters on the terminal layout that require AltGr.
+ *
+ * One can pass additional modifiers to trigger e.g. <ctrl>+<character> compbos.
+ */
 void
-pos_vk_driver_key_down (PosVkDriver *self, const char *key)
+pos_vk_driver_key_down (PosVkDriver *self, const char *key, PosKeycodeModifier modifiers)
 {
   PosKeycode *keycode;
-  guint modifiers = POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE;
+  guint vk_modifiers = 0;
 
   g_return_if_fail (POS_IS_VK_DRIVER (self));
 
   keycode = g_hash_table_lookup (self->keycodes, key);
   g_return_if_fail (keycode);
 
-  if (keycode->modifiers & POS_KEYCODE_MODIFIER_SHIFT)
-    modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT;
-  if (keycode->modifiers & POS_KEYCODE_MODIFIER_CTRL)
-    modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
-  if (keycode->modifiers & POS_KEYCODE_MODIFIER_ALTGR)
-    modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALTGR;
+  modifiers |= keycode->modifiers;
+  if (modifiers & POS_KEYCODE_MODIFIER_SHIFT)
+    vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT;
+  if (modifiers & POS_KEYCODE_MODIFIER_CTRL)
+    vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
+  if (modifiers & POS_KEYCODE_MODIFIER_ALTGR)
+    vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALTGR;
 
   /* FIXME: preserve current modifiers */
   pos_virtual_keyboard_set_modifiers (self->virtual_keyboard,
-                                      modifiers,
+                                      vk_modifiers,
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE,
                                       POS_VIRTUAL_KEYBOARD_MODIFIERS_NONE);
 

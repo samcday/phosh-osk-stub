@@ -77,7 +77,7 @@ pos_im_state_free (PosImState *state)
 static PosImState *
 pos_im_state_dup (PosImState *state)
 {
-  PosImState *new = g_memdup (state, sizeof (PosImState));
+  PosImState *new = g_memdup2 (state, sizeof (PosImState));
 
   new->surrounding_text = g_strdup (state->surrounding_text);
 
