@@ -1,3 +1,45 @@
+phosh-osk-stub (0.42~rc1) experimental; urgency=medium
+
+  * input-surface: Close popover when spawning settings.
+    This avoids flicker when the OSK folds
+  * build: Ack libfeedback's unstable API just once.
+    No need to do it in multiple places
+  * completer: Add vfunc to learn accepted words.
+    Implementation by completers is optional
+  * varnam: Learn accepted words.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/26
+  * build: Install layout information.
+    This allows other tools to figure out which layouts
+    we support.
+  * logind-session: Clear manager location.
+    Otherwise we trigger a use after free if the manager gets
+    unref'ed and we want a new one.
+  * input-surface: Drop explicit-notify from construct-only properties.
+    It makes no sense as they're only set once so we can let glib
+    handle it.
+  * completer-manager: Fix outdated doc string.
+    We never added `set_from_info`
+  * build: Make doc warnings fatal.
+    Make sure we spot broken links early
+  * build: Add gmobile dependency
+  * treewide: Bump glib dependency to 2.80.
+    Fix the deprecations. We can just remove the function triggering the
+    deprecation warning from phosh's utils as it's unused.
+  * vk-driver: Allow to pass additional modifiers.
+    This allows us to submit complex key combos for virtual keyboards
+  * vk-driver: Drop now unused copy/paste symbols
+  * clipboard-manager: New object to handle clipboard interaction.
+    We use wlr-data-control-v1 to track the clipboard contents and store any
+    text offers we see.
+  * input-surface: Use clipboard manager.
+    This allows us to paste text via a paste button
+  * completion-bar: Add paste button
+  * input-surface: Add paste button to popover
+  * debug-surface: Drop paste button.
+    Now handled via popover
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 20 Sep 2024 17:19:53 +0200
+
 phosh-osk-stub (0.41.1) experimental; urgency=medium
 
   [ Guido Günther ]
