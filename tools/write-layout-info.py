@@ -16,7 +16,7 @@ import json
 def get_layouts_info(path, varnam):
     layouts = []
 
-    for file in glob.glob(os.path.join(path, "*.json")):
+    for file in sorted(glob.glob(os.path.join(path, "*.json"))):
 
         name = os.path.basename(file).split(".")[0]
         # Not handles in p-o-s
