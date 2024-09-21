@@ -77,6 +77,7 @@ build_info = custom_target('build-info',
             varnam_dep.found() ? '--varnam' : '--no-varnam',
 	   ],
   depend_files: [layouts, info_builder.full_path()],
+  env: { 'LC_ALL': 'C' },
   install: true,
   install_dir: pkgdatadir,
 )
