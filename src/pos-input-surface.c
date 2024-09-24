@@ -1170,7 +1170,8 @@ on_im_surrounding_text_changed (PosInputSurface *self, GParamSpec *pspec, PosInp
   g_assert (POS_IS_INPUT_METHOD (im));
 
   text = pos_input_method_get_surrounding_text (im, &anchor, &cursor);
-  if (!pos_input_surface_is_completer_active (self))
+
+  if (!pos_input_surface_is_completion_mode (self))
     return;
 
   before = g_strndup (text, cursor);
