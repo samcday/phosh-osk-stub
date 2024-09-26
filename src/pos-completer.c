@@ -536,7 +536,7 @@ pos_completer_grab_last_word (const char *text, char **new_text, char **word)
     }
   }
 
-  /* Now whitespace in text */
+  /* No whitespace in text */
   *new_text = NULL;
   *word = g_strdup (text);
 

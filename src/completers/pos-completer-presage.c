@@ -164,32 +164,21 @@ pos_completer_presage_set_surrounding_text (PosCompleter *iface,
                                             const char   *after_text)
 {
   PosCompleterPresage *self = POS_COMPLETER_PRESAGE (iface);
-  g_autofree char *word = NULL;
-  g_autofree char *new_before = NULL;
 
   if (g_strcmp0 (self->after_text, after_text) == 0 &&
-      g_strcmp0 (self->before_text, before_text) == 0)
+      g_strcmp0 (self->before_text, before_text) == 0) {
     return;
+  }
 
   g_free (self->after_text);
   self->after_text = g_strdup (after_text);
 
   g_free (self->before_text);
-  if (!self->updating_preedit && pos_completer_grab_last_word (before_text, &new_before, &word)) {
-    self->before_text = g_steal_pointer (&new_before);
-    g_string_prepend (self->preedit, word);
+  self->before_text = g_strdup (before_text);
 
-    g_debug ("Updating preedit:  b:'%s' p:'%s' a:'%s'",
-             self->before_text, self->preedit->str, self->after_text);
-    g_signal_emit_by_name (self, "update", self->preedit->str, strlen (word), 0);
-    g_object_notify_by_pspec (G_OBJECT (self), props[PROP_PREEDIT]);
-  } else {
-    self->before_text = g_strdup (before_text);
-  }
   pos_completer_presage_predict (self);
 
-  g_debug ("Updating:  b:'%s' p:'%s' a:'%s'",
-           self->before_text, self->preedit->str, self->after_text);
+  g_debug ("Updating:  b:'%s', a:'%s'", self->before_text, self->after_text);
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_BEFORE_TEXT]);
   g_object_notify_by_pspec (G_OBJECT (self), props[PROP_AFTER_TEXT]);
 }
