@@ -2,7 +2,7 @@
   <schema id="sm.puri.phosh.osk"
           path="/sm/puri/phosh/osk/">
     <key name="completion-mode" flags="sm.puri.phosh.osk.PhoshOskCompletionModeFlags">
-      <default>[]</default>
+      <default>['hint']</default>
       <summary>When to enable the on screen keyboard's text completion</summary>
       <description>
         Text completion can be disabled, only enabled when a text
