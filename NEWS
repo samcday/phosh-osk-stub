@@ -1,3 +1,17 @@
+phosh-osk-stub 0.42.0
+---------------------
+Released September 2024
+* Fix several input issues when using completers that take
+  surrounding text into account (like presage)
+* data: Enable opportunistic completion by default. With the recent
+  compositor and OSK fixes it should be stable enough to at least
+  enable in those cases where the application recommends to use
+  completion (e.g. gnome-text-editor or chatty).
+* Lower velocity needed to swipe close the OSK a bit
+* Contributors:
+    * Guido Günther
+    * Teemu Ikonen
+
 phosh-osk-stub 0.42~rc1
 -----------------------
 Released September 2024
