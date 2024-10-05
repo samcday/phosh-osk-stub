@@ -125,7 +125,7 @@ pos-shortcuts-bar button {
   padding-right: 12px;
   border: none;
   border-radius: 6px;
-  margin: 2px 2px 2px 0px;;
+  margin: 2px 2px 2px 0px;
 }
 
 /* FIXME: an override to prevent double highlighting on some buttons */
