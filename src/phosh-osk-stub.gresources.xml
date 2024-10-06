@@ -3,7 +3,6 @@
   <gresource prefix="/sm/puri/phosh/osk-stub/">
     <file preprocess="xml-stripblanks">ui/char-popup.ui</file>
     <file preprocess="xml-stripblanks">ui/completion-bar.ui</file>
-    <file preprocess="xml-stripblanks">ui/debug-widget.ui</file>
     <file preprocess="xml-stripblanks">ui/emoji-picker.ui</file>
     <file preprocess="xml-stripblanks">ui/input-surface.ui</file>
     <file preprocess="xml-stripblanks">ui/shortcuts-bar.ui</file>
