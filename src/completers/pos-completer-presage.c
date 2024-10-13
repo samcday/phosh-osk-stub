@@ -395,18 +395,9 @@ pos_completer_presage_initable_init (GInitable    *initable,
     return FALSE;
   }
 
-  /* Set the necessary predictors, if they are not in user config */
-  result = presage_config (self->presage,
-                           "Presage.PredictorRegistry.PREDICTORS", &confvar);
-  if (result != PRESAGE_OK
-      || !g_strrstr (confvar, CONFIG_NGRM_PREDICTOR)
-      || !g_strrstr (confvar, CONFIG_USER_PREDICTOR)) {
-    g_debug ("Presage config is missing predictors we need, "
-             "setting PREDICTORS to '%s'", CONFIG_PREDICTORS);
-    presage_config_set (self->presage,
-                        "Presage.PredictorRegistry.PREDICTORS",
-                        CONFIG_PREDICTORS);
-  }
+  presage_config_set (self->presage,
+                      "Presage.PredictorRegistry.PREDICTORS",
+                      CONFIG_PREDICTORS);
 
   max = g_strdup_printf ("%d", self->max_completions);
   presage_config_set (self->presage, "Presage.Selector.SUGGESTIONS", max);
