@@ -79,3 +79,5 @@ if appstream_util.found()
     args: ['validate', '--no-net', appstream_file]
   )
 endif
+
+subdir('completers')

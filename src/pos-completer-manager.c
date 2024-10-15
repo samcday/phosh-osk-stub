@@ -31,6 +31,12 @@
  * Manages initialization and lookup of the different completion engines.
  */
 
+/**
+ * PosCompletionInfo:
+ *
+ * Info about a completer for certain region/language.
+ */
+
 enum {
   PROP_0,
   PROP_DEFAULT,
@@ -290,7 +296,7 @@ pos_completer_manager_get_default_completer (PosCompleterManager *self)
  * Given the engine name and a language fills in the necessary
  * information and initializes the completion engine.
  *
- * Returns: (transfer full)(nullable): The completer information or %NULL on error.
+ * Returns:(transfer full)(nullable): The completion information or %NULL on error.
  */
 PosCompletionInfo *
 pos_completer_manager_get_info (PosCompleterManager *self,

@@ -75,6 +75,7 @@ as root and selecting the entry ending in ``sm.puri.Phosh.OskStub.desktop``.
 
 CONFIGURATION
 -------------
+
 ``phosh-osk-stub`` is configured via ``GSettings``. This includes
 configuration of the loaded layouts from
 ``org.gnome.desktop.input-sources`` via the ``sources`` and
@@ -189,6 +190,7 @@ patterns without having to modify ``phosh-osk-stub`` itself.
 You need to restart ``phosh-osk-stub`` for the new command to become
 active. A commonly used executable is swipeGuess: https://git.sr.ht/~earboxer/swipeGuess
 
+
 TEXT COMPLETION USING VARNAM
 ****************************
 
@@ -247,6 +249,18 @@ connected hardware keyboard. To make it show nevertheless use
    gsettings set sm.puri.phosh.osk ignore-hw-keyboards false
 
 
+KEY PRESS
+^^^^^^^^^
+
+By default moving the finger while pressing a character will cancel
+the gesture and not input it. This can be changed by enabling
+`key-drag`:
+
+::
+
+   gsettings set sm.puri.phosh.osk osk-features "['key-drag']"
+
+
 ENVIRONMENT VARIABLES
 ---------------------
 
@@ -265,7 +279,20 @@ ENVIRONMENT VARIABLES
 - ``GTK_DEBUG`` and other environment variables supported by GTK, see
   https://docs.gtk.org/gtk3/running.html
 
+
+EXAMPLES
+--------
+
+Use ``swipeGuess`` for swipe input:
+
+::
+
+   gsettings set sm.puri.phosh.osk.Completers default pipe
+   gsettings set sm.puri.phosh.osk.Completers.Pipe command "swipeGuess /usr/local/share/swipeGuess/words/words-qwerty-en"
+   gsettings set sm.puri.phosh.osk osk-features "['key-drag']"
+
+
 See also
 --------
 
-``phosh(1)`` ``squeekboard(1)`` ``text2ngram(1)`` ``gsettings(1)`` ``hunspell(5)``
+``phosh(1)`` ``squeekboard(1)`` ``text2ngram(1)`` ``gsettings(1)`` ``hunspell(5)`` ``swipeGuess(1)``

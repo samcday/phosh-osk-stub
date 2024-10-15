@@ -4,7 +4,7 @@
 #
 # Author: Guido Günther <agx@sigxcpu.org>
 #
-# Add info about available layouts
+# Add info about available completers
 
 import argparse
 import glob

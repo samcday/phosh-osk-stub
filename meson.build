@@ -128,11 +128,17 @@ else
 endif
 varnam_dep = dependency('govarnam', required: false)
 
+completers = []
+if presage_dep.found()
+  default_completer = 'presage'
+  completers += ['presage']
+endif
 if hunspell_dep.found()
   default_completer = 'hunspell'
-elif presage_dep.found()
-  default_completer = 'presage'
-else
+  completers += ['hunspell']
+endif
+
+if completers.length() == 0
   error('No usable completer found')
 endif
 
@@ -200,6 +206,5 @@ summary({
 if meson.version().version_compare('>=0.59.0')
   gnome.post_install(
     glib_compile_schemas: true,
-    gtk_update_icon_cache: true,
   )
 endif
