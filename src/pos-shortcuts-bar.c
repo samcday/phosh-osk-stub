@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2022 Guido Günther
+ * Copyright (C) 2022-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Author: Guido Günther <agx@sigxcpu.org>
  */
 
 #define G_LOG_DOMAIN "pos-shortcuts-bar"
@@ -14,6 +16,7 @@
 
 enum {
   PROP_0,
+  PROP_LATCHED_MODIFIERS,
   PROP_NUM_SHORTCUTS,
   PROP_LAST_PROP,
 };
@@ -36,16 +39,22 @@ G_DEFINE_BOXED_TYPE (PosShortcut, pos_shortcut, pos_shortcut_ref, pos_shortcut_u
 /**
  * PosShortcutsBar:
  *
- * ShortcutsBar stored in gsettings
+ * The shortcuts bar contains buttons that emit key combinations (like `<ctrl>c`). These
+ * can be configured via GSettings.
+ *
+ * If a combination is only a modifier like `<ctrl>` or `<alt>` then a toggle button is
+ * used to allow for latched modifiers.
  */
+
 typedef struct _PosShortcutsBar
 {
-  GtkBox       parent;
+  GtkBox           parent;
 
-  GtkFlowBox  *shortcuts_box;
-  guint        n_shortcuts;
+  GtkFlowBox      *shortcuts_box;
+  guint            n_shortcuts;
+  GdkModifierType  latched;
 
-  GSettings   *settings;
+  GSettings       *settings;
 } PosShortcutsBar;
 
 G_DEFINE_TYPE (PosShortcutsBar, pos_shortcuts_bar, GTK_TYPE_BOX);
@@ -112,10 +121,41 @@ on_btn_clicked (PosShortcutsBar *self, GtkButton *btn)
 }
 
 
+static void
+on_toggle_btn_active_changed (PosShortcutsBar *self, GParamSpec *pspec, GtkToggleButton *btn)
+{
+  PosShortcut *shortcut;
+  gboolean active;
+
+  g_assert (POS_IS_SHORTCUTS_BAR (self));
+
+  active = gtk_toggle_button_get_active (btn);
+  shortcut = g_object_get_data (G_OBJECT (btn), "pos-shortcut");
+  g_assert (shortcut);
+
+  if (active)
+    self->latched |= shortcut->modifiers;
+  else
+    self->latched &= ~shortcut->modifiers;
+
+  g_object_notify_by_pspec (G_OBJECT (self), props[PROP_LATCHED_MODIFIERS]);
+}
+
+
 static char *
 pos_accelerator_get_label (PosShortcut *shortcut)
 {
   char *label = NULL;
+
+  if (shortcut->key == 0) {
+    if (shortcut->modifiers == GDK_CONTROL_MASK)
+      label = "Ctrl";
+    else if (shortcut->modifiers == GDK_MOD1_MASK)
+      label = "Alt";
+
+    if (label)
+      return g_strdup (label);
+  }
 
   if (shortcut->modifiers)
     return NULL;
@@ -180,14 +220,27 @@ on_shortcuts_changed (PosShortcutsBar *self,
       }
     }
 
-    g_debug ("Adding shortcut: '%s'", shortcut->name);
-    btn = gtk_button_new_with_label (shortcut->name);
     child = gtk_flow_box_child_new ();
-    g_object_set_data_full (G_OBJECT (btn), "pos-shortcut",
-                            g_steal_pointer (&shortcut),
-                            (GDestroyNotify)pos_shortcut_unref);
-    g_signal_connect_swapped (btn, "clicked", G_CALLBACK (on_btn_clicked), self);
-    gtk_container_add (GTK_CONTAINER (child), btn);
+    if (shortcut->key) {
+      g_debug ("Adding shortcut: '%s'", shortcut->name);
+      btn = gtk_button_new_with_label (shortcut->name);
+      g_object_set_data_full (G_OBJECT (btn), "pos-shortcut",
+                              g_steal_pointer (&shortcut),
+                              (GDestroyNotify)pos_shortcut_unref);
+      g_signal_connect_swapped (btn, "clicked", G_CALLBACK (on_btn_clicked), self);
+      gtk_container_add (GTK_CONTAINER (child), btn);
+    } else {
+      g_debug ("Adding modifier: '%s'", shortcut->name);
+      btn = gtk_toggle_button_new_with_label (shortcut->name);
+      g_object_set_data_full (G_OBJECT (btn), "pos-shortcut",
+                              g_steal_pointer (&shortcut),
+                              (GDestroyNotify)pos_shortcut_unref);
+      g_signal_connect_swapped (btn,
+                                "notify::active",
+                                G_CALLBACK (on_toggle_btn_active_changed),
+                                self);
+      gtk_container_add (GTK_CONTAINER (child), btn);
+    }
     gtk_widget_show_all (child);
     gtk_flow_box_insert (self->shortcuts_box, child, -1);
   }
@@ -211,6 +264,9 @@ pos_shortcuts_bar_get_property (GObject    *object,
   switch (property_id) {
   case PROP_NUM_SHORTCUTS:
     g_value_set_uint (value, pos_shortcuts_bar_get_num_shortcuts (self));
+    break;
+  case PROP_LATCHED_MODIFIERS:
+    g_value_set_flags (value, self->latched);
     break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -250,6 +306,17 @@ pos_shortcuts_bar_class_init (PosShortcutsBarClass *klass)
                        G_MAXUINT,
                        0,
                        G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  /**
+   * PosShortcutsBar:latched-modifiers
+   *
+   * Currently latched modifiers. This only takes effect when there are modifier keys
+   * like plain `Ctrl` or `Alt` added to the shortcuts bar.
+   */
+  props[PROP_LATCHED_MODIFIERS] =
+    g_param_spec_flags ("latched-modifiers", "", "",
+                        GDK_TYPE_MODIFIER_TYPE,
+                        0,
+                        G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, PROP_LAST_PROP, props);
 
@@ -303,4 +370,43 @@ pos_shortcuts_bar_get_num_shortcuts (PosShortcutsBar *self)
   g_return_val_if_fail (POS_IS_SHORTCUTS_BAR (self), 0);
 
   return self->n_shortcuts;
+}
+
+GdkModifierType
+pos_shortcuts_bar_get_latched_modifiers (PosShortcutsBar *self)
+{
+  g_return_val_if_fail (POS_IS_SHORTCUTS_BAR (self), 0);
+
+  return self->latched;
+}
+
+
+static void
+unlatch_modifiers (GtkWidget *widget)
+{
+  PosShortcut *shortcut;
+  GtkWidget *child;
+
+  g_return_if_fail (GTK_IS_FLOW_BOX_CHILD (widget));
+
+  child = gtk_bin_get_child (GTK_BIN (widget));
+  if (!GTK_IS_TOGGLE_BUTTON (child))
+    return;
+
+  shortcut = g_object_get_data (G_OBJECT (child), "pos-shortcut");
+  g_return_if_fail (shortcut);
+  g_return_if_fail (!shortcut->key);
+
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (child), FALSE);
+}
+
+
+void
+pos_shortcuts_bar_unlatch_modifiers (PosShortcutsBar *self)
+{
+  g_return_if_fail (POS_IS_SHORTCUTS_BAR (self));
+
+  gtk_container_foreach (GTK_CONTAINER (self->shortcuts_box),
+                         (GtkCallback) unlatch_modifiers,
+                         NULL);
 }

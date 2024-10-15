@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Guido Günther
+ * Copyright (C) 2022-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
@@ -29,6 +29,7 @@ G_DECLARE_FINAL_TYPE (PosShortcutsBar, pos_shortcuts_bar, POS, SHORTCUTS_BAR, Gt
 
 PosShortcutsBar    *pos_shortcuts_bar_new (void);
 guint               pos_shortcuts_bar_get_num_shortcuts (PosShortcutsBar *self);
-
+GdkModifierType     pos_shortcuts_bar_get_latched_modifiers (PosShortcutsBar *self);
+void                pos_shortcuts_bar_unlatch_modifiers (PosShortcutsBar *self);
 
 G_END_DECLS

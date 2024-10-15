@@ -138,6 +138,11 @@ pos-shortcuts-bar button:active {
   background: shade(@pos_key_bg_color, 0.8);
 }
 
+/* Modifier button */
+pos-shortcuts-bar button.toggle:checked {
+  background: shade(@pos_key_bg_color, 0.6);
+}
+
 pos-shortcuts-bar scrollbar {
   background-color: transparent;
   border: none;
