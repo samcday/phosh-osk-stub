@@ -492,18 +492,6 @@ on_osk_popover_hidden (PosInputSurface *self)
 
 
 static void
-clipboard_copy_activated (GSimpleAction *action,
-                          GVariant      *parameter,
-                          gpointer       data)
-{
-  PosInputSurface *self = POS_INPUT_SURFACE (data);
-
-  pos_vk_driver_key_down (self->keyboard_driver, "c", POS_KEYCODE_MODIFIER_CTRL);
-  pos_vk_driver_key_up (self->keyboard_driver, "c");
-}
-
-
-static void
 clipboard_paste_activated (GSimpleAction *action,
                            GVariant      *parameter,
                            gpointer       data)
@@ -1819,7 +1807,6 @@ on_completion_mode_changed (PosInputSurface *self, const char *key, GSettings *s
 
 static GActionEntry entries[] =
 {
-  { .name = "clipboard-copy", .activate = clipboard_copy_activated },
   { .name = "clipboard-paste", .activate = clipboard_paste_activated },
   { .name = "settings", .activate = settings_activated },
   { .name = "select-layout", .parameter_type = "s", .state = "\"terminal\"",
