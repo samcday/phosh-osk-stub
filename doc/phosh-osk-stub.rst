@@ -221,6 +221,8 @@ terminal layout. These are configured via the ``shortcuts`` GSetting
   gsettings set sm.puri.phosh.osk.Terminal shortcuts "['<ctrl>a', '<ctrl>e', '<ctrl>r']"
 
 For valid values see documentation of `gtk_accelerator_parse()`: https://docs.gtk.org/gtk3/func.accelerator_parse.html
+One can also add plain ``<ctrl>`` and ``<alt>`` keys. These then act as latched keys
+until the next regular key is pressed.
 
 IGNORING ACTIVATION
 ^^^^^^^^^^^^^^^^^^^
