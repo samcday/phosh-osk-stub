@@ -118,7 +118,7 @@ pos_accelerator_get_label (PosShortcut *shortcut)
   char *label = NULL;
 
   if (shortcut->modifiers)
-    return FALSE;
+    return NULL;
 
   switch (shortcut->key) {
   case GDK_KEY_Down:
