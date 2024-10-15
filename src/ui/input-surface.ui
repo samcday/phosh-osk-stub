@@ -23,6 +23,7 @@
               <object class="PosShortcutsBar" id="shortcuts_bar">
                 <property name="visible">False</property>
                 <signal name="shortcut-activated" handler="on_shortcut_activated" object="PosInputSurface" swapped="yes"/>
+                <signal name="notify::latched-modifiers" handler="on_latched_modifiers_changed" object="PosInputSurface" swapped="yes"/>
                 <signal name="notify::num-shortcuts" handler="on_num_shortcuts_changed" object="PosInputSurface" swapped="yes"/>
               </object>
             </child>
