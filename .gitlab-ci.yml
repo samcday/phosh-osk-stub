@@ -1,14 +1,15 @@
+---
 include:
- - project: 'guidog/meta-phosh'
-   ref: '5e3667e2e4d3f23a5dcadaa2a4aadc8824a9e565'
-   file: '/ci/phosh-common-jobs.yml'
- - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/6a40df92957c8ce9ee741aaccc5daaaf70545b1e/templates/ci-fairy.yml'
+  - project: 'guidog/meta-phosh'
+    ref: '5e3667e2e4d3f23a5dcadaa2a4aadc8824a9e565'
+    file: '/ci/phosh-common-jobs.yml'
+  - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/6a40df92957c8ce9ee741aaccc5daaaf70545b1e/templates/ci-fairy.yml'
 
 stages:
- - build
- - test+docs
- - style-checks
- - deploy
+  - build
+  - test+docs
+  - style-checks
+  - deploy
 
 default:
   # Protect CI infra from rogue jobs
@@ -47,7 +48,7 @@ variables:
 .trixie_vars: &trixie_vars
   variables:
     DIST: trixie
-    BUILD_OPTS:  ${COMMON_BUILD_OPTS}
+    BUILD_OPTS: ${COMMON_BUILD_OPTS}
 
 .trixie_prep: &trixie_prep
   before_script:
