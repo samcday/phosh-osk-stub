@@ -383,7 +383,7 @@ add_emoji (GtkWidget      *box,
 static GBytes *
 get_emoji_data (void)
 {
-  return g_resources_lookup_data ("/sm/puri/phosh/osk-stub/emoji/en.data", 0, NULL);
+  return g_resources_lookup_data ("/mobi/phosh/osk-stub/emoji/en.data", 0, NULL);
 }
 
 static gboolean
@@ -682,7 +682,7 @@ pos_emoji_picker_class_init (PosEmojiPickerClass *klass)
                   G_TYPE_NONE, 0);
 
   gtk_widget_class_set_template_from_resource (widget_class,
-                                               "/sm/puri/phosh/osk-stub/ui/emoji-picker.ui");
+                                               "/mobi/phosh/osk-stub/ui/emoji-picker.ui");
 
   gtk_widget_class_bind_template_child (widget_class, PosEmojiPicker, scrolled_window);
   gtk_widget_class_bind_template_child (widget_class, PosEmojiPicker, scrolled_sections);

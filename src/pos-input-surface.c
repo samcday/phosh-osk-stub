@@ -385,9 +385,9 @@ on_gtk_theme_name_changed (PosInputSurface *self, GParamSpec *pspec, GtkSettings
   }
 
   if (g_strcmp0 (self->theme_name, "HighContrast") == 0)
-    style = "/sm/puri/phosh/osk-stub/stylesheet/adwaita-hc-light.css";
+    style = "/mobi/phosh/osk-stub/stylesheet/adwaita-hc-light.css";
   else
-    style = "/sm/puri/phosh/osk-stub/stylesheet/adwaita-dark.css";
+    style = "/mobi/phosh/osk-stub/stylesheet/adwaita-dark.css";
 
   gtk_css_provider_load_from_resource (provider, style);
   gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
@@ -1487,7 +1487,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   g_type_ensure (POS_TYPE_SHORTCUTS_BAR);
 
   gtk_widget_class_set_template_from_resource (widget_class,
-                                               "/sm/puri/phosh/osk-stub/ui/input-surface.ui");
+                                               "/mobi/phosh/osk-stub/ui/input-surface.ui");
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, completion_bar);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, emoji_picker);
