@@ -24,6 +24,7 @@
 #include "pos-osk-widget.h"
 #include "pos-settings-panel.h"
 #include "pos-shortcuts-bar.h"
+#include "pos-style-manager.h"
 #include "pos-vk-driver.h"
 #include "pos-virtual-keyboard.h"
 #include "pos-vk-driver.h"
@@ -121,8 +122,7 @@ struct _PosInputSurface {
   /* TODO: this should be an interface for different keyboard drivers */
   PosVkDriver             *keyboard_driver;
 
-  GtkCssProvider          *css_provider;
-  char                    *theme_name;
+  PosStyleManager         *style_manager;
 
   /* menu popover */
   GtkBox                  *menu_box_layouts;
@@ -359,41 +359,6 @@ pos_input_surface_submit_current_preedit (PosInputSurface *self)
   pos_completer_set_preedit (self->completer, NULL);
   pos_input_method_send_preedit (self->input_method, "", 0, 0, FALSE);
   pos_input_method_send_string (self->input_method, preedit, TRUE);
-}
-
-
-/* Select proper style sheet in case of high contrast */
-static void
-on_gtk_theme_name_changed (PosInputSurface *self, GParamSpec *pspec, GtkSettings *settings)
-{
-  const char *style;
-  g_autofree char *name = NULL;
-
-  g_autoptr (GtkCssProvider) provider = gtk_css_provider_new ();
-
-  g_object_get (settings, "gtk-theme-name", &name, NULL);
-
-  if (g_strcmp0 (self->theme_name, name) == 0)
-    return;
-
-  self->theme_name = g_steal_pointer (&name);
-  g_debug ("GTK theme: %s", self->theme_name);
-
-  if (self->css_provider) {
-    gtk_style_context_remove_provider_for_screen (gdk_screen_get_default (),
-                                                  GTK_STYLE_PROVIDER (self->css_provider));
-  }
-
-  if (g_strcmp0 (self->theme_name, "HighContrast") == 0)
-    style = "/mobi/phosh/osk-stub/stylesheet/adwaita-hc-light.css";
-  else
-    style = "/mobi/phosh/osk-stub/stylesheet/adwaita-dark.css";
-
-  gtk_css_provider_load_from_resource (provider, style);
-  gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
-                                             GTK_STYLE_PROVIDER (provider),
-                                             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  g_set_object (&self->css_provider, provider);
 }
 
 
@@ -1314,12 +1279,11 @@ pos_input_surface_finalize (GObject *object)
   g_clear_object (&self->input_settings);
   g_clear_object (&self->osk_settings);
   g_clear_object (&self->xkbinfo);
-  g_clear_object (&self->css_provider);
   g_clear_object (&self->clipboard_manager);
   g_clear_object (&self->completer);
   g_clear_object (&self->completer_manager);
   g_clear_object (&self->swipe_down);
-  g_clear_pointer (&self->theme_name, g_free);
+  g_clear_object (&self->style_manager);
   g_clear_pointer (&self->osks, g_hash_table_destroy);
 
   G_OBJECT_CLASS (pos_input_surface_parent_class)->finalize (object);
@@ -1854,13 +1818,13 @@ static GActionEntry entries[] =
 static void
 pos_input_surface_init (PosInputSurface *self)
 {
-  GtkSettings *gtk_settings;
   g_autoptr (GPropertyAction) completion_action = NULL;
   g_autoptr (GError) err = NULL;
   GAction *action;
 
   gtk_widget_init_template (GTK_WIDGET (self));
 
+  self->style_manager = pos_style_manager_new ();
   self->action_map = g_simple_action_group_new ();
   g_action_map_add_action_entries (G_ACTION_MAP (self->action_map),
                                    entries,
@@ -1901,13 +1865,6 @@ pos_input_surface_init (PosInputSurface *self)
                                   &err)) {
     g_warning ("Failed to set terminal layout: %s", err->message);
   }
-
-  gtk_settings = gtk_settings_get_default ();
-  g_object_set (G_OBJECT (gtk_settings), "gtk-application-prefer-dark-theme", TRUE, NULL);
-
-  g_signal_connect_swapped (gtk_settings, "notify::gtk-theme-name",
-                            G_CALLBACK (on_gtk_theme_name_changed), self);
-  on_gtk_theme_name_changed (self, NULL, gtk_settings);
 
   self->clicked_id = g_signal_add_emission_hook (g_signal_lookup ("clicked", GTK_TYPE_BUTTON), 0,
                                                  on_click_hook, self, NULL);
