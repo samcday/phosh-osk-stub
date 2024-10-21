@@ -191,3 +191,12 @@ pos-emoji-picker scrollbar {
   border: none;
   transition: none;
 }
+
+/* Unset GTK defaults */
+modelbutton check:checked,
+modelbutton radio:active,
+modelbutton radio:checked {
+  background-color: @theme_selected_bg_color;
+  background-image: none;
+  border-color: @theme_selected_bg_color;
+}
