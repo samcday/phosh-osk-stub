@@ -2,7 +2,7 @@ include:
  - project: 'guidog/meta-phosh'
    ref: '5e3667e2e4d3f23a5dcadaa2a4aadc8824a9e565'
    file: '/ci/phosh-common-jobs.yml'
- - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/34039cd573a2df832d465bc9e4c5f543571f5241/templates/ci-fairy.yml'
+ - remote: 'https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/6a40df92957c8ce9ee741aaccc5daaaf70545b1e/templates/ci-fairy.yml'
 
 stages:
  - build
@@ -74,13 +74,16 @@ sanity:
   extends:
     - .fdo.ci-fairy
   stage: style-checks
+  variables:
+    GIT_DEPTH: "100"
+  needs: []
   script: |
-    ci-fairy check-commits --junit-xml=commit-message-junit-report.xml cifairy/main..HEAD ;
+    ci-fairy check-commits --signed-off-by --junit-xml=commit-message-junit-report.xml
   artifacts:
     reports:
       junit: commit-message-junit-report.xml
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME'
 
 build:native-debian-trixie:
   stage: build
