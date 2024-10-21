@@ -68,6 +68,8 @@ libpos_sources = files(
   'pos-shortcuts-bar.c',
   'pos-settings-panel.h',
   'pos-settings-panel.c',
+  'pos-style-manager.h',
+  'pos-style-manager.c',
   'pos-vk-driver.h',
   'pos-vk-driver.c',
   'pos-virtual-keyboard.h',

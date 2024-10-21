@@ -10,14 +10,14 @@
 
 G_BEGIN_DECLS
 
-#define PHOSH_TYPE_STYLE_MANAGER (phosh_style_manager_get_type ())
+#define POS_TYPE_STYLE_MANAGER (pos_style_manager_get_type ())
 
-G_DECLARE_FINAL_TYPE (PhoshStyleManager, phosh_style_manager, PHOSH, STYLE_MANAGER, GObject)
+G_DECLARE_FINAL_TYPE (PosStyleManager, pos_style_manager, POS, STYLE_MANAGER, GObject)
 
-PhoshStyleManager *phosh_style_manager_new (void);
-const char        *phosh_style_manager_get_theme_name (PhoshStyleManager *self);
-gboolean           phosh_style_manager_is_high_contrast (PhoshStyleManager *self);
+PosStyleManager   *pos_style_manager_new (void);
+const char        *pos_style_manager_get_theme_name (PosStyleManager *self);
+gboolean           pos_style_manager_is_high_contrast (PosStyleManager *self);
 
-const char        *phosh_style_manager_get_stylesheet (const char *theme_name);
+const char        *pos_style_manager_get_stylesheet (const char *theme_name);
 
 G_END_DECLS

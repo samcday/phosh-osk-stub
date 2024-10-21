@@ -6,11 +6,11 @@
  * Author: Guido Günther <agx@sigxcpu.org>
  */
 
-#define G_LOG_DOMAIN "phosh-style-manager"
+#define G_LOG_DOMAIN "pos-style-manager"
 
-#include "phosh-config.h"
+#include "pos-config.h"
 
-#include "style-manager.h"
+#include "pos-style-manager.h"
 #include "util.h"
 
 #include <gtk/gtk.h>
@@ -32,7 +32,7 @@
 #define ACCENT_COLOR_FOREGROUND "#ffffff"
 
 /**
- * PhoshStyleManager:
+ * PosStyleManager:
  *
  * The style manager is responsible for picking style sheets and
  * themes and notifying other parts of the shell about changes.
@@ -46,7 +46,7 @@ enum {
 static GParamSpec *props[PROP_LAST_PROP];
 
 
-struct _PhoshStyleManager {
+struct _PosStyleManager {
   GObject         parent;
 
   char           *theme_name;
@@ -55,11 +55,11 @@ struct _PhoshStyleManager {
 
   GSettings      *interface_settings;
 };
-G_DEFINE_TYPE (PhoshStyleManager, phosh_style_manager, G_TYPE_OBJECT)
+G_DEFINE_TYPE (PosStyleManager, pos_style_manager, G_TYPE_OBJECT)
 
 
 static void
-on_accent_color_changed (PhoshStyleManager *self)
+on_accent_color_changed (PosStyleManager *self)
 {
   const char *color;
   g_autofree char *css  = NULL;
@@ -119,7 +119,7 @@ on_accent_color_changed (PhoshStyleManager *self)
 
 
 static void
-on_gtk_theme_name_changed (PhoshStyleManager *self, GParamSpec *pspec, GtkSettings *settings)
+on_gtk_theme_name_changed (PosStyleManager *self, GParamSpec *pspec, GtkSettings *settings)
 {
   const char *style;
   g_autofree char *name = NULL;
@@ -138,7 +138,7 @@ on_gtk_theme_name_changed (PhoshStyleManager *self, GParamSpec *pspec, GtkSettin
                                                   GTK_STYLE_PROVIDER (self->css_provider));
   }
 
-  style = phosh_style_manager_get_stylesheet (self->theme_name);
+  style = pos_style_manager_get_stylesheet (self->theme_name);
 
   gtk_css_provider_load_from_resource (provider, style);
   gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
@@ -154,12 +154,12 @@ on_gtk_theme_name_changed (PhoshStyleManager *self, GParamSpec *pspec, GtkSettin
 
 
 static void
-phosh_style_manager_get_property (GObject    *object,
+pos_style_manager_get_property (GObject    *object,
                                   guint       property_id,
                                   GValue     *value,
                                   GParamSpec *pspec)
 {
-  PhoshStyleManager *self = PHOSH_STYLE_MANAGER (object);
+  PosStyleManager *self = POS_STYLE_MANAGER (object);
 
   switch (property_id) {
   case PROP_THEME_NAME:
@@ -173,9 +173,9 @@ phosh_style_manager_get_property (GObject    *object,
 
 
 static void
-phosh_style_manager_dispose (GObject *object)
+pos_style_manager_dispose (GObject *object)
 {
-  PhoshStyleManager *self = PHOSH_STYLE_MANAGER (object);
+  PosStyleManager *self = POS_STYLE_MANAGER (object);
 
   g_clear_pointer (&self->theme_name, g_free);
   g_clear_object (&self->css_provider);
@@ -183,17 +183,17 @@ phosh_style_manager_dispose (GObject *object)
 
   g_clear_object (&self->interface_settings);
 
-  G_OBJECT_CLASS (phosh_style_manager_parent_class)->dispose (object);
+  G_OBJECT_CLASS (pos_style_manager_parent_class)->dispose (object);
 }
 
 
 static void
-phosh_style_manager_class_init (PhoshStyleManagerClass *klass)
+pos_style_manager_class_init (PosStyleManagerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->get_property = phosh_style_manager_get_property;
-  object_class->dispose = phosh_style_manager_dispose;
+  object_class->get_property = pos_style_manager_get_property;
+  object_class->dispose = pos_style_manager_dispose;
 
   props[PROP_THEME_NAME] =
     g_param_spec_string ("theme-name", "", "",
@@ -205,7 +205,7 @@ phosh_style_manager_class_init (PhoshStyleManagerClass *klass)
 
 
 static void
-phosh_style_manager_init (PhoshStyleManager *self)
+pos_style_manager_init (PosStyleManager *self)
 {
   GtkSettings *gtk_settings = gtk_settings_get_default ();
 
@@ -225,33 +225,33 @@ phosh_style_manager_init (PhoshStyleManager *self)
 }
 
 
-PhoshStyleManager *
-phosh_style_manager_new (void)
+PosStyleManager *
+pos_style_manager_new (void)
 {
-  return g_object_new (PHOSH_TYPE_STYLE_MANAGER, NULL);
+  return g_object_new (POS_TYPE_STYLE_MANAGER, NULL);
 }
 
 /**
- * phosh_style_manager_get_stylesheet:
+ * pos_style_manager_get_stylesheet:
  * @theme_name: A theme name
  *
  * Get the proper style sheet based on the given theme name
  */
 const char *
-phosh_style_manager_get_stylesheet (const char *theme_name)
+pos_style_manager_get_stylesheet (const char *theme_name)
 {
   const char *style;
 
   if (g_strcmp0 (theme_name, "HighContrast") == 0)
-    style = "/sm//phosh/stylesheet/adwaita-hc-light.css";
+    style = "/mobi/phosh/osk-stub/stylesheet/adwaita-hc-light.css";
   else
-    style = "/sm/puri/phosh/stylesheet/adwaita-dark.css";
+    style = "/mobi/phosh/osk-stub/stylesheet/adwaita-dark.css";
 
   return style;
 }
 
 /**
- * phosh_style_manager_get_theme_name:
+ * pos_style_manager_get_theme_name:
  * @self; The style manager
  *
  * Get the current theme manem
@@ -259,15 +259,15 @@ phosh_style_manager_get_stylesheet (const char *theme_name)
  * Returns: The theme name
  */
 const char *
-phosh_style_manager_get_theme_name (PhoshStyleManager *self)
+pos_style_manager_get_theme_name (PosStyleManager *self)
 {
-  g_return_val_if_fail (PHOSH_IS_STYLE_MANAGER (self), NULL);
+  g_return_val_if_fail (POS_IS_STYLE_MANAGER (self), NULL);
 
   return self->theme_name;
 }
 
 /**
- * phosh_style_manager_is_high_contrast:
+ * pos_style_manager_is_high_contrast:
  * @self; The style manager
  *
  * Get the current theme manem
@@ -275,9 +275,9 @@ phosh_style_manager_get_theme_name (PhoshStyleManager *self)
  * Returns: The theme name
  */
 gboolean
-phosh_style_manager_is_high_contrast (PhoshStyleManager *self)
+pos_style_manager_is_high_contrast (PosStyleManager *self)
 {
-  g_return_val_if_fail (PHOSH_IS_STYLE_MANAGER (self), FALSE);
+  g_return_val_if_fail (POS_IS_STYLE_MANAGER (self), FALSE);
 
   return g_strcmp0 (self->theme_name, "HighContrast") == 0;
 }
