@@ -56,6 +56,8 @@
           path='/sm/puri/phosh/osk/terminal/'>
     <key name='shortcuts' type='as'>
       <default>[
+        <!-- modifiers -->
+        '&lt;ctrl&gt;', '&lt;alt&gt;',
         <!-- shell navigation and search -->
         '&lt;ctrl&gt;r', 'Home', 'End', '&lt;ctrl&gt;w', '&lt;alt&gt;b', '&lt;alt&gt;f',
         <!-- copy / paste -->

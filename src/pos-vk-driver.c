@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2022 Purism SPC
+ *               2023-2024 The Phosh Developers
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  *
@@ -568,6 +569,8 @@ pos_vk_driver_key_down (PosVkDriver *self, const char *key, PosKeycodeModifier m
     vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_SHIFT;
   if (modifiers & POS_KEYCODE_MODIFIER_CTRL)
     vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_CTRL;
+  if (modifiers & POS_KEYCODE_MODIFIER_ALT)
+    vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALT;
   if (modifiers & POS_KEYCODE_MODIFIER_ALTGR)
     vk_modifiers |= POS_VIRTUAL_KEYBOARD_MODIFIERS_ALTGR;
 
@@ -783,4 +786,19 @@ pos_vk_driver_set_overlay_keymap (PosVkDriver *self, const char *const *symbols)
 
   g_clear_pointer (&self->layout_id, g_free);
   pos_virtual_keyboard_set_keymap (self->virtual_keyboard, keymap_str);
+}
+
+
+PosKeycodeModifier
+pos_vk_driver_convert_modifiers (PosVkDriver *self, GdkModifierType gdk_modifier)
+{
+  PosKeycodeModifier modifier = POS_KEYCODE_MODIFIER_NONE;
+
+  if (gdk_modifier & GDK_CONTROL_MASK)
+    modifier |= POS_KEYCODE_MODIFIER_CTRL;
+
+  if (gdk_modifier & GDK_MOD1_MASK)
+    modifier |= POS_KEYCODE_MODIFIER_ALT;
+
+  return modifier;
 }

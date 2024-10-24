@@ -116,6 +116,7 @@ struct _PosInputSurface {
   GtkWidget               *last_layout;
   PosShortcutsBar         *shortcuts_bar;
   PhoshOskFeatures         osk_features;
+  GdkModifierType          latched_modifiers;
 
   /* TODO: this should be an interface for different keyboard drivers */
   PosVkDriver             *keyboard_driver;
@@ -174,6 +175,14 @@ on_swipe (GtkGestureSwipe *swipe, double velocity_x, double velocity_y, gpointer
   }
 }
 
+
+static void
+pos_input_surface_unlatch_modifiers (PosInputSurface *self)
+{
+  pos_shortcuts_bar_unlatch_modifiers (self->shortcuts_bar);
+}
+
+
 static void
 on_shortcut_activated (PosInputSurface *self, PosShortcut *shortcut, PosShortcutsBar *bar)
 {
@@ -182,7 +191,20 @@ on_shortcut_activated (PosInputSurface *self, PosShortcut *shortcut, PosShortcut
 
   pos_vk_driver_key_press_gdk (self->keyboard_driver,
                                pos_shortcut_get_key (shortcut),
-                               pos_shortcut_get_modifiers (shortcut));
+                               pos_shortcut_get_modifiers (shortcut) | self->latched_modifiers);
+  pos_input_surface_unlatch_modifiers (self);
+}
+
+
+static void
+on_latched_modifiers_changed (PosInputSurface *self, GParamSpec *pspec, PosShortcutsBar *bar)
+{
+  g_return_if_fail (POS_IS_INPUT_SURFACE (self));
+  g_return_if_fail (POS_IS_SHORTCUTS_BAR (bar));
+
+  self->latched_modifiers = pos_shortcuts_bar_get_latched_modifiers (bar);
+
+  g_debug ("Modifiers: 0x%x", self->latched_modifiers);
 }
 
 
@@ -395,6 +417,16 @@ on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_wid
 
   g_debug ("Key: '%s' symbol", symbol);
 
+  /* Latched modifiers, send as virtual-keyboard */
+  if (self->latched_modifiers) {
+    PosKeycodeModifier modifier;
+
+    modifier = pos_vk_driver_convert_modifiers (self->keyboard_driver, self->latched_modifiers);
+    pos_vk_driver_key_down (self->keyboard_driver, symbol, modifier);
+    pos_vk_driver_key_up (self->keyboard_driver, symbol);
+    pos_input_surface_unlatch_modifiers (self);
+    return;
+  }
   /* virtual-keyboard, no input method */
   if (!pos_input_method_get_active (self->input_method)) {
     pos_vk_driver_key_down (self->keyboard_driver, symbol, POS_KEYCODE_MODIFIER_NONE);
@@ -488,18 +520,6 @@ on_osk_popover_hidden (PosInputSurface *self)
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
 
   set_keymap_delayed (self);
-}
-
-
-static void
-clipboard_copy_activated (GSimpleAction *action,
-                          GVariant      *parameter,
-                          gpointer       data)
-{
-  PosInputSurface *self = POS_INPUT_SURFACE (data);
-
-  pos_vk_driver_key_down (self->keyboard_driver, "c", POS_KEYCODE_MODIFIER_CTRL);
-  pos_vk_driver_key_up (self->keyboard_driver, "c");
 }
 
 
@@ -702,6 +722,9 @@ select_layout_change_state (GSimpleAction *action,
 
   /* popdown popover right away to avoid flicker when switching layouts */
   gtk_popover_popdown (self->menu_popup);
+
+  /* reset all letched modifiers */
+  pos_input_surface_unlatch_modifiers (self);
 
   g_variant_get (parameter, "&s", &layout);
   g_debug ("Layout '%s' selected", layout);
@@ -1477,6 +1500,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_callback (widget_class, on_emoji_picked);
   gtk_widget_class_bind_template_callback (widget_class, on_emoji_picker_done);
   gtk_widget_class_bind_template_callback (widget_class, on_emoji_picker_delete_last);
+  gtk_widget_class_bind_template_callback (widget_class, on_latched_modifiers_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_num_shortcuts_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_symbol);
@@ -1819,7 +1843,6 @@ on_completion_mode_changed (PosInputSurface *self, const char *key, GSettings *s
 
 static GActionEntry entries[] =
 {
-  { .name = "clipboard-copy", .activate = clipboard_copy_activated },
   { .name = "clipboard-paste", .activate = clipboard_paste_activated },
   { .name = "settings", .activate = settings_activated },
   { .name = "select-layout", .parameter_type = "s", .state = "\"terminal\"",
