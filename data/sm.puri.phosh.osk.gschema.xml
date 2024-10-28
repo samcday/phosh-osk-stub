@@ -61,7 +61,7 @@
         <!-- shell navigation and search -->
         '&lt;ctrl&gt;r', 'Home', 'End', '&lt;ctrl&gt;w', '&lt;alt&gt;b', '&lt;alt&gt;f',
         <!-- copy / paste -->
-        '&lt;ctrl&gt;v', '&lt;ctrl&gt;c',  '&lt;ctrl&gt;&lt;shift&gt;v', '&lt;ctrl&gt;&lt;shift&gt;c'
+        '&lt;ctrl&gt;v', '&lt;ctrl&gt;c',  '&lt;ctrl&gt;&lt;shift&gt;v', '&lt;ctrl&gt;&lt;shift&gt;c', 'Menu'
       ]</default>
       <summary>Shotcuts for terminal layout</summary>
       <description/>
