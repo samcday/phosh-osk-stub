@@ -1,7 +1,7 @@
 @define-color pos_key_fg_color shade(@theme_fg_color, 1.1);
 @define-color pos_key_bg_color mix(@theme_bg_color, @theme_fg_color, 0.3);
 @define-color pos_fg_color @theme_fg_color;
-@define-color pos_bg_color @theme_bg_color;
+@define-color pos_bg_color #242424;
 
 @import url("resource:///sm/puri/phosh/osk-stub/stylesheet/common.css");
 
