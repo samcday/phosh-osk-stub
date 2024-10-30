@@ -9,6 +9,7 @@ Build-Depends:
  libfeedback-dev,
  gi-docgen <!nodoc>,
  gobject-introspection <!nodoc>,
+ gsettings-desktop-schemas-dev (>= 47),
  libgmobile-dev,
  libgnome-desktop-3-dev,
  libgirepository1.0-dev <!nodoc>,
@@ -36,6 +37,7 @@ Recommends:
 Depends:
  ${misc:Depends},
  ${shlibs:Depends},
+  gsettings-desktop-schemas (>= 47),
 Breaks:
  libgtk-3-0 (<< 3.24.35)
 Description: An experimental on screen keyboard for Phosh

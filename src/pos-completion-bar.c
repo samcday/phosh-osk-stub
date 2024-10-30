@@ -46,7 +46,7 @@ pos_completion_bar_class_init (PosCompletionBarClass *klass)
                                     G_TYPE_STRING);
 
   gtk_widget_class_set_template_from_resource (widget_class,
-                                               "/sm/puri/phosh/osk-stub/ui/completion-bar.ui");
+                                               "/mobi/phosh/osk-stub/ui/completion-bar.ui");
   gtk_widget_class_bind_template_child (widget_class, PosCompletionBar, buttons);
 
   gtk_widget_class_set_css_name (widget_class, "pos-completion-bar");

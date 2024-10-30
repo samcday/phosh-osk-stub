@@ -515,7 +515,7 @@ main (int argc, char *argv[])
   _debug_flags = parse_debug_env ();
   gtk_init (&argc, &argv);
 
-  gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/sm/puri/phosh/osk-stub/icons");
+  gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/mobi/phosh/osk-stub/icons");
 
   proxy = pos_session_register (APP_ID, loop);
 
