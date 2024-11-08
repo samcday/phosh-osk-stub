@@ -19,6 +19,7 @@
 #include "pos-completer-manager.h"
 #include "pos-completion-bar.h"
 #include "pos-input-surface.h"
+#include "pos-keypad.h"
 #include "pos-logind-session.h"
 #include "pos-main.h"
 #include "pos-osk-widget.h"
@@ -115,6 +116,7 @@ struct _PosInputSurface {
   GtkWidget               *osk_terminal;
   GtkWidget               *emoji_picker;
   GtkWidget               *last_layout;
+  GtkWidget               *keypad;
   PosShortcutsBar         *shortcuts_bar;
   PhoshOskFeatures         osk_features;
   GdkModifierType          latched_modifiers;
@@ -264,7 +266,7 @@ pos_input_surface_is_completion_mode (PosInputSurface *self)
 {
   GtkWidget *osk_widget;
 
-  if (pos_input_surface_is_completer_active(self) == FALSE)
+  if (pos_input_surface_is_completer_active (self) == FALSE)
     return FALSE;
 
   /* no completion in cursor mode */
@@ -376,12 +378,11 @@ on_osk_key_down (PosInputSurface *self, const char *symbol, GtkWidget *osk_widge
 
 
 static void
-on_osk_key_symbol (PosInputSurface *self, const char *symbol, GtkWidget *osk_widget)
+on_osk_key_symbol (PosInputSurface *self, const char *symbol)
 {
   gboolean handled;
 
   g_return_if_fail (POS_IS_INPUT_SURFACE (self));
-  g_return_if_fail (osk_widget == NULL || POS_IS_OSK_WIDGET (osk_widget));
 
   g_debug ("Key: '%s' symbol", symbol);
 
@@ -589,8 +590,35 @@ static void
 on_emoji_picker_delete_last (PosInputSurface *self)
 {
   g_debug ("%s", __func__);
-  on_osk_key_symbol (self, "KEY_BACKSPACE", NULL);
+  on_osk_key_symbol (self, "KEY_BACKSPACE");
 }
+
+/* Keypads */
+
+static void
+on_keypad_symbol_pressed (PosInputSurface *self, const char *symbol, PosKeypad *keypad)
+{
+  g_assert (POS_IS_INPUT_SURFACE (self));
+  g_assert (POS_IS_KEYPAD (keypad));
+
+  if (pos_input_method_get_active (self->input_method)) {
+    pos_input_surface_submit_current_preedit (self);
+    pos_input_method_send_string (self->input_method, symbol, TRUE);
+  } else {
+    pos_vk_driver_key_down (self->keyboard_driver, symbol, POS_KEYCODE_MODIFIER_NONE);
+    pos_vk_driver_key_up (self->keyboard_driver, symbol);
+  }
+
+  pos_input_surface_notify_key_press (self);
+}
+
+
+static void
+on_keypad_done (PosInputSurface *self)
+{
+  hdy_deck_set_visible_child (self->deck, self->last_layout);
+}
+
 
 /* menu button */
 
@@ -1068,7 +1096,7 @@ pos_input_surface_get_property (GObject    *object,
 static void
 on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod *im)
 {
-  GtkWidget *osk_widget = NULL;
+  GtkWidget *widget = NULL;
   PosOskWidgetLayer layer = POS_OSK_WIDGET_LAYER_NORMAL;
   PosInputMethodPurpose purpose;
 
@@ -1090,32 +1118,53 @@ on_im_purpose_changed (PosInputSurface *self, GParamSpec *pspec, PosInputMethod 
     break;
   case POS_INPUT_METHOD_PURPOSE_DATE:
   case POS_INPUT_METHOD_PURPOSE_DATETIME:
-  case POS_INPUT_METHOD_PURPOSE_DIGITS:
-  case POS_INPUT_METHOD_PURPOSE_NUMBER:
-  case POS_INPUT_METHOD_PURPOSE_PHONE:
-  case POS_INPUT_METHOD_PURPOSE_PIN:
   case POS_INPUT_METHOD_PURPOSE_TIME:
     layer = POS_OSK_WIDGET_LAYER_SYMBOLS;
     break;
+  case POS_INPUT_METHOD_PURPOSE_NUMBER:
+    pos_keypad_set_decimal_separator_visible (POS_KEYPAD (self->keypad), TRUE);
+    pos_keypad_set_symbols_visible (POS_KEYPAD (self->keypad), FALSE);
+    pos_keypad_set_letters_visible (POS_KEYPAD (self->keypad), FALSE);
+    widget = self->keypad;
+    break;
+  case POS_INPUT_METHOD_PURPOSE_DIGITS:
+    pos_keypad_set_decimal_separator_visible (POS_KEYPAD (self->keypad), FALSE);
+    pos_keypad_set_symbols_visible (POS_KEYPAD (self->keypad), FALSE);
+    pos_keypad_set_letters_visible (POS_KEYPAD (self->keypad), FALSE);
+    widget = self->keypad;
+    break;
+  case POS_INPUT_METHOD_PURPOSE_PIN:
+    pos_keypad_set_decimal_separator_visible (POS_KEYPAD (self->keypad), FALSE);
+    pos_keypad_set_symbols_visible (POS_KEYPAD (self->keypad), FALSE);
+    pos_keypad_set_letters_visible (POS_KEYPAD (self->keypad), TRUE);
+    widget = self->keypad;
+    break;
+  case POS_INPUT_METHOD_PURPOSE_PHONE:
+    pos_keypad_set_decimal_separator_visible (POS_KEYPAD (self->keypad), FALSE);
+    pos_keypad_set_symbols_visible (POS_KEYPAD (self->keypad), TRUE);
+    pos_keypad_set_letters_visible (POS_KEYPAD (self->keypad), TRUE);
+    widget = self->keypad;
+    break;
   case POS_INPUT_METHOD_PURPOSE_TERMINAL:
-    osk_widget = self->osk_terminal;
+    widget = self->osk_terminal;
     break;
   default:
     g_return_if_reached ();
   }
 
-  if (osk_widget == NULL) {
-    osk_widget = hdy_deck_get_visible_child (self->deck);
+  if (widget == NULL) {
+    widget = hdy_deck_get_visible_child (self->deck);
     /* If no "special" layout, Switch back to the last language layer */
-    if (!POS_INPUT_SURFACE_IS_LANG_LAYOUT (osk_widget))
-      osk_widget = self->last_layout;
+    if (!POS_INPUT_SURFACE_IS_LANG_LAYOUT (widget))
+      widget = self->last_layout;
+  } else if (POS_IS_OSK_WIDGET (widget)) {
+    pos_osk_widget_set_layer (POS_OSK_WIDGET (widget), layer);
+    g_debug ("Layout: %s, purpose: %d",
+             pos_osk_widget_get_name (POS_OSK_WIDGET (widget)),
+             purpose);
   }
-  g_debug ("Layout: %s, purpose: %d",
-           pos_osk_widget_get_name (POS_OSK_WIDGET (osk_widget)),
-           purpose);
-  hdy_deck_set_visible_child (self->deck, osk_widget);
 
-  pos_osk_widget_set_layer (POS_OSK_WIDGET (osk_widget), layer);
+  hdy_deck_set_visible_child (self->deck, widget);
 }
 
 
@@ -1450,6 +1499,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 
   g_type_ensure (POS_TYPE_COMPLETION_BAR);
   g_type_ensure (POS_TYPE_EMOJI_PICKER);
+  g_type_ensure (POS_TYPE_KEYPAD);
   g_type_ensure (POS_TYPE_OSK_WIDGET);
   g_type_ensure (POS_TYPE_SHORTCUTS_BAR);
 
@@ -1458,6 +1508,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, completion_bar);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, deck);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, emoji_picker);
+  gtk_widget_class_bind_template_child (widget_class, PosInputSurface, keypad);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_box_layouts);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, menu_popup);
   gtk_widget_class_bind_template_child (widget_class, PosInputSurface, osk_terminal);
@@ -1467,6 +1518,10 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
   gtk_widget_class_bind_template_callback (widget_class, on_emoji_picked);
   gtk_widget_class_bind_template_callback (widget_class, on_emoji_picker_done);
   gtk_widget_class_bind_template_callback (widget_class, on_emoji_picker_delete_last);
+
+  gtk_widget_class_bind_template_callback (widget_class, on_keypad_symbol_pressed);
+  gtk_widget_class_bind_template_callback (widget_class, on_keypad_done);
+
   gtk_widget_class_bind_template_callback (widget_class, on_latched_modifiers_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_num_shortcuts_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_osk_key_down);
