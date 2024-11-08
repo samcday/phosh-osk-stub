@@ -192,6 +192,41 @@ pos-emoji-picker scrollbar {
   transition: none;
 }
 
+/* Keypad */
+pos-keypad .digit { font-size: 120%; font-weight: bold; }
+pos-keypad .letters { font-size: 60%; }
+pos-keypad .symbol { font-size: 100%; }
+
+pos-keypad button {
+  color: @pos_key_fg_color;
+  background: @pos_key_bg_color;  
+  border: 0px;
+  margin: 1px;
+}
+
+pos-keypad button:active {
+  background: shade(@pos_key_bg_color, 0.8);
+}
+
+pos-keypad button.sys {
+  color: @pos_key_fg_color;
+  background: shade(@pos_key_bg_color, 0.75);
+}
+
+pos-keypad button.sys:active {
+  background: shade(@pos_key_bg_color, 0.6);
+}
+
+pos-keypad button.return {
+  background: @theme_selected_bg_color;
+  color: @theme_selected_fg_color;
+}
+
+pos-keypad button.return:active {
+  background: shade(@theme_selected_bg_color, 0.8);
+  color: alpha(@theme_selected_fg_color, 0.8);
+}
+
 /* Unset GTK defaults */
 modelbutton check:checked,
 modelbutton radio:active,
