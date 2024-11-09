@@ -1493,10 +1493,10 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
    * A completer implementing the #PosCompleter interface.
    *
    */
-   props[PROP_COMPLETER] =
-     g_param_spec_object ("completer", "", "",
-                          POS_TYPE_COMPLETER,
-                          G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
+  props[PROP_COMPLETER] =
+    g_param_spec_object ("completer", "", "",
+                         POS_TYPE_COMPLETER,
+                         G_PARAM_READABLE | G_PARAM_EXPLICIT_NOTIFY | G_PARAM_STATIC_STRINGS);
   /**
    * PosInputSurface:completer-manager:
    *
