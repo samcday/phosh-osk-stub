@@ -70,6 +70,10 @@ check-consistency:
   stage: test+docs
   extends: .phosh-check-consistency
 
+check-po:
+  stage: test+docs
+  extends: .phosh-check-po
+  
 # Sanity checks of MR settings and commit logs
 sanity:
   extends:
