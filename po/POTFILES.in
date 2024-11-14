@@ -1,4 +1,4 @@
 data/sm.puri.OSK0.desktop.in.in
-data/completers/hunspell.completer.in.in
-data/completers/presage.completer.in.in
+data/completers/hunspell.desktop.in
+data/completers/presage.desktop.in
 src/ui/input-surface.ui
