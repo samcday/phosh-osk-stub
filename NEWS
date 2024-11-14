@@ -1,5 +1,5 @@
-phosh-osk-stub 0.43~rc1
------------------------
+phosh-osk-stub 0.43.0
+---------------------
 Released November 2024
 * Add <ctrl> and <alt> modifiers and <menu> key to the shortcuts bar
 * Support accent colors

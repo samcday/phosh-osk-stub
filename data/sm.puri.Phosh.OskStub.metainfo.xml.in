@@ -58,6 +58,20 @@
   </screenshots>
 
   <releases>
+    <release version="0.43.0" date="2024-11-14">
+      <description translate="no">
+        <ul>
+          <li>Add &lt;ctrl&gt; and &lt;alt&gt; modifiers and &lt;menu&gt; key to the shortcuts bar</li>
+          <li>Support accent colors</li>
+          <li>Better handle overlapping key presses to ease fast typing</li>
+          <li>Make lower- and upper-case view of terminal layout more consistent</li>
+          <li>presage: Don't set abbrev predictor as it adds random unicode chars</li>
+          <li>Ship completer descriptions so mobile settings knows about them</li>
+          <li>User documentation updates</li>
+          <li>Various bug fixes</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.42.0" date="2024-09-28">
       <description translate="no">
         <ul>
