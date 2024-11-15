@@ -1,8 +1,6 @@
 desktop_file = 'sm.puri.OSK0.desktop'
 target = 'sm.puri.OSK0.desktop'
 
-app_id = 'sm.puri.Phosh.OskStub'
-
 if get_option('default_osk') == false
   target = '@0@.desktop'.format(app_id)
 endif

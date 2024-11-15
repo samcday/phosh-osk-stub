@@ -5,6 +5,9 @@ project('phosh-osk-stub', 'c',
   default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
 )
 
+
+app_id = 'mobi.phosh.OskStub'
+
 prefix = get_option('prefix')
 bindir = join_paths(prefix, get_option('bindir'))
 datadir = join_paths(prefix, get_option('datadir'))
