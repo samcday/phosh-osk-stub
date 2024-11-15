@@ -1,3 +1,19 @@
+phosh-osk-stub (0.43.0) experimental; urgency=medium
+
+  * metainfo: Don't mark release notes as translatable. No need to put
+    translator effort into these
+  * po: Remove generated pot file.
+  * po: Fix path to completer files.
+    We use a .desktop extension so they get picked up by
+    gettext properly.
+  * po: Mark pos-input-surface as translatable
+  * ci: Check po. Make sure we don't forget any translatable files again
+  * docs: Cleanup markdown
+  * ci: Lint markdown
+  * main: Set text domain so translations get picked up
+
+ -- Guido Günther <agx@sigxcpu.org>  Thu, 14 Nov 2024 13:23:59 +0100
+
 phosh-osk-stub (0.43~rc1) experimental; urgency=medium
 
   [ Guido Günther ]
