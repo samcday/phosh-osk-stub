@@ -321,8 +321,6 @@ pos_keypad_init (PosKeypad *self)
 
 /**
  * pos_keypad_new:
- * @symbols_visible: whether the hash, plus, and asterisk symbols should be visible
- * @letters_visible: whether the letters below the digits should be visible
  *
  * Create a new #PosKeypad widget.
  *
@@ -337,7 +335,7 @@ pos_keypad_new (void)
 /**
  * pos_keypad_set_letters_visible:
  * @self: a #PosKeypad
- * @letters_visible: whether the letters below the digits should be visible
+ * @visible: whether the letters below the digits should be visible
  *
  * Sets whether @self should display the standard letters below the digits on
  * its buttons.
@@ -378,7 +376,7 @@ pos_keypad_get_letters_visible (PosKeypad *self)
 /**
  * pos_keypad_set_symbols_visible:
  * @self: a #PosKeypad
- * @symbols_visible: whether the hash, plus, and asterisk symbols should be visible
+ * @visible: whether the hash, plus, and asterisk symbols should be visible
  *
  * Sets whether @self should display the hash and asterisk buttons, and should
  * display the plus symbol at the bottom of its 0 button.
@@ -422,7 +420,7 @@ pos_keypad_get_symbols_visible (PosKeypad *self)
 /**
  * pos_keypad_set_decimal_separator_visible:
  * @self: a #PosKeypad
- * @decimal_separator_visible: whether the hash, plus, and asterisk decimal_separator should be visible
+ * @visible: whether the hash, plus, and asterisk decimal_separator should be visible
  *
  * Sets whether @self should display the hash and asterisk buttons, and should
  * display the plus symbol at the bottom of its 0 button.
