@@ -1,3 +1,21 @@
+phosh-osk-stub (0.44~rc1) experimental; urgency=medium
+
+  [ Guido Günther ]
+  * metainfo: Make metainfo match app-id
+  * keypad: Add new widget for keypads.
+    This is somewhat based on what we have in libcall-ui
+  * input-surface: Use keypad for pin, digit and phone number inputs
+  * pos-keypad: Fix several doc strings.
+    The function arguments were superfluous or incorrectly named.
+  * packaging: Update alternative name too.
+    Fixes 6316a3d06 ("metainfo: Make metainfo match app-id")
+
+  [ Danial Behzadi ]
+  * po: Add Persian translation
+  * layout: Make Persian layout close to ISIRI 9147
+
+ -- Guido Günther <agx@sigxcpu.org>  Fri, 20 Dec 2024 14:25:15 +0100
+
 phosh-osk-stub (0.43.0) experimental; urgency=medium
 
   * metainfo: Don't mark release notes as translatable. No need to put
