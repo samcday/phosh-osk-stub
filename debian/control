@@ -32,7 +32,7 @@ Package: phosh-osk-stub
 Architecture: any
 Recommends:
  fonts-noto-core,
- hunspell-en-US,
+ hunspell-en-us,
  phosh-osk-data-eu,
 Depends:
  ${misc:Depends},
