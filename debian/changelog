@@ -1,3 +1,14 @@
+phosh-osk-stub (0.44.0) experimental; urgency=medium
+
+  * metainfo: Make metainfo match app-id.
+  * docs: Add "Getting in touch"
+  * packaging: Fix hunspell package name.  Should be all lowercase
+  * treewide: Remove "experimental" We consider it stable nowadays
+  * screenshots: Update. We had several style changes in phosh and p-o-s
+    since we added the initial screenshots.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 29 Dec 2024 14:21:18 +0100
+
 phosh-osk-stub (0.44~rc1) experimental; urgency=medium
 
   [ Guido Günther ]

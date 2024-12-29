@@ -61,6 +61,14 @@
   </screenshots>
 
   <releases>
+    <release version="0.44.0" date="2024-12-30">
+      <description translate="no">
+        <ul>
+          <li>Add special layouts for pin, digit and phone number input purpose</li>
+          <li>Make Persian layout close to ISIRI 9147</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.43.0" date="2024-11-14">
       <description translate="no">
         <ul>
