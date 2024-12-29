@@ -107,6 +107,11 @@ The API documentation is available at
 For end user documentation see the [manpage][] (or in the installed
 system via `man phosh-osk-stub`).
 
+## Getting in Touch
+
+- Issue tracker: <https://gitlab.gnome.org/guidog/phosh-osk-stub/issues>
+- Matrix: <https://matrix.to/#/#phosh:sigxcpu.org>
+
 [main]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/tree/main
 [.gitlab-ci.yml]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/.gitlab-ci.yml
 [debian/control]:https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/debian/control
