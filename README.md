@@ -1,7 +1,7 @@
 # Phosh OSK Stub
 
-An experimental keyboard for quick prototyping and to debug input related
-issues in phosh. For a production ready on-screen keyboard see [squeekboard][].
+An alternative keyboard for Phosh. It can replace the default OSK
+[squeekboard][].
 
 The purpose of phosh-osk-stub:
 
