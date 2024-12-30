@@ -1,7 +1,7 @@
 # Phosh OSK Stub
 
-An experimental keyboard for quick prototyping and to debug input related
-issues in phosh. For a production ready on-screen keyboard see [squeekboard][].
+An alternative keyboard for Phosh. It can replace the default OSK
+[squeekboard][].
 
 The purpose of phosh-osk-stub:
 
@@ -106,6 +106,11 @@ The API documentation is available at
 
 For end user documentation see the [manpage][] (or in the installed
 system via `man phosh-osk-stub`).
+
+## Getting in Touch
+
+- Issue tracker: <https://gitlab.gnome.org/guidog/phosh-osk-stub/issues>
+- Matrix: <https://matrix.to/#/#phosh:sigxcpu.org>
 
 [main]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/tree/main
 [.gitlab-ci.yml]: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/blob/main/.gitlab-ci.yml

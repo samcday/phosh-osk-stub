@@ -4,9 +4,9 @@
 phosh-osk-stub
 ==============
 
-----------------------------------------------
-An (experimental) on screen keyboard for Phosh
-----------------------------------------------
+-------------------------------
+An on screen keyboard for Phosh
+-------------------------------
 
 SYNOPSIS
 --------
@@ -16,10 +16,8 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-``phosh-osk-stub`` is an on screen keyboard (OSK) for phosh. It is
-considered experimental. For a production ready on screen keyboard see
-``squeekboard(1)``.
-
+``phosh-osk-stub`` is an on screen keyboard (OSK) for phosh. It can
+replace Phosh's default keyboard ``squeekboard(1)``.
 
 ``phosh-osk-stub`` has two modes of operation. If the application
 supports and uses ``text-input-unstable-v3`` the Wayland compositor

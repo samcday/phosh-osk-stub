@@ -1,12 +1,14 @@
 /*
- * Copyright (C) 2022 Guido Günther
+ * Copyright (C) 2023 The Phosh Developers
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Author: Guido Günther <agx@sigxcpu.org>
  *
  * Heavily based on GTK's:
  * gtkemojichooser.c: An Emoji chooser widget
  * Copyright 2017, Red Hat, Inc.
  * Author: Matthias Clasen <mclasen@redhat.com>
- *
- * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 #include "pos-emoji-picker.h"

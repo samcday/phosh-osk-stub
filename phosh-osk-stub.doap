@@ -8,7 +8,7 @@
   <name>phosh-osk-stub</name>
   <shortname>phosh-osk-stub</shortname>
   <shortdesc>An on screen keyboard stub for Phosh</shortdesc>
-  <description>An experimental On Screen Keyboard and debugging tool
+  <description>An On Screen Keyboard and debugging tool
    for keyboard and input related issues in phosh.</description>
   <homepage rdf:resource="https://gitlab.gnome.org/World/Phosh/phosh/" />
   <license rdf:resource="http://usefulinc.com/doap/licenses/gpl" />

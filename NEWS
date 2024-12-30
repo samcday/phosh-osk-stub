@@ -1,6 +1,6 @@
-phosh-osk-stub 0.44~rc1
------------------------
-Released Dezember 2024
+phosh-osk-stub 0.44.0
+---------------------
+Released December 2024
 * Add special layouts for pin, digit and phone number input purpose
 * Make Persian layout close to ISIRI 9147
 * Contributors:
