@@ -52,7 +52,8 @@ typedef enum _PosDebugFlags {
 typedef struct _PhoshOskStub {
   GObject parent_instance;
 
-  GMainLoop *loop;
+  GMainLoop        *loop;
+  GDBusProxy       *session_proxy;
 } PhoshOskStub;
 
 #define PHOSH_TYPE_OSK_STUB (phosh_osk_stub_get_type ())
@@ -489,8 +490,22 @@ parse_debug_env (void)
 
 
 static void
+pos_input_surface_finalize (GObject *object)
+{
+  PhoshOskStub *self = PHOSH_OSK_STUB (object);
+
+  g_clear_object (&self->session_proxy);
+
+  G_OBJECT_CLASS (phosh_osk_stub_parent_class)->finalize (object);
+}
+
+
+static void
 phosh_osk_stub_class_init (PhoshOskStubClass *klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->finalize = pos_input_surface_finalize;
 }
 
 
@@ -501,13 +516,14 @@ phosh_osk_stub_init (PhoshOskStub *self)
 
   g_unix_signal_add (SIGTERM, quit_cb, self->loop);
   g_unix_signal_add (SIGINT, quit_cb, self->loop);
+
+  self->session_proxy = pos_session_register (APP_ID, self->loop);
 }
 
 
 int
 main (int argc, char *argv[])
 {
-  g_autoptr (GDBusProxy) proxy = NULL;
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
   g_autoptr (PhoshOskStub) osk_stub = NULL;
@@ -543,7 +559,6 @@ main (int argc, char *argv[])
   gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/mobi/phosh/osk-stub/icons");
 
   osk_stub = g_object_new (PHOSH_TYPE_OSK_STUB, NULL);
-  proxy = pos_session_register (APP_ID, osk_stub->loop);
 
   flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
     (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
