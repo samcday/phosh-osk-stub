@@ -132,6 +132,7 @@ struct _PosOskWidget {
   PosOskWidgetMode     mode;
   /* Contains pointers to key symbols (keys have ownership) */
   GPtrArray           *symbols;
+  gboolean             caps_lock;
 
   char                *name;
   char                *display_name;
@@ -727,12 +728,28 @@ switch_layer (PosOskWidget *self, PosOskKey *key)
         break;
       }
     }
+    self->caps_lock = FALSE;
     /* Reset caps layer on every (non toggle) key press */
-  } else if (new_layer == POS_OSK_WIDGET_LAYER_CAPS) {
+  } else if (new_layer == POS_OSK_WIDGET_LAYER_CAPS && !self->caps_lock) {
     new_layer = POS_OSK_WIDGET_LAYER_NORMAL;
   }
 
   pos_osk_widget_set_layer (self, new_layer);
+}
+
+
+static void
+set_caps_lock (PosOskWidget *self, gboolean caps_lock)
+{
+  PosOskWidgetLayer layer;
+
+  if (self->caps_lock == caps_lock)
+    return;
+
+  self->caps_lock = caps_lock;
+
+  layer = self->caps_lock ? POS_OSK_WIDGET_LAYER_CAPS : POS_OSK_WIDGET_LAYER_NORMAL;
+  pos_osk_widget_set_layer (self, layer);
 }
 
 
@@ -1069,6 +1086,14 @@ on_long_pressed (GtkGestureLongPress *gesture, double x, double y, gpointer user
     /* Remember the key we want to untoggle when mode ends */
     self->space = key;
     pos_osk_widget_set_mode (self, POS_OSK_WIDGET_MODE_CURSOR);
+    return;
+  }
+
+  if (pos_osk_key_get_use (key) == POS_OSK_KEY_USE_TOGGLE &&
+      pos_osk_key_get_layer (key) == POS_OSK_WIDGET_LAYER_CAPS) {
+    g_debug ("Enabling caps lock");
+    set_caps_lock (self, TRUE);
+    pos_osk_widget_cancel_press (self);
     return;
   }
 
