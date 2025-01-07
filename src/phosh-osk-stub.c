@@ -512,6 +512,8 @@ phosh_osk_stub_class_init (PhoshOskStubClass *klass)
 void
 phosh_osk_stub_init (PhoshOskStub *self)
 {
+  gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/mobi/phosh/osk-stub/icons");
+
   self->loop = g_main_loop_new (NULL, FALSE);
 
   g_unix_signal_add (SIGTERM, quit_cb, self->loop);
@@ -555,8 +557,6 @@ main (int argc, char *argv[])
   lfb_init (APP_ID, NULL);
   _debug_flags = parse_debug_env ();
   gtk_init (&argc, &argv);
-
-  gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/mobi/phosh/osk-stub/icons");
 
   osk_stub = g_object_new (PHOSH_TYPE_OSK_STUB, NULL);
 
