@@ -49,6 +49,15 @@ typedef enum _PosDebugFlags {
   POS_DEBUG_FLAG_DEBUG_SURFACE     = 1 << 2,
 } PosDebugFlags;
 
+typedef struct _PhoshOskStub {
+  GObject parent_instance;
+
+  GMainLoop *loop;
+} PhoshOskStub;
+
+#define PHOSH_TYPE_OSK_STUB (phosh_osk_stub_get_type ())
+G_DECLARE_FINAL_TYPE (PhoshOskStub, phosh_osk_stub, PHOSH, OSK_STUB, GObject)
+G_DEFINE_TYPE (PhoshOskStub, phosh_osk_stub, G_TYPE_OBJECT)
 
 static PosInputSurface *_input_surface;
 
@@ -479,13 +488,29 @@ parse_debug_env (void)
 }
 
 
+static void
+phosh_osk_stub_class_init (PhoshOskStubClass *klass)
+{
+}
+
+
+void
+phosh_osk_stub_init (PhoshOskStub *self)
+{
+  self->loop = g_main_loop_new (NULL, FALSE);
+
+  g_unix_signal_add (SIGTERM, quit_cb, self->loop);
+  g_unix_signal_add (SIGINT, quit_cb, self->loop);
+}
+
+
 int
 main (int argc, char *argv[])
 {
-  g_autoptr (GMainLoop) loop = NULL;
   g_autoptr (GDBusProxy) proxy = NULL;
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
+  g_autoptr (PhoshOskStub) osk_stub = NULL;
   gboolean version = FALSE, replace = FALSE, allow_replace = FALSE;
   GBusNameOwnerFlags flags;
 
@@ -517,7 +542,8 @@ main (int argc, char *argv[])
 
   gtk_icon_theme_add_resource_path (gtk_icon_theme_get_default (), "/mobi/phosh/osk-stub/icons");
 
-  proxy = pos_session_register (APP_ID, loop);
+  osk_stub = g_object_new (PHOSH_TYPE_OSK_STUB, NULL);
+  proxy = pos_session_register (APP_ID, osk_stub->loop);
 
   flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
     (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
@@ -527,12 +553,7 @@ main (int argc, char *argv[])
   if (!setup_input_method (_osk_dbus))
     return EXIT_FAILURE;
 
-  loop = g_main_loop_new (NULL, FALSE);
-
-  g_unix_signal_add (SIGTERM, quit_cb, loop);
-  g_unix_signal_add (SIGINT, quit_cb, loop);
-
-  g_main_loop_run (loop);
+  g_main_loop_run (osk_stub->loop);
 
   if (_input_surface)
     dispose_input_surface (_input_surface);
