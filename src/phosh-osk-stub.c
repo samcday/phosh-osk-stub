@@ -57,6 +57,8 @@ typedef struct _PhoshOskStub {
   GMainLoop           *loop;
   GDBusProxy          *session_proxy;
   PosOskDbus          *osk_dbus;
+  PosActivationFilter *activation_filter;
+  PosHwTracker        *hw_tracker;
 
   struct wl_display                       *display;
   struct zwlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager;
@@ -74,8 +76,6 @@ G_DECLARE_FINAL_TYPE (PhoshOskStub, phosh_osk_stub, PHOSH, OSK_STUB, GObject)
 G_DEFINE_TYPE (PhoshOskStub, phosh_osk_stub, G_TYPE_OBJECT)
 
 
-static PosActivationFilter *_activation_filter;
-static PosHwTracker *_hw_tracker;
 PosDebugFlags _debug_flags;
 
 /* TODO:
@@ -223,10 +223,10 @@ set_surface_prop_surface_visible (GBinding     *binding,
 
   enabled = pos_input_surface_get_screen_keyboard_enabled (self->input_surface);
 
-  if (_activation_filter && !pos_activation_filter_allow_active (_activation_filter))
+  if (self->activation_filter && !pos_activation_filter_allow_active (self->activation_filter))
     enabled = FALSE;
 
-  if (_hw_tracker && !pos_hw_tracker_get_allow_active (_hw_tracker))
+  if (self->hw_tracker && !pos_hw_tracker_get_allow_active (self->hw_tracker))
     enabled = FALSE;
 
   g_debug ("active: %d, enabled: %d", visible, enabled);
@@ -348,7 +348,7 @@ create_input_surface (PhoshOskStub *self)
                                self,
                                NULL);
 
-  g_signal_connect_object (_hw_tracker, "notify::allow-active",
+  g_signal_connect_object (self->hw_tracker, "notify::allow-active",
                            G_CALLBACK (on_hw_tracker_allow_active_changed),
                            im,
                            G_CONNECT_DEFAULT);
@@ -425,7 +425,7 @@ registry_handle_global (void               *data,
     self->foreign_toplevel_manager = wl_registry_bind (registry, name,
                                                        &zwlr_foreign_toplevel_manager_v1_interface,
                                                        1);
-    _activation_filter = pos_activation_filter_new (self->foreign_toplevel_manager);
+    self->activation_filter = pos_activation_filter_new (self->foreign_toplevel_manager);
   } else if (!strcmp (interface, zwp_virtual_keyboard_manager_v1_interface.name)) {
     self->virtual_keyboard_manager = wl_registry_bind (registry, name,
                                                        &zwp_virtual_keyboard_manager_v1_interface,
@@ -434,7 +434,7 @@ registry_handle_global (void               *data,
     self->phoc_device_state = wl_registry_bind (registry, name,
                                                 &zphoc_device_state_v1_interface,
                                                 MIN (2, version));
-    _hw_tracker = pos_hw_tracker_new (self->phoc_device_state);
+    self->hw_tracker = pos_hw_tracker_new (self->phoc_device_state);
   } else if (!strcmp (interface, zwlr_data_control_manager_v1_interface.name)) {
     self->wlr_data_control_manager = wl_registry_bind (registry, name,
                                                        &zwlr_data_control_manager_v1_interface, 1);
@@ -519,7 +519,8 @@ pos_input_surface_finalize (GObject *object)
   PhoshOskStub *self = PHOSH_OSK_STUB (object);
 
   g_clear_object (&self->osk_dbus);
-
+  g_clear_object (&self->activation_filter);
+  g_clear_object (&self->hw_tracker);
 
   g_clear_object (&self->session_proxy);
 
@@ -606,9 +607,6 @@ main (int argc, char *argv[])
     return EXIT_FAILURE;
 
   phosh_osk_stub_run (osk_stub);
-
-  g_clear_object (&_activation_filter);
-  g_clear_object (&_hw_tracker);
 
   pos_uninit ();
 
