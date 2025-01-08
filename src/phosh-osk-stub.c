@@ -54,6 +54,14 @@ typedef struct _PhoshOskStub {
 
   GMainLoop        *loop;
   GDBusProxy       *session_proxy;
+
+  struct zwlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager;
+  struct zwp_input_method_manager_v2      *input_method_manager;
+  struct zwlr_layer_shell_v1              *layer_shell;
+  struct zphoc_device_state_v1            *phoc_device_state;
+  struct wl_seat                          *seat;
+  struct zwp_virtual_keyboard_manager_v1  *virtual_keyboard_manager;
+  struct zwlr_data_control_manager_v1     *wlr_data_control_manager;
 } PhoshOskStub;
 
 #define PHOSH_TYPE_OSK_STUB (phosh_osk_stub_get_type ())
@@ -64,13 +72,6 @@ static PosInputSurface *_input_surface;
 
 static struct wl_display *_display;
 static struct wl_registry *_registry;
-static struct wl_seat *_seat;
-static struct zphoc_device_state_v1 *_phoc_device_state;
-static struct zwlr_data_control_manager_v1 *_wlr_data_control_manager;
-static struct zwlr_layer_shell_v1 *_layer_shell;
-static struct zwp_input_method_manager_v2 *_input_method_manager;
-static struct zwp_virtual_keyboard_manager_v1 *_virtual_keyboard_manager;
-static struct zwlr_foreign_toplevel_manager_v1 *_foreign_toplevel_manager;
 
 static PosDebugFlags _debug_flags;
 static PosOskDbus *_osk_dbus;
@@ -262,22 +263,35 @@ static void on_input_surface_gone (gpointer data, GObject *unused);
 static void on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused);
 
 static void
-dispose_input_surface (PosInputSurface *input_surface)
+dispose_input_surface (PhoshOskStub *self, PosInputSurface *input_surface)
 {
+  g_assert (PHOSH_IS_OSK_STUB (self));
+  g_assert (POS_IS_INPUT_SURFACE (input_surface));
+
   /* Remove weak ref so input-surface doesn't get recreated */
-  g_object_weak_unref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
-  gtk_widget_destroy (GTK_WIDGET (_input_surface));
+  g_object_weak_unref (G_OBJECT (input_surface), on_input_surface_gone, self);
+  gtk_widget_destroy (GTK_WIDGET (input_surface));
 }
 
 #define INPUT_SURFACE_HEIGHT 200
 
+static gboolean
+phosh_osk_stub_has_wl_protcols (PhoshOskStub *self)
+{
+  g_assert (PHOSH_IS_OSK_STUB (self));
+
+  return (self->foreign_toplevel_manager &&
+          self->input_method_manager &&
+          self->layer_shell &&
+          self->phoc_device_state &&
+          self->seat &&
+          self->virtual_keyboard_manager &&
+          self->wlr_data_control_manager);
+}
+
+
 static void
-create_input_surface (struct wl_seat                         *seat,
-                      struct zwp_virtual_keyboard_manager_v1 *virtual_keyboard_manager,
-                      struct zwp_input_method_manager_v2     *im_manager,
-                      struct zwlr_layer_shell_v1             *layer_shell,
-                      struct zwlr_data_control_manager_v1    *data_control_manager,
-                      PosOskDbus                             *osk_dbus)
+create_input_surface (PhoshOskStub *self, PosOskDbus *osk_dbus)
 {
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
@@ -286,23 +300,24 @@ create_input_surface (struct wl_seat                         *seat,
   g_autoptr (PosClipboardManager) clipboard_manager = NULL;
   gboolean force_completion;
 
-  g_assert (seat);
-  g_assert (virtual_keyboard_manager);
-  g_assert (im_manager);
-  g_assert (layer_shell);
+  g_assert (PHOSH_IS_OSK_STUB (self));
+  g_assert (self->seat);
+  g_assert (self->virtual_keyboard_manager);
+  g_assert (self->input_method_manager);
+  g_assert (self->layer_shell);
   g_assert (osk_dbus);
 
-  virtual_keyboard = pos_virtual_keyboard_new (virtual_keyboard_manager, seat);
+  virtual_keyboard = pos_virtual_keyboard_new (self->virtual_keyboard_manager, self->seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
   completer_manager = pos_completer_manager_new ();
-  clipboard_manager = pos_clipboard_manager_new (data_control_manager, seat);
+  clipboard_manager = pos_clipboard_manager_new (self->wlr_data_control_manager, self->seat);
 
-  im = pos_input_method_new (im_manager, seat);
+  im = pos_input_method_new (self->input_method_manager, self->seat);
 
   force_completion = !!(_debug_flags & POS_DEBUG_FLAG_FORCE_COMPLETEION);
   _input_surface = g_object_new (POS_TYPE_INPUT_SURFACE,
                                  /* layer-surface */
-                                 "layer-shell", layer_shell,
+                                 "layer-shell", self->layer_shell,
                                  "height", INPUT_SURFACE_HEIGHT,
                                  "anchor", ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
                                            ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
@@ -350,35 +365,37 @@ create_input_surface (struct wl_seat                         *seat,
 
   gtk_window_present (GTK_WINDOW (_input_surface));
 
-  g_object_weak_ref (G_OBJECT (_input_surface), on_input_surface_gone, NULL);
+  g_object_weak_ref (G_OBJECT (_input_surface), on_input_surface_gone, self);
 }
 
 
 static void
 on_input_surface_gone (gpointer data, GObject *unused)
 {
-  g_debug ("Input surface gone, recreating");
+  PhoshOskStub *self = PHOSH_OSK_STUB (data);
 
-  create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
-                        _wlr_data_control_manager, _osk_dbus);
+  g_assert (PHOSH_IS_OSK_STUB (self));
+
+  g_debug ("Input surface gone, recreating");
+  create_input_surface (self, _osk_dbus);
 }
 
 
 static void
-on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused)
+on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer data)
 {
+  PhoshOskStub *self = PHOSH_OSK_STUB (data);
   gboolean has_name;
 
   has_name = pos_osk_dbus_has_name (dbus);
   g_debug ("Has dbus name: %d", has_name);
 
   if (has_name == FALSE) {
-    dispose_input_surface (_input_surface);
+    dispose_input_surface (self, _input_surface);
     _input_surface = NULL;
   } else if (_input_surface == NULL) {
-    if (_seat && _virtual_keyboard_manager && _input_method_manager && _layer_shell) {
-      create_input_surface (_seat, _virtual_keyboard_manager, _input_method_manager, _layer_shell,
-                            _wlr_data_control_manager, dbus);
+    if (self && phosh_osk_stub_has_wl_protcols (self)) {
+      create_input_surface (self, dbus);
     } else {
       g_warning ("Wayland globals not yet read");
     }
@@ -393,39 +410,39 @@ registry_handle_global (void               *data,
                         const char         *interface,
                         uint32_t            version)
 {
+  PhoshOskStub *self = PHOSH_OSK_STUB (data);
+
+  g_assert (PHOSH_IS_OSK_STUB (self));
+
   if (strcmp (interface, zwp_input_method_manager_v2_interface.name) == 0) {
-    _input_method_manager = wl_registry_bind (registry, name,
-                                              &zwp_input_method_manager_v2_interface, 1);
+    self->input_method_manager = wl_registry_bind (registry, name,
+                                                   &zwp_input_method_manager_v2_interface, 1);
   } else if (strcmp (interface, wl_seat_interface.name) == 0) {
-    _seat = wl_registry_bind (registry, name, &wl_seat_interface, version);
+    self->seat = wl_registry_bind (registry, name, &wl_seat_interface, version);
   } else if (!strcmp (interface, zwlr_layer_shell_v1_interface.name)) {
-    _layer_shell = wl_registry_bind (_registry, name, &zwlr_layer_shell_v1_interface, 1);
+    self->layer_shell = wl_registry_bind (_registry, name, &zwlr_layer_shell_v1_interface, 1);
   } else if (!strcmp (interface, zwlr_foreign_toplevel_manager_v1_interface.name)) {
-    _foreign_toplevel_manager = wl_registry_bind (registry, name,
-                                                  &zwlr_foreign_toplevel_manager_v1_interface, 1);
-    _activation_filter = pos_activation_filter_new (_foreign_toplevel_manager);
+    self->foreign_toplevel_manager = wl_registry_bind (registry, name,
+                                                       &zwlr_foreign_toplevel_manager_v1_interface,
+                                                       1);
+    _activation_filter = pos_activation_filter_new (self->foreign_toplevel_manager);
   } else if (!strcmp (interface, zwp_virtual_keyboard_manager_v1_interface.name)) {
-    _virtual_keyboard_manager = wl_registry_bind (registry, name,
-                                                  &zwp_virtual_keyboard_manager_v1_interface, 1);
+    self->virtual_keyboard_manager = wl_registry_bind (registry, name,
+                                                       &zwp_virtual_keyboard_manager_v1_interface,
+                                                       1);
   } else if (!strcmp (interface, zphoc_device_state_v1_interface.name)) {
-    _phoc_device_state = wl_registry_bind (registry, name,
-                                           &zphoc_device_state_v1_interface,
-                                           MIN (2, version));
-    _hw_tracker = pos_hw_tracker_new (_phoc_device_state);
+    self->phoc_device_state = wl_registry_bind (registry, name,
+                                                &zphoc_device_state_v1_interface,
+                                                MIN (2, version));
+    _hw_tracker = pos_hw_tracker_new (self->phoc_device_state);
   } else if (!strcmp (interface, zwlr_data_control_manager_v1_interface.name)) {
-    _wlr_data_control_manager = wl_registry_bind (registry, name,
-                                                  &zwlr_data_control_manager_v1_interface, 1);
+    self->wlr_data_control_manager = wl_registry_bind (registry, name,
+                                                       &zwlr_data_control_manager_v1_interface, 1);
   }
 
-  if (_foreign_toplevel_manager && _hw_tracker && _seat && _input_method_manager &&
-      _layer_shell && _virtual_keyboard_manager && _wlr_data_control_manager &&
-      !_input_surface) {
+  if (phosh_osk_stub_has_wl_protcols (self) && !_input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
-    create_input_surface (_seat, _virtual_keyboard_manager,
-                          _input_method_manager,
-                          _layer_shell,
-                          _wlr_data_control_manager,
-                          _osk_dbus);
+    create_input_surface (self, _osk_dbus);
   }
 }
 
@@ -446,7 +463,7 @@ static const struct wl_registry_listener registry_listener = {
 
 
 static gboolean
-setup_input_method (PosOskDbus *osk_dbus)
+setup_input_method (PhoshOskStub *osk_stub, PosOskDbus *osk_dbus)
 {
   GdkDisplay *gdk_display;
 
@@ -459,7 +476,7 @@ setup_input_method (PosOskDbus *osk_dbus)
   }
 
   _registry = wl_display_get_registry (_display);
-  wl_registry_add_listener (_registry, &registry_listener, NULL);
+  wl_registry_add_listener (_registry, &registry_listener, osk_stub);
   return TRUE;
 }
 
@@ -570,15 +587,15 @@ main (int argc, char *argv[])
   flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
     (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
   _osk_dbus = pos_osk_dbus_new (flags);
-  g_signal_connect (_osk_dbus, "notify::has-name", G_CALLBACK (on_has_dbus_name_changed), NULL);
+  g_signal_connect (_osk_dbus, "notify::has-name", G_CALLBACK (on_has_dbus_name_changed), osk_stub);
 
-  if (!setup_input_method (_osk_dbus))
+  if (!setup_input_method (osk_stub, _osk_dbus))
     return EXIT_FAILURE;
 
   phosh_osk_stub_run (osk_stub);
 
   if (_input_surface)
-    dispose_input_surface (_input_surface);
+    dispose_input_surface (osk_stub, _input_surface);
   g_clear_object (&_osk_dbus);
   g_clear_object (&_activation_filter);
   g_clear_object (&_hw_tracker);
