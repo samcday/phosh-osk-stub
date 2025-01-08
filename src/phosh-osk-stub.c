@@ -50,7 +50,9 @@ typedef enum _PosDebugFlags {
 } PosDebugFlags;
 
 typedef struct _PhoshOskStub {
-  GObject parent_instance;
+  GObject           parent_instance;
+
+  PosInputSurface  *input_surface;
 
   GMainLoop        *loop;
   GDBusProxy       *session_proxy;
@@ -67,8 +69,6 @@ typedef struct _PhoshOskStub {
 #define PHOSH_TYPE_OSK_STUB (phosh_osk_stub_get_type ())
 G_DECLARE_FINAL_TYPE (PhoshOskStub, phosh_osk_stub, PHOSH, OSK_STUB, GObject)
 G_DEFINE_TYPE (PhoshOskStub, phosh_osk_stub, G_TYPE_OBJECT)
-
-static PosInputSurface *_input_surface;
 
 static struct wl_display *_display;
 static struct wl_registry *_registry;
@@ -263,14 +263,14 @@ static void on_input_surface_gone (gpointer data, GObject *unused);
 static void on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer unused);
 
 static void
-dispose_input_surface (PhoshOskStub *self, PosInputSurface *input_surface)
+dispose_input_surface (PhoshOskStub *self)
 {
   g_assert (PHOSH_IS_OSK_STUB (self));
-  g_assert (POS_IS_INPUT_SURFACE (input_surface));
+  g_assert (POS_IS_INPUT_SURFACE (self->input_surface));
 
   /* Remove weak ref so input-surface doesn't get recreated */
-  g_object_weak_unref (G_OBJECT (input_surface), on_input_surface_gone, self);
-  gtk_widget_destroy (GTK_WIDGET (input_surface));
+  g_object_weak_unref (G_OBJECT (self->input_surface), on_input_surface_gone, self);
+  gtk_widget_destroy (GTK_WIDGET (self->input_surface));
 }
 
 #define INPUT_SURFACE_HEIGHT 200
@@ -315,37 +315,37 @@ create_input_surface (PhoshOskStub *self, PosOskDbus *osk_dbus)
   im = pos_input_method_new (self->input_method_manager, self->seat);
 
   force_completion = !!(_debug_flags & POS_DEBUG_FLAG_FORCE_COMPLETEION);
-  _input_surface = g_object_new (POS_TYPE_INPUT_SURFACE,
-                                 /* layer-surface */
-                                 "layer-shell", self->layer_shell,
-                                 "height", INPUT_SURFACE_HEIGHT,
-                                 "anchor", ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
-                                           ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
-                                           ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
-                                 "layer", ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-                                 "kbd-interactivity", FALSE,
-                                 "exclusive-zone", INPUT_SURFACE_HEIGHT,
-                                 "namespace", "osk",
-                                 /* pos-input-surface */
-                                 "input-method", im,
-                                 "keyboard-driver", vk_driver,
-                                 "completer-manager", completer_manager,
-                                 "completion-enabled", force_completion,
-                                 "clipboard-manager", clipboard_manager,
-                                 NULL);
+  self->input_surface = g_object_new (POS_TYPE_INPUT_SURFACE,
+                                      /* layer-surface */
+                                      "layer-shell", self->layer_shell,
+                                      "height", INPUT_SURFACE_HEIGHT,
+                                      "anchor", ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT,
+                                      "layer", ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+                                      "kbd-interactivity", FALSE,
+                                      "exclusive-zone", INPUT_SURFACE_HEIGHT,
+                                      "namespace", "osk",
+                                      /* pos-input-surface */
+                                      "input-method", im,
+                                      "keyboard-driver", vk_driver,
+                                      "completer-manager", completer_manager,
+                                      "completion-enabled", force_completion,
+                                      "clipboard-manager", clipboard_manager,
+                                      NULL);
 
-  g_object_bind_property (_input_surface,
+  g_object_bind_property (self->input_surface,
                           "surface-visible",
                           _osk_dbus,
                           "visible",
                           G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
 
   g_object_bind_property_full (im, "active",
-                               _input_surface, "surface-visible",
+                               self->input_surface, "surface-visible",
                                G_BINDING_SYNC_CREATE,
                                set_surface_prop_surface_visible,
                                NULL,
-                               _input_surface,
+                               self->input_surface,
                                NULL);
 
   g_signal_connect_object (_hw_tracker, "notify::allow-active",
@@ -354,18 +354,18 @@ create_input_surface (PhoshOskStub *self, PosOskDbus *osk_dbus)
                            G_CONNECT_DEFAULT);
 
   if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW) {
-    pos_input_surface_set_visible (_input_surface, TRUE);
+    pos_input_surface_set_visible (self->input_surface, TRUE);
   } else {
-    g_signal_connect (_input_surface, "notify::screen-keyboard-enabled",
+    g_signal_connect (self->input_surface, "notify::screen-keyboard-enabled",
                       G_CALLBACK (on_screen_keyboard_enabled_changed), NULL);
   }
 
   if (_debug_flags & POS_DEBUG_FLAG_DEBUG_SURFACE)
-    pos_input_surface_set_layout_swipe (_input_surface, TRUE);
+    pos_input_surface_set_layout_swipe (self->input_surface, TRUE);
 
-  gtk_window_present (GTK_WINDOW (_input_surface));
+  gtk_window_present (GTK_WINDOW (self->input_surface));
 
-  g_object_weak_ref (G_OBJECT (_input_surface), on_input_surface_gone, self);
+  g_object_weak_ref (G_OBJECT (self->input_surface), on_input_surface_gone, self);
 }
 
 
@@ -391,9 +391,9 @@ on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer data)
   g_debug ("Has dbus name: %d", has_name);
 
   if (has_name == FALSE) {
-    dispose_input_surface (self, _input_surface);
-    _input_surface = NULL;
-  } else if (_input_surface == NULL) {
+    dispose_input_surface (self);
+    self->input_surface = NULL;
+  } else if (self->input_surface == NULL) {
     if (self && phosh_osk_stub_has_wl_protcols (self)) {
       create_input_surface (self, dbus);
     } else {
@@ -440,7 +440,7 @@ registry_handle_global (void               *data,
                                                        &zwlr_data_control_manager_v1_interface, 1);
   }
 
-  if (phosh_osk_stub_has_wl_protcols (self) && !_input_surface) {
+  if (phosh_osk_stub_has_wl_protcols (self) && !self->input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
     create_input_surface (self, _osk_dbus);
   }
@@ -512,6 +512,9 @@ pos_input_surface_finalize (GObject *object)
   PhoshOskStub *self = PHOSH_OSK_STUB (object);
 
   g_clear_object (&self->session_proxy);
+
+  if (self->input_surface)
+    dispose_input_surface (self);
 
   G_OBJECT_CLASS (phosh_osk_stub_parent_class)->finalize (object);
 }
@@ -594,8 +597,6 @@ main (int argc, char *argv[])
 
   phosh_osk_stub_run (osk_stub);
 
-  if (_input_surface)
-    dispose_input_surface (osk_stub, _input_surface);
   g_clear_object (&_osk_dbus);
   g_clear_object (&_activation_filter);
   g_clear_object (&_hw_tracker);
