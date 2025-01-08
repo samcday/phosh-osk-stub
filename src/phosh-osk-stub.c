@@ -50,12 +50,13 @@ typedef enum _PosDebugFlags {
 } PosDebugFlags;
 
 typedef struct _PhoshOskStub {
-  GObject           parent_instance;
+  GObject              parent_instance;
 
-  PosInputSurface  *input_surface;
+  PosInputSurface     *input_surface;
 
-  GMainLoop        *loop;
-  GDBusProxy       *session_proxy;
+  GMainLoop           *loop;
+  GDBusProxy          *session_proxy;
+  PosOskDbus          *osk_dbus;
 
   struct zwlr_foreign_toplevel_manager_v1 *foreign_toplevel_manager;
   struct zwp_input_method_manager_v2      *input_method_manager;
@@ -73,10 +74,9 @@ G_DEFINE_TYPE (PhoshOskStub, phosh_osk_stub, G_TYPE_OBJECT)
 static struct wl_display *_display;
 static struct wl_registry *_registry;
 
-static PosDebugFlags _debug_flags;
-static PosOskDbus *_osk_dbus;
 static PosActivationFilter *_activation_filter;
 static PosHwTracker *_hw_tracker;
+PosDebugFlags _debug_flags;
 
 /* TODO:
  *  - allow to force virtual-keyboard instead of input-method
@@ -291,7 +291,7 @@ phosh_osk_stub_has_wl_protcols (PhoshOskStub *self)
 
 
 static void
-create_input_surface (PhoshOskStub *self, PosOskDbus *osk_dbus)
+create_input_surface (PhoshOskStub *self)
 {
   g_autoptr (PosVirtualKeyboard) virtual_keyboard = NULL;
   g_autoptr (PosVkDriver) vk_driver = NULL;
@@ -305,7 +305,7 @@ create_input_surface (PhoshOskStub *self, PosOskDbus *osk_dbus)
   g_assert (self->virtual_keyboard_manager);
   g_assert (self->input_method_manager);
   g_assert (self->layer_shell);
-  g_assert (osk_dbus);
+  g_assert (POS_IS_OSK_DBUS (self->osk_dbus));
 
   virtual_keyboard = pos_virtual_keyboard_new (self->virtual_keyboard_manager, self->seat);
   vk_driver = pos_vk_driver_new (virtual_keyboard);
@@ -336,7 +336,7 @@ create_input_surface (PhoshOskStub *self, PosOskDbus *osk_dbus)
 
   g_object_bind_property (self->input_surface,
                           "surface-visible",
-                          _osk_dbus,
+                          self->osk_dbus,
                           "visible",
                           G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
 
@@ -377,7 +377,7 @@ on_input_surface_gone (gpointer data, GObject *unused)
   g_assert (PHOSH_IS_OSK_STUB (self));
 
   g_debug ("Input surface gone, recreating");
-  create_input_surface (self, _osk_dbus);
+  create_input_surface (self);
 }
 
 
@@ -395,7 +395,7 @@ on_has_dbus_name_changed (PosOskDbus *dbus, GParamSpec *pspec, gpointer data)
     self->input_surface = NULL;
   } else if (self->input_surface == NULL) {
     if (self && phosh_osk_stub_has_wl_protcols (self)) {
-      create_input_surface (self, dbus);
+      create_input_surface (self);
     } else {
       g_warning ("Wayland globals not yet read");
     }
@@ -442,7 +442,7 @@ registry_handle_global (void               *data,
 
   if (phosh_osk_stub_has_wl_protcols (self) && !self->input_surface) {
     g_debug ("Found all wayland protocols. Creating listeners and surfaces.");
-    create_input_surface (self, _osk_dbus);
+    create_input_surface (self);
   }
 }
 
@@ -462,10 +462,17 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 
+/* TODO: this could happen in constructed */
 static gboolean
-setup_input_method (PhoshOskStub *osk_stub, PosOskDbus *osk_dbus)
+phosh_osk_stub_setup_input_method (PhoshOskStub *self, PosOskDbus *osk_dbus)
 {
   GdkDisplay *gdk_display;
+
+  g_assert (PHOSH_IS_OSK_STUB (self));
+  g_assert (POS_IS_OSK_DBUS (osk_dbus));
+
+  self->osk_dbus = g_object_ref (osk_dbus);
+  g_signal_connect (osk_dbus, "notify::has-name", G_CALLBACK (on_has_dbus_name_changed), self);
 
   gdk_set_allowed_backends ("wayland");
   gdk_display = gdk_display_get_default ();
@@ -476,7 +483,7 @@ setup_input_method (PhoshOskStub *osk_stub, PosOskDbus *osk_dbus)
   }
 
   _registry = wl_display_get_registry (_display);
-  wl_registry_add_listener (_registry, &registry_listener, osk_stub);
+  wl_registry_add_listener (_registry, &registry_listener, self);
   return TRUE;
 }
 
@@ -510,6 +517,9 @@ static void
 pos_input_surface_finalize (GObject *object)
 {
   PhoshOskStub *self = PHOSH_OSK_STUB (object);
+
+  g_clear_object (&self->osk_dbus);
+
 
   g_clear_object (&self->session_proxy);
 
@@ -556,6 +566,7 @@ main (int argc, char *argv[])
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
   g_autoptr (PhoshOskStub) osk_stub = NULL;
+  g_autoptr (PosOskDbus) osk_dbus = NULL;
   gboolean version = FALSE, replace = FALSE, allow_replace = FALSE;
   GBusNameOwnerFlags flags;
 
@@ -589,15 +600,13 @@ main (int argc, char *argv[])
 
   flags = (allow_replace ? G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT : 0) |
     (replace ? G_BUS_NAME_OWNER_FLAGS_REPLACE : 0);
-  _osk_dbus = pos_osk_dbus_new (flags);
-  g_signal_connect (_osk_dbus, "notify::has-name", G_CALLBACK (on_has_dbus_name_changed), osk_stub);
+  osk_dbus = pos_osk_dbus_new (flags);
 
-  if (!setup_input_method (osk_stub, _osk_dbus))
+  if (!phosh_osk_stub_setup_input_method (osk_stub, osk_dbus))
     return EXIT_FAILURE;
 
   phosh_osk_stub_run (osk_stub);
 
-  g_clear_object (&_osk_dbus);
   g_clear_object (&_activation_filter);
   g_clear_object (&_hw_tracker);
 
