@@ -213,7 +213,7 @@ set_surface_prop_surface_visible (GBinding     *binding,
                                   GValue       *to_value,
                                   gpointer      user_data)
 {
-  PosInputSurface *input_surface = POS_INPUT_SURFACE (user_data);
+  PhoshOskStub *self = PHOSH_OSK_STUB (user_data);
   gboolean enabled, visible = g_value_get_boolean (from_value);
 
   if (_debug_flags & POS_DEBUG_FLAG_FORCE_SHOW) {
@@ -221,7 +221,7 @@ set_surface_prop_surface_visible (GBinding     *binding,
     return TRUE;
   }
 
-  enabled = pos_input_surface_get_screen_keyboard_enabled (input_surface);
+  enabled = pos_input_surface_get_screen_keyboard_enabled (self->input_surface);
 
   if (_activation_filter && !pos_activation_filter_allow_active (_activation_filter))
     enabled = FALSE;
@@ -345,7 +345,7 @@ create_input_surface (PhoshOskStub *self)
                                G_BINDING_SYNC_CREATE,
                                set_surface_prop_surface_visible,
                                NULL,
-                               self->input_surface,
+                               self,
                                NULL);
 
   g_signal_connect_object (_hw_tracker, "notify::allow-active",
