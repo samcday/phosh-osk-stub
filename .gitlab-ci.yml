@@ -155,7 +155,10 @@ test-layouts:
   image: ${DEBIAN_IMAGE}
   stage: test+docs
   variables:
-    PHOSH_ADDITIONAL_PKGS: phoc swaybg grim imagemagick phosh-wallpapers dbus-x11
+    PHOSH_ADDITIONAL_PKGS: >
+      phoc swaybg grim imagemagick
+      phosh-wallpapers dbus-x11
+      fonts-noto-core
   needs:
     - build:native-debian-trixie
   script:
