@@ -566,7 +566,7 @@ main (int argc, char *argv[])
 {
   g_autoptr (GOptionContext) opt_context = NULL;
   g_autoptr (GError) err = NULL;
-  g_autoptr (PhoshOskStub) osk_stub = NULL;
+  PhoshOskStub *osk_stub;
   g_autoptr (PosOskDbus) osk_dbus = NULL;
   gboolean version = FALSE, replace = FALSE, allow_replace = FALSE;
   GBusNameOwnerFlags flags;
@@ -608,6 +608,7 @@ main (int argc, char *argv[])
 
   phosh_osk_stub_run (osk_stub);
 
+  g_clear_object (&osk_stub);
   pos_uninit ();
 
   return EXIT_SUCCESS;

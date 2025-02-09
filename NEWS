@@ -1,3 +1,15 @@
+phosh-osk-stub 0.45~rc1
+-----------------------
+Released February 2025
+* Long press on shift toggles caps lock
+* Update emoji data
+* Issues fixed:
+    * https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/53
+    * https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/31
+* Contributors:
+    * Boris Shtrasman
+    * Guido Günther
+
 phosh-osk-stub 0.44.0
 ---------------------
 Released December 2024
@@ -182,7 +194,7 @@ phosh-osk-stub 0.28.0
 Released: May 2023
 * Add a mode that allows to input characters without lifting the finger
   With this swipeGuess can sensibly be used as pipe based completer
-* Add Esc key to terminal layout in the captial layer
+* Add Esc key to terminal layout in the capital layer
 * Contributors:
     * Guido Günther
     * Undef
@@ -275,7 +287,7 @@ phosh-osk-stub 0.20.0~beta1
 Released: July 2022
 * Add key repeat
 * Honor screen-keyboard-enabled gsetting
-* Intial "terminal like" keyboard (Function keys, ESC, Tab)
+* Initial "terminal like" keyboard (Function keys, ESC, Tab)
 * Lots of internal rework and fixes
 
 phosh-osk-stub 0.0.1

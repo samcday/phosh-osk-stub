@@ -231,7 +231,7 @@ pos_keypad_class_init (PosKeypadClass *klass)
   /**
    * PosKeypad:decimal-separator-visible:
    *
-   * Whether the keypad should display a buttom with the decimal separator
+   * Whether the keypad should display a button with the decimal separator
    * of the current locale.
    */
   props[PROP_DECIMAL_SEPARATOR_VISIBLE] =

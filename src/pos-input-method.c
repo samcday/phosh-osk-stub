@@ -349,7 +349,7 @@ pos_input_method_class_init (PosInputMethodClass *klass)
   /**
    * PosInputMethod:active:
    *
-   * Whether the input method is active. See activate/deactive in
+   * Whether the input method is active. See activate/deactivate in
    * input-method-unstable-v2.xml.
    */
   props[PROP_ACTIVE] =

@@ -1,3 +1,41 @@
+phosh-osk-stub (0.45~rc1) experimental; urgency=medium
+
+  [ Boris Shtrasman ]
+  * layout: Make IL layout to be as close as possible to SI-1452-2.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/53
+
+  [ Guido Günther ]
+  * osk-stub: Add minimal GObject.
+    This will allow us to remove the static variables in there and hence
+    make the surface creation easier to track.
+  * osk-stub: Move session registration into PhoshOskStub
+  * osk-stub: Register icon path in PhoshOskStub
+  * osk-stub: Make main loop private to PhoshOskStub
+  * osk-stub: Move Wayland protocols into PhoshOskStub.
+    Reduces the amount of parameters we need to pass around
+  * osk-stub: Move input surface into PhoshOskStub
+  * osk-stub: Remove unused argument from respond_to_end_session
+  * osk-stub: Move osk_dbus into PhoshOskStub.
+    We can clean this up further by passing the necessary flags to
+    PhoshOskStub and then doing the PosOskDBus setup in `constructed`.  but
+    that's enough to get all the globals into the object's scope for now
+    (hence avoiding the mixture of global and non-global vars that became
+    odd to track).
+  * osk-stub: Move wl_display and registry into PhoshOskStub
+  * osk-stub: Pass self around instead of input-surface.
+    Gives us access to the other members
+  * osk-stub: Move hw-tracker and device-state into object.
+    Moves the remaining globals into the object
+  * osk-widget: Long press on shift toggles caps lock.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/31
+  * dir-locals: Set fill indicator column
+  * emoji: Update emoji data.
+    Taken from GTK commit
+      a97513bd8d ("emoji: Update data to CLDR v46")
+    Contains Unicode 16 changes
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 09 Feb 2025 09:53:39 +0100
+
 phosh-osk-stub (0.44.0) experimental; urgency=medium
 
   * metainfo: Make metainfo match app-id.
@@ -69,7 +107,7 @@ phosh-osk-stub (0.43~rc1) experimental; urgency=medium
   * shortcuts-bar: Allow to add `<ctrl>` and `<alt>`
     They're tracked as toggle buttons that latch until the next character
     is entered.
-  * vk-driver: Helper to convert bitween modifier flags. We want to
+  * vk-driver: Helper to convert between modifier flags. We want to
     convert from Gdk to our internal ones.
   * input-surface: Track latched modifiers.
     Currently then can only come form the shortcuts bar (thus affect the
@@ -344,7 +382,7 @@ phosh-osk-stub (0.36.0) experimental; urgency=medium
     Rename we_know_better_than_gtk() to pos_accelerator_get_label() and
     refactor setting shortcut->name so that the name from there takes
     precedence.
-  * presage: Capitalize completions accoording to preedit
+  * presage: Capitalize completions according to preedit
   * presage: Add tests for capitalize_by_template()
   * completer: Don't assume the out value is inited to FALSE
 
@@ -363,7 +401,7 @@ phosh-osk-stub (0.36.0) experimental; urgency=medium
   * completer: Add more characters to word separators
   * completer: Improve documentation of pos_completer_add_preedit
   * presage: Guard last word grabbing against preedit changes.
-    We only want to grab the last word when preedit isn't beeing updated.
+    We only want to grab the last word when preedit isn't being updated.
     Otherwise we might mix the preedit with the last word and Enter/Return
     being ignored.
   * input-surface: Don't crash on ibus layouts without a language.
@@ -537,7 +575,7 @@ phosh-osk-stub (0.32.0) experimental; urgency=medium
     The keymap is built on the fly avoiding keys that chromium thinks it can
     interpret as evdev keycodes.
     This way we can get more layouts to work in virtual keyboard mode like
-    Ukranian.
+    Ukrainian.
     Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/19
   * vk-driver: Drop handcrafted de layout.
     We only keep the us layout for the moment as this is useful for the
@@ -644,7 +682,7 @@ phosh-osk-stub (0.27.0) experimental; urgency=medium
     simpler in CI.
   * build: Detect available completers.
     The check for fzf is actually a runtime check but use it as this is
-    solely for testing we assume built-time env == runtime env.
+    solely for testing we assume build-time env == runtime env.
     We don't break any existing configurations since switching completers
     needed code changes anyway.
   * Add completer-manager.
@@ -799,7 +837,7 @@ phosh-osk-stub (0.24.0) experimental; urgency=medium
   * README: Update screenshots
   * ci: Run tests in xvfb. We test widgets now
   * build: Allow to disable building the tests
-  * tests: Use environment() to set test enviroment.
+  * tests: Use environment() to set test environment.
     A bit easier to read as we have key / value pairs.
   * layouts: Add more layouts.
     Again taken from gnome-shell as of
@@ -885,7 +923,7 @@ phosh-osk-stub (0.23.0~rc2) experimental; urgency=medium
     without tripping up other completers.
   * d/control: Recommend phosh-osk-data-eu.
     Since we have the presage completer enabled (not the fzf one) recommend
-    data usefull for that.
+    data useful for that.
   * README: Document completion requirements
   * input-method: Reset hint on activate.
     Needs to happen according to protocol. This fixes the problem where
@@ -894,11 +932,11 @@ phosh-osk-stub (0.23.0~rc2) experimental; urgency=medium
     This keeps it simple to run phosh-osk-stub, even when the schema
     isn't installed.
   * Add enums and schema for completion mode
-  * input-surface: Opportunistically enable compltion.
+  * input-surface: Opportunistically enable completion.
     When the input-method hints us to enable completion do so, otherwise
     turn it off but respect the users prefs.
   * debian: Install schema files
-  * input-surface: Disable completion button when compltion mode is 'none'
+  * input-surface: Disable completion button when completion mode is 'none'
   * README: Document gsetting and feature
   * README: Update how to start osk-stub.
     As we have custom schema now we wrap it in the run script as
@@ -914,7 +952,7 @@ phosh-osk-stub (0.23.0~rc2) experimental; urgency=medium
     For testing it's convenient to just use phosh's expected filename for
     the OSK. For distros it causes file conflicts
     so allow to use a osk-stub specific desktop filename.
-  * input-surface: Don't allow to enable completeion without completer.
+  * input-surface: Don't allow to enable completion without completer.
     Hide "Enable word completion" button if the completer failed to
     initialize (e.g. because there' no dictionary).
   * completion-bar: Highlight button on press
@@ -937,7 +975,7 @@ phosh-osk-stub (0.23.0~rc2) experimental; urgency=medium
     later on.
   * Add a shortcuts-bar widget.
     It reads the shortcuts from gsettings and emits signals when pressed.
-    Using GTKs acclerators for that has the upside that we can also easily
+    Using GTKs accelerators for that has the upside that we can also easily
     add widgets to configure shortcuts to a settings app.
   * input-surface: Wire up shortcuts bar
   * docs: Mention shortcuts configuration
@@ -979,7 +1017,7 @@ phosh-osk-stub (0.23.0~rc1) experimental; urgency=medium
   * osk-stub: Don't create osk_dbus multiple times.
     We don't want a new object when the surface gets recreated
   * osk-dbus: Fix indentation
-  * osk-dbus: Log failure when we failt to acquire the well known name
+  * osk-dbus: Log failure when we failed to acquire the well known name
   * osk-dbus: Allow to specify replacement policy.
     So far we always allowed replacement and replaced always, we might
     not always want to do this.
@@ -1170,7 +1208,7 @@ phosh-osk-stub (0.20.0~beta1) experimental; urgency=medium
     This makes it match the property and the setter.
   * pos-input-surface: Reset keyboard layer when current osk changes
   * pos-input-surface: Reset keyboard layer to normal on fold.
-    This makes sure the user dosn't see "random" levels when e.g. switching
+    This makes sure the user doesn't see "random" levels when e.g. switching
     between apps.
   * data: Indicate that we're using feedbackd.
     This will allow configuration tools to pick up that intent.

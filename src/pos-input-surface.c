@@ -681,7 +681,7 @@ menu_activated (GSimpleAction *action, GVariant *parameter, gpointer data)
   osk_widget = hdy_deck_get_visible_child (self->deck);
   osk_name = pos_osk_widget_get_name (POS_OSK_WIDGET (osk_widget));
   g_variant_get (parameter, "(ii)", &rect.x, &rect.y);
-  g_debug ("Menu popoup activated at %d %d, current: '%s'", rect.x, rect.y, osk_name);
+  g_debug ("Menu popup activated at %d %d, current: '%s'", rect.x, rect.y, osk_name);
 
   layout_action = g_action_map_lookup_action (G_ACTION_MAP (self->action_map), "select-layout");
   g_simple_action_set_state (G_SIMPLE_ACTION (layout_action), g_variant_new ("s", osk_name));
@@ -1494,7 +1494,7 @@ pos_input_surface_class_init (PosInputSurfaceClass *klass)
 
   container_class->check_resize = pos_input_surface_check_resize;
 
-  /* Make sure resources are available when building gir */
+  /* Make sure resources are available when building git */
   pos_init ();
 
   g_type_ensure (POS_TYPE_COMPLETION_BAR);

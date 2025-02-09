@@ -37,7 +37,7 @@ workflow:
 variables:
   # For ci-fairy
   FDO_UPSTREAM_REPO: guidog/phosh-osk-stub
-  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.2024-10-21
+  DEBIAN_IMAGE: $CI_REGISTRY/guidog/phosh-osk-stub/debian:v0.0.2025-02-09
   XVFB_RUN: xvfb-run -a -s -noreset
   COMMON_BUILD_OPTS: --werror -Db_coverage=true
   ALPINE_EDGE_DEPS: alpine-sdk feedbackd-dev git glib-dev gnome-desktop-dev
@@ -155,13 +155,14 @@ test-layouts:
   image: ${DEBIAN_IMAGE}
   stage: test+docs
   variables:
-    PKGS: phoc swaybg grim imagemagick phosh-wallpapers dbus-x11
+    PHOSH_ADDITIONAL_PKGS: >
+      phoc swaybg grim imagemagick
+      phosh-wallpapers dbus-x11
+      fonts-noto-core
   needs:
     - build:native-debian-trixie
-  before_script:
-    apt-get -y update &&
-    apt-get -y install $PKGS
   script:
+    - !reference [.phosh-prepare-apt]
     - XDG_RUNTIME_DIR=$PWD
       WLR_RENDERER=pixman
       NO_AT_BRIDGE=1
