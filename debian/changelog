@@ -1,3 +1,41 @@
+phosh-osk-stub (0.45~rc1) experimental; urgency=medium
+
+  [ Boris Shtrasman ]
+  * layout: Make IL layout to be as close as possible to SI-1452-2.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/53
+
+  [ Guido Günther ]
+  * osk-stub: Add minimal GObject.
+    This will allow us to remove the static variables in there and hence
+    make the surface creation easier to track.
+  * osk-stub: Move session registration into PhoshOskStub
+  * osk-stub: Register icon path in PhoshOskStub
+  * osk-stub: Make main loop private to PhoshOskStub
+  * osk-stub: Move Wayland protocols into PhoshOskStub.
+    Reduces the amount of parameters we need to pass around
+  * osk-stub: Move input surface into PhoshOskStub
+  * osk-stub: Remove unused argument from respond_to_end_session
+  * osk-stub: Move osk_dbus into PhoshOskStub.
+    We can clean this up further by passing the necessary flags to
+    PhoshOskStub and then doing the PosOskDBus setup in `constructed`.  but
+    that's enough to get all the globals into the object's scope for now
+    (hence avoiding the mixture of global and non-global vars that became
+    odd to track).
+  * osk-stub: Move wl_display and registry into PhoshOskStub
+  * osk-stub: Pass self around instead of input-surface.
+    Gives us access to the other members
+  * osk-stub: Move hw-tracker and device-state into object.
+    Moves the remaining globals into the object
+  * osk-widget: Long press on shift toggles caps lock.
+    Closes: https://gitlab.gnome.org/guidog/phosh-osk-stub/-/issues/31
+  * dir-locals: Set fill indicator column
+  * emoji: Update emoji data.
+    Taken from GTK commit
+      a97513bd8d ("emoji: Update data to CLDR v46")
+    Contains Unicode 16 changes
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 09 Feb 2025 09:53:39 +0100
+
 phosh-osk-stub (0.44.0) experimental; urgency=medium
 
   * metainfo: Make metainfo match app-id.
