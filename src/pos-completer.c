@@ -369,7 +369,7 @@ pos_completer_set_language (PosCompleter *self,
   return iface->set_language (self, lang, region, error);
 }
 
-/* Used by completers to simplify implenetations */
+/* Used by completers to simplify implementations */
 
 /**
  * pos_completer_add_preedit:

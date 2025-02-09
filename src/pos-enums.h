@@ -60,7 +60,7 @@ typedef enum  {
 /**
  * PosInputMethodTextChangeCause:
  * POS_INPUT_METHOD_TEXT_CHANGE_CAUSE_IM: the input method cause the change
- * POS_INPUT_METHOD_TEXT_CHANGE_CAUSE_NOT_IM: s.th. else caused the cange
+ * POS_INPUT_METHOD_TEXT_CHANGE_CAUSE_NOT_IM: s.th. else caused the change
  */
 typedef enum {
   POS_INPUT_METHOD_TEXT_CHANGE_CAUSE_IM = 0,

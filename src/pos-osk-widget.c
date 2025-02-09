@@ -115,7 +115,7 @@ typedef struct {
  * PosOskWidget:
  * @name: The name of the layout, e.g. `de`, `us`, `de+ch`
  * @display_name: The display name of the layout, e.g. `German`, `English (US)`
- * @langauge: The language of the layout e.g. `de`, `en`
+ * @language: The language of the layout e.g. `de`, `en`
  * @region: The region the layout is for e.g. `at` for language `de` or `us` for language `en`.
  *
  * Renders the keyboard and reacts to keypresses by signal emissions.
@@ -437,7 +437,7 @@ parse_row (PosOskWidget      *self,
     } else if (JSON_NODE_HOLDS (key_node, JSON_NODE_OBJECT)) {
       key = POS_OSK_KEY (json_gobject_deserialize (POS_TYPE_OSK_KEY, key_node));
     } else {
-      g_warning ("Unparseable key in row %d pos %d", r, i);
+      g_warning ("Unparsable key in row %d pos %d", r, i);
       continue;
     }
 
@@ -1451,7 +1451,7 @@ pos_osk_widget_class_init (PosOskWidgetClass *klass)
   /**
    * PosOskWidget:features
    *
-   * Feauture flags to configure this widget
+   * Feature flags to configure this widget
    */
   props[PROP_FEATURES] =
     g_param_spec_flags ("features", "", "",
@@ -1744,7 +1744,7 @@ parse_lang (PosOskWidget *self, const char *layout, const char *variant)
  *
  * Sets the widgets keyboard layout.
  *
- * Retruns: %TRUE on success, %FALSE otherwise.
+ * Returns: %TRUE on success, %FALSE otherwise.
  */
 gboolean
 pos_osk_widget_set_layout (PosOskWidget *self,

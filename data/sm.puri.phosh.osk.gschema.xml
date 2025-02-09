@@ -63,7 +63,7 @@
         <!-- copy / paste -->
         '&lt;ctrl&gt;v', '&lt;ctrl&gt;c',  '&lt;ctrl&gt;&lt;shift&gt;v', '&lt;ctrl&gt;&lt;shift&gt;c', 'Menu'
       ]</default>
-      <summary>Shotcuts for terminal layout</summary>
+      <summary>Shortcuts for terminal layout</summary>
       <description/>
     </key>
   </schema>
@@ -83,7 +83,7 @@
     <key name='command' type='s'>
       <default>'cat'</default>
       <summary>The command to use for the pipe based completer. The given command should read
-        the preedit from standard input and output possible completions newline seperated on stdout.
+        the preedit from standard input and output possible completions newline separated on stdout.
       </summary>
       <description/>
     </key>
