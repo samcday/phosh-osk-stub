@@ -155,13 +155,11 @@ test-layouts:
   image: ${DEBIAN_IMAGE}
   stage: test+docs
   variables:
-    PKGS: phoc swaybg grim imagemagick phosh-wallpapers dbus-x11
+    PHOSH_ADDITIONAL_PKGS: phoc swaybg grim imagemagick phosh-wallpapers dbus-x11
   needs:
     - build:native-debian-trixie
-  before_script:
-    apt-get -y update &&
-    apt-get -y install $PKGS
   script:
+    - !reference [.phosh-prepare-apt]
     - XDG_RUNTIME_DIR=$PWD
       WLR_RENDERER=pixman
       NO_AT_BRIDGE=1
