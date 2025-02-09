@@ -1,0 +1,14 @@
+# https://packit.dev/docs/configuration/
+specfile_path: phosh-osk-stub.spec
+files_to_sync:
+  - phosh-osk-stub.spec
+  - .packit.yaml
+upstream_package_name: phosh-osk-stub
+downstream_package_name: phosh-osk-stub
+jobs:
+  # Build main commits in samcday/phosh-nightly COPR
+  - job: copr_build
+    trigger: commit
+    branch: main
+    owner: samcday
+    project: phosh-nightly
